@@ -37,52 +37,53 @@ export default function Login({ navigation }) {
     }
 
     const handleLogin = async () => {
-        setLoading(true)
-        const hash = generateHmacMD5(username, password);
+        if (!username || !password) {
+            setError('Please provide both username and password');
+            return;
+        }
+
+        setLoading(true);
+
+        const hash = await generateHmacMD5(username, password);
 
         try {
-            const res = await fetch(`http://192.168.2.11:8070/osiris3/json/etracs25/LoginService.login`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
+            const res = await fetch('http://192.168.2.11:8070/osiris3/json/etracs25/LoginService.login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     env: {
-                        CLIENTTYPE: "mobile"
+                        CLIENTTYPE: 'mobile',
                     },
                     args: {
-                        username: username,
-                        password: hash
-                    }
-                })
+                        username,
+                        password: hash,
+                    },
+                }),
             });
+
+            if (!res.ok) {
+                throw new Error('Network response was not ok');
+            }
 
             const data = await res.json();
 
-            if (username === "" || password === "") {
-                if (username === "" && password === "") {
-                    setError("Please provide the username and the password")
-                } else if (password === "") {
-                    setError("Please provide the password")
-                } else if (username === "") {
-                    setError("Please provide the username")
-                }
-            } else if ((data.hasOwnProperty("status")) && (data.status === "ERROR")) {
-                setError("Incorrect username or password!")
+            if (data.status === 'ERROR') {
+                setError('Incorrect username or password');
             } else {
-                delete data.env.ROLES
+                delete data.env.ROLES;
                 await AsyncStorage.setItem('readerInfo', JSON.stringify(data));
-                setError("")
-                setUserName("")
-                setPassword("")
-                navigation.navigate("Water")
+                setError('');
+                setUserName('');
+                setPassword('');
+                navigation.navigate('Water');
             }
-            setLoading(false)
-        } catch (err) {
-            setLoading(false)
-            setError(err)
-            alert(err)
+        } catch (error) {
+            setError('An error occurred. Please try again later.');
+            console.error('Error during login:', error);
+        } finally {
+            setLoading(false);
         }
-
-    }
+    };
 
     if (loading) {
         return (
