@@ -115,8 +115,8 @@ const BatchInfo = ({ navigation, route }) => {
                                                 <View style={data.item.reading === null ? styles.accountContainer : {...styles.accountContainer, backgroundColor: 'rgba(0, 0, 0, 0.2)' }}>
                                                     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
                                                         {data.item.acctno === '1' ?
-                                                            <Ionicons name="md-location-sharp" size={50} color="red" /> :
-                                                            <Ionicons name="md-location-outline" size={50} color="black" />
+                                                            <Ionicons name="location-sharp" size={50} color="red" /> :
+                                                            <Ionicons name="location-outline" size={50} color="black" />
                                                         }
                                                         <Text>1234</Text>
                                                     </View>
@@ -168,8 +168,8 @@ const BatchInfo = ({ navigation, route }) => {
                                                 <View style={data.item.reading === null ? styles.accountContainer : {...styles.accountContainer, backgroundColor: 'rgba(0, 0, 0, 0.2)' }}>
                                                     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
                                                         {data.item.acctno === '1' ?
-                                                            <Ionicons name="md-location-sharp" size={50} color="red" /> :
-                                                            <Ionicons name="md-location-outline" size={50} color="black" />
+                                                            <Ionicons name="location-sharp" size={50} color="red" /> :
+                                                            <Ionicons name="location-outline" size={50} color="black" />
                                                         }
                                                         <Text>1234</Text>
                                                     </View>

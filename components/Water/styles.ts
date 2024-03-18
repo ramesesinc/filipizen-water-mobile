@@ -1,11 +1,11 @@
-
 import { StyleSheet } from "react-native";
 
 
 export const styles = StyleSheet.create({
     componentContainer: {
         flexDirection: 'row',
-        borderBottomWidth: 2,
+        borderTopWidth: 2,
+        borderBottomWidth: 1,
         borderColor: 'rgba(0, 0, 0, 0.1)',
         gap: 80
     },

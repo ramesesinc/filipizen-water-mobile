@@ -176,8 +176,8 @@ const UserInfo = ({ navigation, route }) => {
                             <View style={{ alignItems: 'center' }}>
                                 <Pressable onPress={() => console.log(user)}>
                                     {user.acctno === '1' ?
-                                        <Ionicons name="md-location-sharp" size={50} color="red" /> :
-                                        <Ionicons name="md-location-outline" size={50} color="black" />
+                                        <Ionicons name="location-sharp" size={50} color="red" /> :
+                                        <Ionicons name="location-outline" size={50} color="black" />
                                     }
                                 </Pressable>
                                 <Text style={{ fontWeight: 'bold' }}>1234</Text>

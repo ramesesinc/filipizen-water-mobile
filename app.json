@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "sampleApp",
-    "slug": "sampleApp",
+    "name": "Etracs Water",
+    "slug": "etracs-water",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -29,8 +29,9 @@
     },
     "extra": {
       "eas": {
-        "projectId": "cd4d8253-34d3-408c-bf7b-74324f034bae"
+        "projectId": "193c28f4-633e-4cb0-9126-87eb29736ad1"
       }
-    }
+    },
+    "owner": "nivekcryptos"
   }
 }
