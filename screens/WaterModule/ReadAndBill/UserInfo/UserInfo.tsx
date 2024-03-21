@@ -144,7 +144,8 @@ const UserInfo = ({ navigation, route }) => {
     };
 
     const handleSave = async () => {
-        const newRead = Number(numberValue.join(''));
+        try {
+            const newRead = Number(numberValue.join(''));
         const newVol = newRead - user.prevreading;
         const result = await eval(formula.replace(/vol/g, newVol.toString()));
 
@@ -163,7 +164,11 @@ const UserInfo = ({ navigation, route }) => {
                 );
             }   
         );
-        setOpen(false)
+        } catch (e) {
+            console.log("error:",e)
+        } finally {
+            setOpen(false)
+        }
     }
 
     return (
