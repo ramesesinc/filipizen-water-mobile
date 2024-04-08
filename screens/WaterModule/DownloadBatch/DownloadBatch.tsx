@@ -10,6 +10,7 @@ import * as SQLITE from 'expo-sqlite'
 import React from 'react'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { UserType } from '../Others/types'
+import { SelectList } from 'react-native-dropdown-select-list'
 
 const DownloadBatch = ({ navigation }) => {
   const [batch, setBatch] = useState('')
@@ -20,9 +21,10 @@ const DownloadBatch = ({ navigation }) => {
   const [fileNum, setFileNum] = useState(0);
   const [curr, setCurr] = useState(0);
   const [downloaded, setDownloaded] = useState(false)
+  const [selected, setSelected] = useState<any>()
 
   // Math.floor(((initCur) / data.length) * 10) / 10
-  const fetchSize = 100
+  const fetchSize = 20
   const limit = fetchSize + 1
 
   const db = SQLITE.openDatabase('example.db');
@@ -34,14 +36,12 @@ const DownloadBatch = ({ navigation }) => {
 
   const isFocused = useIsFocused()
 
-  console.log("focs:", isFocused)
-
   useEffect(() => {
     const unsubscribe = AppState.addEventListener('change', async (nextAppState) => {
       if (nextAppState === 'background' || nextAppState === 'inactive' || isFocused === false) {
         // If app goes to background or inactive state, navigate away from the current component
         exited.current = true
-        console.log("current", prevStart.current, currentBatch.current)
+        // console.log("current", prevStart.current, currentBatch.current)
         if (prevStart.current !== null && currentBatch.current !== null) {
           db.transaction(tx => {
             tx.executeSql(
@@ -68,10 +68,10 @@ const DownloadBatch = ({ navigation }) => {
                       AsyncStorage.setItem(`${currentBatch.current}Start`, JSON.stringify(0));
                       console.log(`${currentBatch.current} now deleted`);
                     },
-                    (_,e) => {
-                      console.log("table not deleted", e)
-                      return false
-                    }
+                      (_, e) => {
+                        console.log("table not deleted", e)
+                        return false
+                      }
                     );
                   })
                 }
@@ -119,13 +119,13 @@ const DownloadBatch = ({ navigation }) => {
     try {
       console.log("start is:", start)
 
-      const res = await fetch(`http://192.168.2.11:8040/osiris3/json/enterprise/WaterMobileReadingService.getBatchItems?batchid=${batch}&start=${start}&limit=${limit}`);
+      const res = await fetch(`http://192.168.2.11:8040/osiris3/json/enterprise/WaterMobileReadingService.getBatchItems?batchid=${batch}&start=${start}&limit=${selected + 1}`);
       // const res = await fetch(`http://192.168.2.88:8040/osiris3/json/enterprise/WaterMobileReadingService.getBatchItems?batchid=${batch}`);
       const dataRes = await res.json();
 
       if (dataRes.msg) {
         setError(dataRes.msg)
-      } else {
+      } else if (dataRes.length !== 0) {
         db.transaction(tx => {
           tx.executeSql(`
             CREATE TABLE IF NOT EXISTS ${batchTable} (
@@ -154,7 +154,7 @@ const DownloadBatch = ({ navigation }) => {
         }, (err) => {
           console.log(err)
         });
-        const newData = await dataRes.map((e : any, i: any) => ({
+        const newData = await dataRes.map((e: any, i: any) => ({
           ...e,
           "pageNum": i + start
         }))
@@ -176,21 +176,21 @@ const DownloadBatch = ({ navigation }) => {
             return false;
           }
         };
-  
+
         let lastRec = await checkVariableExists(batchTable);
-        if (lastRec === limit || lastRec === 0) {
+        // if (lastRec == limit || lastRec === 0) {
           let data;
-  
-          newData.length === limit ? data = newData.slice(0, newData.length - 1) : data = newData;
-  
+
+          newData.length === selected + 1 ? data = newData.slice(0, newData.length - 1) : data = newData;
+
           setPreDownloading(false)
           setDownloading(true)
-  
+
           let initCur = 0;
           let newNum = data.length;
-  
+
           setFileNum(newNum)
-  
+
           for (let i = 0; i < newNum; i++) {
             await new Promise((res) => setTimeout(res, 50))
             if (exited.current) {
@@ -233,7 +233,7 @@ const DownloadBatch = ({ navigation }) => {
                   initCur = initCur + 1
                   setCurr(initCur)
                   setPercent((initCur) / newNum);
-                  console.log(`data ${i + 1} saved`)
+                  // console.log(`data ${i + 1} saved`)
                   if (i === newNum - 1 && exited.current !== true) {
                     AsyncStorage.setItem(`${batchTable}Start`, JSON.stringify(data[i].pageNum));
                     prevStart.current = data[i].pageNum;
@@ -247,7 +247,7 @@ const DownloadBatch = ({ navigation }) => {
               )
             })
           }
-  
+
           console.log("done")
           AsyncStorage.setItem(batchTable, JSON.stringify(dataRes.length));
           setPercent(0)
@@ -255,10 +255,12 @@ const DownloadBatch = ({ navigation }) => {
           setDownloaded(true)
           setBatch('')
           setError('')
-  
-        } else {
-          setError("All accounts already downloaded")
-        }
+
+        // } else {
+        //   setError("All accounts already downloaded")
+        // }
+      } else {
+        setError("All accounts already downloaded")
       }
 
 
@@ -312,6 +314,8 @@ const DownloadBatch = ({ navigation }) => {
     )
   }
 
+  const inputRef = useRef()
+
   return (
     <View style={{ flex: 1, backgroundColor: 'white' }}>
       <WaterHeader navigation={navigation} backBut='Water Home' />
@@ -320,14 +324,46 @@ const DownloadBatch = ({ navigation }) => {
           <ActivityIndicator style={{ flex: 1 }} size={100} color="#00669B" /> :
           <View style={styles.infoContainer}>
             <Text style={styles.menuText}>Download Batch</Text>
-            <TextInput placeholder='Enter Batch Number' style={styles.textInput} value={batch} onChangeText={(inputText) => setBatch(inputText)} />
-            <Text style={{ color: 'red', textAlign: 'center' }}>{error}</Text>
-            <Pressable style={styles.downloadButton} onPress={downloadBatch}>
-              <Text style={{ color: 'white' }}>Download</Text>
-            </Pressable>
-            <Pressable onPress={() => navigation.navigate('Water Home')} style={styles.backButton}>
-              <Text style={{ color: 'black' }}>Back</Text>
-            </Pressable>
+            <View style={{ gap: 15 }}>
+              <TextInput placeholder='Enter Batch Number' style={styles.textInput} value={batch} onChangeText={(inputText) => setBatch(inputText)} />
+              {error && <Text style={{ color: 'red', textAlign: 'center' }}>{error}</Text>}
+              <View style={{ flexDirection: 'row', gap: 10 }}>
+                <View style={{flex: 2 }}>
+                  <Pressable style={styles.downloadButton} onPress={downloadBatch}>
+                    <Text style={{ color: 'white', textAlign: 'center' }}>Download</Text>
+                  </Pressable>
+                </View>
+                <View style={{ flex: 1}}>
+                  <SelectList
+                    data={[
+                      { key: 10, value: 10 },
+                      { key: 20, value: 20 },
+                      { key: 30, value: 30 },
+                      { key: 40, value: 40 },
+                      { key: 50, value: 50 },
+                      { key: 60, value: 60 },
+                      { key: 70, value: 70 },
+                      { key: 80, value: 80 },
+                      { key: 90, value: 90 },
+                      { key: 100, value: 100 },
+                    ]}
+                    setSelected={setSelected}
+                    search={false}
+                    defaultOption={{ key: 10, value: 10 }}
+                    boxStyles={{height: 50}}
+                    onSelect={() => {
+                      console.log(selected)
+                    }}
+                  />
+                </View>
+              </View>
+              {/* <Pressable style={styles.downloadButton} onPress={downloadBatch}>
+                <Text style={{ color: 'white' }}>Download</Text>
+              </Pressable>
+              <Pressable onPress={() => navigation.navigate('Water Home')} style={styles.backButton}>
+                <Text style={{ color: 'black' }}>Back</Text>
+              </Pressable> */}
+            </View>
           </View>
         }
 

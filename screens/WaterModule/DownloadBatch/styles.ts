@@ -27,11 +27,14 @@ export const styles = StyleSheet.create({
         textAlign: 'center'
     },
     downloadButton: {
-        margin: 20,
+        borderWidth: 1,
+        height: 50,
         backgroundColor: 'green',
         padding: 10,
         paddingHorizontal: 40,
-        borderRadius: 10
+        borderRadius: 10,
+        alignItems:'center',
+        justifyContent: 'center'
     },
     backButton: {
         bottom: 10,
@@ -50,7 +53,7 @@ export const styles = StyleSheet.create({
         bottom: 10,
         backgroundColor: "#00669B",
         padding: 10,
-        marginBottom: 180,
+        marginBottom: 120,
         width: 250,
         alignSelf: 'center',
         alignItems: 'center',
@@ -63,7 +66,7 @@ export const styles = StyleSheet.create({
         bottom: 10,
         backgroundColor: "white",
         padding: 10,
-        marginBottom: 120,
+        marginBottom: 60,
         width: 250,
         alignSelf: 'center',
         alignItems: 'center',

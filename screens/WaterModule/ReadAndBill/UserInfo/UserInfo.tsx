@@ -50,10 +50,9 @@ const UserInfo = ({ navigation, route }) => {
         header2: "",
         header3: ""
     })
-    const [numberValue, setNumberValue] = useState([]);
+    const [numberValue, setNumberValue] = useState([])
+    const [decimalValue, setDecimalValue] = useState(["0", "0", "0", "0"]);
     const [formula, setFormula] = useState(null)
-
-    const inputRefs = useRef([]);
 
     // const hdb = SQLITE.openDatabase('headers.db');
 
@@ -67,8 +66,6 @@ const UserInfo = ({ navigation, route }) => {
     } else if (height > 600 && height < 1000) {
         styles = styles2
     }
-
-    console.log(user.id)
 
     useEffect(() => {
         if (isFocused) {
@@ -84,7 +81,7 @@ const UserInfo = ({ navigation, route }) => {
                             });
 
                             if (user.reading !== null) {
-                                const val = user.reading.toString()
+                                const val = Math.floor(user.reading).toString()
                                 let arrIndex = newArr.length - 1
                                 for (let i = val.length - 1; i >= 0; i--) {
                                     newArr[arrIndex] = val[i];
@@ -139,6 +136,7 @@ const UserInfo = ({ navigation, route }) => {
         }
     };
 
+    const inputRefs = useRef([]);
 
     const handleInputChange = (text, index) => {
         if (text.length > 0 && index < numberValue.length - 1) {
@@ -149,17 +147,30 @@ const UserInfo = ({ navigation, route }) => {
         setNumberValue(newInputs);
     };
 
+    const decimalRefs = useRef([])
+
+    const handleDecimalChange = (text, index) => {
+        if (text.length > 0 && index < decimalValue.length - 1) {
+            decimalRefs.current[index + 1].focus();
+        }
+        const newInputs = [...decimalValue];
+        newInputs[index] = text;
+        setDecimalValue(newInputs);
+    };
+
     const handleSave = async () => {
         try {
-            const newArr = numberValue.map((item) => item === "" ? item = "0" : item)
-            const newRead = Number(newArr.join(''));
+            const newNumber = numberValue.map((item) => item === "" ? item = "0" : item)
+            const newDecimal = decimalValue.map((item) => item === "" ? item = "0" : item)
+            const newReadStr = newNumber.join('') + '.' + newDecimal.join('');
+            const newRead = parseFloat(newReadStr);
             const newVol = newRead - user.prevreading;
             const newFormula = await formula + `({acctgroup: '${user.acctgroup}', volume: ${newVol}})`
             // const result = await eval(formula.replace(/vol/g, newVol.toString()));
             const result = await eval(newFormula)
 
             db.transaction(
-                 tx => {
+                tx => {
                     tx.executeSql(
                         `UPDATE ${batchname} SET reading = ?, volume = ?, amount = ? WHERE acctno = ?`,
                         [newRead, newVol, result, user.acctno],
@@ -282,21 +293,44 @@ const UserInfo = ({ navigation, route }) => {
                                                 keyboardType="numeric"
                                                 ref={(ref) => (inputRefs.current[index] = ref)}
                                                 cursorColor={'black'}
+                                                selectTextOnFocus
+                                                textAlign='center'
                                             />
                                         ))}
                                     </View>
-                                    <Pressable onPress={handleSave} style={styles.save}>
-                                        <Text style={{ color: 'white' }}>Save</Text>
-                                    </Pressable>
+                                    <View style={styles.inputContainer}>
+                                        {decimalValue.map((value, index) => (
+                                            <TextInput
+                                                style={styles.decimalBox}
+                                                value={value}
+                                                key={index}
+                                                onChangeText={(text) => handleDecimalChange(text, index)}
+                                                maxLength={1}
+                                                keyboardType="numeric"
+                                                ref={(ref) => (decimalRefs.current[index] = ref)}
+                                                cursorColor={'black'}
+                                                selectTextOnFocus
+                                                textAlign='center'
+                                            />
+                                        ))}
+                                    </View>
+                                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, marginTop: 30 }}>
+                                        <Pressable onPress={() => setOpen(false)} style={{...styles.save, backgroundColor: 'white'}}>
+                                            <Text style={{ color: 'black' }}>Back</Text>
+                                        </Pressable>
+                                        <Pressable onPress={handleSave} style={styles.save}>
+                                            <Text style={{ color: 'white' }}>Save</Text>
+                                        </Pressable>
+                                    </View>
                                 </View>
                             </View>
                         </Modal>
                     }
                 </View>
             </View>
-            <Pressable onPress={() => navigation.navigate('Batch Info', { batchname })} style={styles.backButton}>
+            {!open && <Pressable onPress={() => navigation.navigate('Batch Info', { batchname })} style={styles.backButton}>
                 <Text style={{ color: 'black' }}>Back to List</Text>
-            </Pressable>
+            </Pressable>}
         </View>
     )
 }

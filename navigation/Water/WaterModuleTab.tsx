@@ -29,9 +29,9 @@ const WaterModuleStack = () => {
 
 const getRouteName = (route: RouteProp<ParamListBase, "Home">): BottomTabNavigationOptions => {
   const routeName = getFocusedRouteNameFromRoute(route)
-  console.log("Current Route:", routeName)
+  // console.log("Current Route:", routeName)
 
-  if (routeName?.includes("Download Batch")) {
+  if (routeName?.includes("Download Batch") || routeName?.includes("Upload Batch")) {
     return {
       tabBarStyle: {
         display: "none"

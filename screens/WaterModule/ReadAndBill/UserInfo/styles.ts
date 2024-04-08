@@ -60,7 +60,7 @@ export const styles1 = StyleSheet.create({
     },
     modal: {
         backgroundColor: 'white',
-        height: 200,
+        height: 250,
         padding: 20,
         borderRadius: 20,
         justifyContent: 'space-around'
@@ -97,6 +97,13 @@ export const styles1 = StyleSheet.create({
         paddingHorizontal: 15,
         fontWeight: 'bold',
         fontSize: 30
+    },
+    decimalBox: {
+        borderWidth: 1,
+        padding: 10,
+        paddingHorizontal: 15,
+        fontWeight: 'bold',
+        fontSize: 15
     }
 })
 
@@ -167,15 +174,16 @@ export const styles2 = StyleSheet.create({
     },
     modal: {
         backgroundColor: 'white',
-        height: 200,
+        height: 250,
         padding: 20,
         borderRadius: 20,
-        justifyContent: 'space-around'
+        justifyContent: 'space-around',
+        gap: 20
     },
     save: {
         backgroundColor: "green",
         padding: 10,
-        width: 150,
+        width: 100,
         alignSelf: 'center',
         alignItems: 'center',
         borderRadius: 10,
@@ -204,5 +212,12 @@ export const styles2 = StyleSheet.create({
         paddingHorizontal: 15,
         fontWeight: 'bold',
         fontSize: 30
+    },
+    decimalBox: {
+        borderWidth: 1,
+        padding: 5,
+        paddingHorizontal: 10,
+        fontWeight: 'bold',
+        fontSize: 15
     }
 })

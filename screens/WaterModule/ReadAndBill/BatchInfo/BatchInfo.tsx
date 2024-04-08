@@ -104,6 +104,8 @@ const BatchInfo = ({ navigation, route }) => {
         navigation.navigate("Map", { batchname, coordinate })
     }
 
+    // onPress={() =>seeLoc({longitude: 123.91016, latitude: 10.32234})}
+
 
     return (
         <View style={{ flex: 1, backgroundColor: 'white' }}>
@@ -128,7 +130,7 @@ const BatchInfo = ({ navigation, route }) => {
                                                             <Ionicons name="location-sharp" size={50} color="red" /> :
                                                             <Ionicons name="location-outline" size={50} color="black" />
                                                         }
-                                                        <Pressable onPress={() =>seeLoc({longitude: 123.91016, latitude: 10.32234})} style={{backgroundColor: 'white', padding: 3, paddingHorizontal: 10, borderRadius: 5}}>
+                                                        <Pressable style={{backgroundColor: 'white', padding: 3, paddingHorizontal: 10, borderRadius: 5}}>
                                                             <Text>View</Text>
                                                         </Pressable>
                                                     </View>
