@@ -20,6 +20,7 @@ const imageUrl = imageAsset.uri;
 import { Dimensions } from 'react-native';
 
 const { height } = Dimensions.get('window');
+const db = SQLITE.openDatabase('example.db');
 
 const UserInfo = ({ navigation, route }) => {
     const [open, setOpen] = useState(false)
@@ -40,7 +41,9 @@ const UserInfo = ({ navigation, route }) => {
         amount: null,
         classification: null,
         penalty: null,
-        discount: null
+        discount: null,
+        acctgroup: null,
+        pageNum: null
     })
     const [headers, setHeaders] = useState({
         header1: "",
@@ -52,7 +55,6 @@ const UserInfo = ({ navigation, route }) => {
 
     const inputRefs = useRef([]);
 
-    const db = SQLITE.openDatabase('example.db');
     // const hdb = SQLITE.openDatabase('headers.db');
 
     const isFocused = useIsFocused()
@@ -66,57 +68,61 @@ const UserInfo = ({ navigation, route }) => {
         styles = styles2
     }
 
+    console.log(user.id)
+
     useEffect(() => {
-        db.transaction(
-            tx => {
-                tx.executeSql(`SELECT * FROM ${batchname} WHERE acctno = ?`, [userAccNo],
-                    (txObj, resultSet) => {
-                        setUser(resultSet.rows._array[0]);
-                        const numberString = resultSet.rows._array[0].capacity.toString().match(/0/g) || [];
-                        const newArr = []
-                        numberString.map(() => {
-                            newArr.push('0')
-                        });
+        if (isFocused) {
+            db.transaction(
+                tx => {
+                    tx.executeSql(`SELECT * FROM ${batchname} WHERE acctno = ?`, [userAccNo],
+                        (txObj, resultSet) => {
+                            setUser(resultSet.rows._array[0]);
+                            const numberString = resultSet.rows._array[0].capacity.toString().match(/0/g) || [];
+                            const newArr = []
+                            numberString.map(() => {
+                                newArr.push('0')
+                            });
 
-                        if (user.reading !== null) {
-                            const val = user.reading.toString()
-                            let arrIndex = newArr.length - 1
-                            for (let i = val.length - 1; i >= 0; i--) {
-                                newArr[arrIndex] = val[i];
-                                arrIndex = arrIndex - 1
+                            if (user.reading !== null) {
+                                const val = user.reading.toString()
+                                let arrIndex = newArr.length - 1
+                                for (let i = val.length - 1; i >= 0; i--) {
+                                    newArr[arrIndex] = val[i];
+                                    arrIndex = arrIndex - 1
+                                }
+                                setNumberValue(newArr)
                             }
-                            setNumberValue(newArr)
                         }
+                    );
+                }
+            );
+
+            const retrieveData = async () => {
+                try {
+                    const storedString = await AsyncStorage.getItem('header');
+                    if (storedString !== null) {
+                        const storedObject = await JSON.parse(storedString);
+                        setHeaders(storedObject)
                     }
-                );
-            }
-        );
-
-        const retrieveData = async () => {
-            try {
-                const storedString = await AsyncStorage.getItem('header');
-                if (storedString !== null) {
-                    const storedObject = JSON.parse(storedString);
-                    setHeaders(storedObject)
+                } catch (error) {
+                    console.error('Error retrieving object:', error);
                 }
-            } catch (error) {
-                console.error('Error retrieving object:', error);
-            }
-        };
+            };
 
-        const retrieveFormula = async () => {
-            try {
-                const storedString = await AsyncStorage.getItem('formula');
-                if (storedString !== null) {
-                    setFormula(storedString)
+            const retrieveFormula = async () => {
+                try {
+                    const storedString = await AsyncStorage.getItem('formula');
+                    if (storedString !== null) {
+                        setFormula(storedString)
+                    }
+                } catch (error) {
+                    console.error('Error retrieving object:', error);
                 }
-            } catch (error) {
-                console.error('Error retrieving object:', error);
-            }
-        };
+            };
 
-        retrieveFormula();
-        retrieveData();
+            retrieveFormula();
+            retrieveData();
+        }
 
     }, [open, isFocused]);
 
@@ -145,27 +151,30 @@ const UserInfo = ({ navigation, route }) => {
 
     const handleSave = async () => {
         try {
-            const newRead = Number(numberValue.join(''));
-        const newVol = newRead - user.prevreading;
-        const result = await eval(formula.replace(/vol/g, newVol.toString()));
+            const newArr = numberValue.map((item) => item === "" ? item = "0" : item)
+            const newRead = Number(newArr.join(''));
+            const newVol = newRead - user.prevreading;
+            const newFormula = await formula + `({acctgroup: '${user.acctgroup}', volume: ${newVol}})`
+            // const result = await eval(formula.replace(/vol/g, newVol.toString()));
+            const result = await eval(newFormula)
 
-        db.transaction(
-            tx => {
-                tx.executeSql(
-                    `UPDATE ${batchname} SET reading = ?, volume = ?, amount = ? WHERE acctno = ?`,
-                    [newRead, newVol, result, user.acctno],
-                    (txObj, resultSet) => {
-                        console.log('Updated reading, volume, and amount');
-                    },
-                    (txObj, error) => {
-                        console.error('Error updating reading, volume, and amount:', error);
-                        return false
-                    }
-                );
-            }   
-        );
+            db.transaction(
+                 tx => {
+                    tx.executeSql(
+                        `UPDATE ${batchname} SET reading = ?, volume = ?, amount = ? WHERE acctno = ?`,
+                        [newRead, newVol, result, user.acctno],
+                        (txObj, resultSet) => {
+                            console.log('Updated reading, volume, and amount');
+                        },
+                        (txObj, error) => {
+                            console.error('Error updating reading, volume, and amount:', error);
+                            return false
+                        }
+                    );
+                }
+            );
         } catch (e) {
-            console.log("error:",e)
+            console.log("error:", e)
         } finally {
             setOpen(false)
         }

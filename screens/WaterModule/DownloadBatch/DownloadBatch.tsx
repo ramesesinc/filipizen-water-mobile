@@ -1,13 +1,15 @@
-import { View, Text, Pressable, TextInput, ActivityIndicator} from 'react-native'
+import { View, Text, Pressable, TextInput, ActivityIndicator, AppState } from 'react-native'
 
 import { styles } from './styles'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import WaterHeader from '../../../components/Water/WaterHeader'
 import * as Progress from 'react-native-progress'
+import { useIsFocused, useNavigationState } from '@react-navigation/native';
 
 import * as SQLITE from 'expo-sqlite'
 import React from 'react'
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import { UserType } from '../Others/types'
 
 const DownloadBatch = ({ navigation }) => {
   const [batch, setBatch] = useState('')
@@ -20,122 +22,262 @@ const DownloadBatch = ({ navigation }) => {
   const [downloaded, setDownloaded] = useState(false)
 
   // Math.floor(((initCur) / data.length) * 10) / 10
-  const num = 2
+  const fetchSize = 100
+  const limit = fetchSize + 1
 
-  const download = async () => {
-    const db = SQLITE.openDatabase('example.db');
-    try {
-        const storedString = await AsyncStorage.getItem('readerInfo');
-        if (storedString !== null) {
-          const readerObj = JSON.parse(storedString);
-          const res = await fetch(`http://192.168.2.88:8040/osiris3/json/enterprise/WaterMobileReadingService.getBatchItems?batchid=${batch}`, {
-              method: "GET",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                  env: {
-                      CLIENTTYPE: "mobile",
-                      USERID: readerObj.USERID,
-                      SESSIONID: readerObj.env.SESSIONID
-                  }
-              })
+  const db = SQLITE.openDatabase('example.db');
+
+  const exited = useRef(false)
+
+  const currentBatch = useRef(null)
+  const prevStart = useRef(null)
+
+  const isFocused = useIsFocused()
+
+  console.log("focs:", isFocused)
+
+  useEffect(() => {
+    const unsubscribe = AppState.addEventListener('change', async (nextAppState) => {
+      if (nextAppState === 'background' || nextAppState === 'inactive' || isFocused === false) {
+        // If app goes to background or inactive state, navigate away from the current component
+        exited.current = true
+        console.log("current", prevStart.current, currentBatch.current)
+        if (prevStart.current !== null && currentBatch.current !== null) {
+          db.transaction(tx => {
+            tx.executeSql(
+              `DELETE FROM ${currentBatch.current} WHERE pageNum >= ?`,
+              [prevStart.current],
+              (_, resultSet) => {
+                console.log('Rows deleted successfully');
+              },
+              (_, error) => {
+                console.error('Error deleting rows:', error);
+                return false
+              }
+            );
           });
-          const data = await res.json();
-
-          if (data.status !== "ERROR") {
-              const batchTable = batch.replace(/-/g, '')
-
-              db.transaction(tx => {
-                  tx.executeSql(`CREATE TABLE IF NOT EXISTS ${batchTable} (batchid TEXT, acctno TEXT, prevreading INTEGER, reading INTEGER, volume INTEGER, rate INTEGER, acctname TEXT, capacity INTEGER, brand TEXT, meterno TEXT, billdate TEXT, duedate TEXT, discdate TEXT, amount INTEGER, classification TEXT, penalty INTEGER, discount INTEGER)`);
-              }, (err) => {
-                  console.log(err)
-              });
-
-              db.transaction(tx => {
-                  tx.executeSql(`SELECT * FROM ${batchTable}`, null,
-                      (txObj, resultSet) => {
-                          if (resultSet.rows._array.length !== data.length) {
-                              setPreDownloading(false)
-                              setDownloading(true)
-                              // setFileNum(data.length)
-                              db.transaction(tx => {
-                                  let initCur = 0;
-                                  let x = resultSet.rows._array.length;
-                                  const newData = data.slice(x);
-                                  let newNum = 0;
-
-                                  if (newData.length > num) {
-                                    newNum = num
-                                  } else {
-                                    newNum = newData.length
-                                  }
-
-                                  setFileNum(newNum)
-                                  for (let i = 0; i < newNum; i++) {
-                                      tx.executeSql(`INSERT INTO ${batchTable} (batchid, acctno, prevreading, reading, volume, rate, acctname, capacity, brand, meterno, billdate, duedate, discdate, amount, classification, penalty, discount) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
-                                          [newData[i].batchid, newData[i].acctno, newData[i].prevreading, newData[i].reading, newData[i].volume, newData[i].rate, newData[i].acctname, newData[i].meter.capacity, newData[i].meter.brand, newData[i].meterid, newData[i].billdate, newData[i].duedate, newData[i].discdate, newData[i].amount, newData[i].classification.name, newData[i].penalty, newData[i].discount],
-                                          () => {
-                                            setTimeout(() => {
-                                              initCur = initCur + 1
-                                              setCurr(initCur)
-                                              setPercent((initCur) / newNum);
-                                            }, 1500 * i)
-                                          }
-                                      )
-                                  }
-
-                                  // data.forEach((user, index) => {
-                                  //     tx.executeSql(`INSERT INTO ${batchTable} (batchid, acctno, prevreading, reading, volume, rate, acctname, capacity, brand, meterno, billdate, duedate, discdate) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`,
-                                  //         [user.batchid, user.acctno, user.prevreading, user.reading, user.volume, user.rate, user.acctname, user.meter.capacity, user.meter.brand, user.meterid, user.billdate, user.duedate, user.discdate],
-                                  //         () => {
-                                  //           setTimeout(() => {
-                                  //             initCur = initCur + 1
-                                  //             setCurr(initCur)
-                                  //             setPercent((initCur) / data.length);
-                                  //           }, 1500 * index)
-                                              
-                                  //         }
-                                  //     )
-                                  // })
-                              }, (err) => {
-                                  setPreDownloading(false)
-                                  setDownloading(false);
-                                  setError('Data not saved in device')
-                                  console.log(err);
-                              }, () => {
-                                  setTimeout(() => {
-                                    setPercent(0)
-                                    setPreDownloading(false)
-                                      setDownloaded(true)
-                                      setBatch('')
-                                      setError('')
-                                  }, (1500 * data.length) - 1000)
-                                  console.log(`${batch} has been downloaded`)
-                                  db.closeAsync();
-                              })
-                          } else if (resultSet.rows.length > 0) {
-                              setError('All of the accounts of this batch is already downloaded')
-                          }
-                      }
-                  )
-              })
-          } else {
-              setError('Input a valid Batch')
-          }
+          db.transaction(tx => {
+            tx.executeSql(
+              `SELECT * FROM ${currentBatch.current}`, null,
+              (txt, resultSet) => {
+                console.log("total", resultSet.rows._array.length)
+                const total = resultSet.rows._array.length
+                if (total === 0) {
+                  db.transaction(tx => {
+                    tx.executeSql(`DROP TABLE ${currentBatch.current}`, null, (txObj, resultSet) => {
+                      AsyncStorage.setItem(`${currentBatch.current}Start`, JSON.stringify(0));
+                      console.log(`${currentBatch.current} now deleted`);
+                    },
+                    (_,e) => {
+                      console.log("table not deleted", e)
+                      return false
+                    }
+                    );
+                  })
+                }
+              }
+            )
+          })
+        }
+        console.log(exited.current)
+        navigation.navigate("Water Home"); // Replace "Water Home" with the name of the screen you want to navigate to
       }
-        
+    });
+
+    return () => {
+      console.log("closing")
+      unsubscribe.remove(); // Unsubscribe from AppState changes when the component unmounts
+    };
+  }, []);
+
+
+  const downloadBatch = async () => {
+    // navigation.navigate("Downloading", {batch})
+    // let start = 0;
+    const batchTable = batch.replace(/-/g, '')
+    currentBatch.current = batchTable
+
+    const checkStartExists = async (key) => {
+      try {
+        const value = await AsyncStorage.getItem(key);
+        // If the value is not null, the variable exists
+        if (value !== null) {
+          // console.log(`Variable ${key} exists with value:`, value);
+          const toStart = Number(value) + 1
+          return toStart;
+        } else {
+          return 0;
+        }
+      } catch (error) {
+        console.error('Error checking variable existence:', error);
+        return 0;
+      }
+    };
+
+    let start: any = await checkStartExists(`${batchTable}Start`);
+    prevStart.current = start
+    try {
+      console.log("start is:", start)
+
+      const res = await fetch(`http://192.168.2.11:8040/osiris3/json/enterprise/WaterMobileReadingService.getBatchItems?batchid=${batch}&start=${start}&limit=${limit}`);
+      // const res = await fetch(`http://192.168.2.88:8040/osiris3/json/enterprise/WaterMobileReadingService.getBatchItems?batchid=${batch}`);
+      const dataRes = await res.json();
+
+      if (dataRes.msg) {
+        setError(dataRes.msg)
+      } else {
+        db.transaction(tx => {
+          tx.executeSql(`
+            CREATE TABLE IF NOT EXISTS ${batchTable} (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              batchid TEXT,
+              acctno TEXT,
+              prevreading INTEGER,
+              reading INTEGER,
+              volume INTEGER,
+              rate INTEGER,
+              acctname TEXT,
+              capacity INTEGER,
+              brand TEXT,
+              meterno TEXT,
+              billdate TEXT,
+              duedate TEXT,
+              discdate TEXT,
+              amount INTEGER,
+              classification TEXT,
+              penalty INTEGER,
+              discount INTEGER,
+              acctgroup TEXT,
+              pageNum INTEGER
+            )
+          `);
+        }, (err) => {
+          console.log(err)
+        });
+        const newData = await dataRes.map((e : any, i: any) => ({
+          ...e,
+          "pageNum": i + start
+        }))
+
+        const checkVariableExists = async (key) => {
+          try {
+            const value = await AsyncStorage.getItem(key);
+            // If the value is not null, the variable exists
+            if (value !== null) {
+              // console.log(`Variable ${key} exists with value:`, value);
+              return Number(value);
+            } else {
+              // console.log(`Variable ${key} does not exist`);
+              AsyncStorage.setItem(batchTable, JSON.stringify(dataRes.length));
+              return 0;
+            }
+          } catch (error) {
+            console.error('Error checking variable existence:', error);
+            return false;
+          }
+        };
+  
+        let lastRec = await checkVariableExists(batchTable);
+        if (lastRec === limit || lastRec === 0) {
+          let data;
+  
+          newData.length === limit ? data = newData.slice(0, newData.length - 1) : data = newData;
+  
+          setPreDownloading(false)
+          setDownloading(true)
+  
+          let initCur = 0;
+          let newNum = data.length;
+  
+          setFileNum(newNum)
+  
+          for (let i = 0; i < newNum; i++) {
+            await new Promise((res) => setTimeout(res, 50))
+            if (exited.current) {
+              // db.transaction(tx => {
+              //   tx.executeSql(
+              //     `DELETE FROM ${batchTable} WHERE pageNum >= ?`,
+              //     [start],
+              //     (_, resultSet) => {
+              //       console.log('Rows deleted successfully');
+              //     },
+              //     (_, error) => {
+              //       console.error('Error deleting rows:', error);
+              //       return false
+              //     }
+              //   );
+              // });
+              // db.transaction(tx => {
+              //   tx.executeSql(
+              //     `SELECT * FROM ${batchTable}`, null,
+              //     (txt, resultSet) => {
+              //       console.log("total",resultSet.rows._array.length)
+              //       const total = resultSet.rows._array.length
+              //       if (total === 0) {
+              //         db.transaction(tx => {
+              //           tx.executeSql(`DROP TABLE ${batchTable}`, null, (txObj, resultSet) => {
+              //             AsyncStorage.setItem(`${batchTable}Start`, JSON.stringify(0));
+              //             console.log(`${batchTable} now deleted`);
+              //           });
+              //         })
+              //       }
+              //     }
+              //   )
+              // })
+              break;
+            }
+            db.transaction(tx => {
+              tx.executeSql(`INSERT INTO ${batchTable} (batchid, acctno, prevreading, reading, volume, rate, acctname, capacity, brand, meterno, billdate, duedate, discdate, amount, classification, penalty, discount, acctgroup, pageNum) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+                [data[i].batchid, data[i].acctno, data[i].prevreading, data[i].reading, data[i].volume, data[i].rate, data[i].acctname, data[i].meter.capacity, data[i].meter.brand, data[i].meterid, data[i].billdate, data[i].duedate, data[i].discdate, data[i].amount, data[i].classificationid, data[i].penalty, data[i].discount, data[i].acctgroup, data[i].pageNum],
+                () => {
+                  initCur = initCur + 1
+                  setCurr(initCur)
+                  setPercent((initCur) / newNum);
+                  console.log(`data ${i + 1} saved`)
+                  if (i === newNum - 1 && exited.current !== true) {
+                    AsyncStorage.setItem(`${batchTable}Start`, JSON.stringify(data[i].pageNum));
+                    prevStart.current = data[i].pageNum;
+                    console.log(`new start saved:`, data[i].pageNum)
+                  }
+                },
+                (_, e) => {
+                  console.log("not saved:", e)
+                  return false
+                }
+              )
+            })
+          }
+  
+          console.log("done")
+          AsyncStorage.setItem(batchTable, JSON.stringify(dataRes.length));
+          setPercent(0)
+          setPreDownloading(false)
+          setDownloaded(true)
+          setBatch('')
+          setError('')
+  
+        } else {
+          setError("All accounts already downloaded")
+        }
+      }
+
+
+      // console.log(start)
+
     } catch (error) {
-        console.log(error)
-        setPreDownloading(false)
-        setDownloading(false)
-        setError('Server is Offline')
-    } 
+      console.log(error)
+      setPreDownloading(false)
+      setDownloading(false)
+      setError(`Error: ${error}`)
+    } finally {
 
-}
+    }
+  }
 
-const downloadAnotherBatch = () => {
-  setDownloaded(false);
-  setDownloading(false)
-}
+  const downloadAnotherBatch = () => {
+    setDownloaded(false);
+    setDownloading(false)
+  }
 
   if (downloading) {
     return (
@@ -175,97 +317,23 @@ const downloadAnotherBatch = () => {
       <WaterHeader navigation={navigation} backBut='Water Home' />
       <View style={styles.container}>
         {predownloading ?
-        <ActivityIndicator style={{flex: 1}} size={100} color="#00669B" /> :
-        <View style={styles.infoContainer}>
-          <Text style={styles.menuText}>Download Batch</Text>
-          <TextInput placeholder='Enter Batch Number' style={styles.textInput} value={batch} onChangeText={(inputText) => setBatch(inputText)} />
-          <Text style={{ color: 'red', textAlign: 'center' }}>{error}</Text>
-          <Pressable style={styles.downloadButton} onPress={download}>
-            <Text style={{ color: 'white' }}>Download</Text>
-          </Pressable>
-          <Pressable onPress={() => navigation.navigate('Water Home')} style={styles.backButton}>
-            <Text style={{ color: 'black' }}>Back</Text>
-          </Pressable>
-        </View>
-      }
-  
+          <ActivityIndicator style={{ flex: 1 }} size={100} color="#00669B" /> :
+          <View style={styles.infoContainer}>
+            <Text style={styles.menuText}>Download Batch</Text>
+            <TextInput placeholder='Enter Batch Number' style={styles.textInput} value={batch} onChangeText={(inputText) => setBatch(inputText)} />
+            <Text style={{ color: 'red', textAlign: 'center' }}>{error}</Text>
+            <Pressable style={styles.downloadButton} onPress={downloadBatch}>
+              <Text style={{ color: 'white' }}>Download</Text>
+            </Pressable>
+            <Pressable onPress={() => navigation.navigate('Water Home')} style={styles.backButton}>
+              <Text style={{ color: 'black' }}>Back</Text>
+            </Pressable>
+          </View>
+        }
+
       </View>
     </View>
   )
 }
 
 export default DownloadBatch
-
-// const downloadBatch = async (batchTable) => {
-//   try {
-//     setDownloading(true)
-//     const res = await fetch(`http://192.168.2.207:8040/osiris3/json/enterprise/WaterMobileReadingService.getBatchItems?batchid=${batch}`);
-//     const data = await res.json();
-
-//     setFileNum(data.length)
-//     db.transaction(tx => {
-//       let initCur = 0
-//       data.forEach((user) => {
-//         tx.executeSql(`INSERT INTO ${batchTable} (batchid, acctno, prevreading, reading, volume, rate, acctname, capacity) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-//           [user.batchid, user.acctno, user.prevreading, user.reading, user.volume, user.rate, user.acctname, user.meter.capacity],
-//           () => {
-//             initCur = initCur + 1
-//             setCurr(initCur)
-//             setPercent(Math.floor(((initCur) / data.length) * 10) / 10);
-//           }
-//         )
-//       })
-//     }, (err) => {
-//       console.log(err);
-//     }, () => {
-//       setTimeout(() => {
-//         setDownloaded(true)
-//         setBatch('')
-//         setError('')
-//       }, 1000)
-//       console.log(`${batch} has been downloaded`)
-//     })
-
-
-//   } catch (error) {
-//     setDownloading(false)
-//     console.error(error)
-//   }
-// }
-
-// const download = async () => {
-//   try {
-//     const res = await fetch(`http://192.168.2.207:8040/osiris3/json/enterprise/WaterMobileReadingService.getBatchItems?batchid=${batch}`);
-//     const data = await res.json();
-
-//     console.log(data.status === "ERROR")
-
-//     if (data.status !== "ERROR") {
-//       const batchTable = batch.replace(/-/g, '')
-
-//       db.transaction(tx => {
-//         tx.executeSql(`CREATE TABLE IF NOT EXISTS ${batchTable} (batchid TEXT, acctno TEXT, prevreading INTEGER, reading INTEGER, volume INTEGER, rate INTEGER, acctname TEXT, capacity INTEGER)`);
-//       }, (err) => {
-//         console.log(err)
-//       });
-
-//       db.transaction(tx => {
-//         tx.executeSql(`SELECT * FROM ${batchTable}`, null,
-//           (txObj, resultSet) => {
-//             if (resultSet.rows.length < 1) {
-//               downloadBatch(batchTable)
-//             } else if (resultSet.rows.length > 0) {
-//               setError('Batch is already downloaded')
-//             }
-//           }
-//         )
-//       })
-//     } else {
-//       setError('Input a valid Batch')
-//     }
-//   } catch (error) {
-//     console.log(error)
-//     setError('Server is Offline')
-//   }
-  
-// }

@@ -14,16 +14,20 @@ const BatchInfo = ({ navigation, route }) => {
     const [dataInfo, setDataInfo] = useState<UserType[]>([])
     const [currentPage, setCurrentPage] = useState(0);
 
-    const pageSize = 4;
+    const pageSize = 20;
 
     const [search, setSearch] = useState('')
     const [searchRes, setSearchRes] = useState([])
     const [error, setError] = useState(false)
 
-    const db = SQLITE.openDatabase('example.db');
     const isFocused = useIsFocused()
 
     const { batchname } = route.params;
+
+    const db = SQLITE.openDatabase('example.db');
+
+
+    const inputRef = useRef(null)
 
     useEffect(() => {
         if (isFocused) {
@@ -35,7 +39,7 @@ const BatchInfo = ({ navigation, route }) => {
                 )
             })
         }
-    }, [isFocused])
+    }, [isFocused, batchname])
 
     useEffect(() => {
         let timeoutId;
@@ -45,7 +49,7 @@ const BatchInfo = ({ navigation, route }) => {
                 db.transaction(tx => {
                     tx.executeSql(
                         `SELECT * FROM ${batchname} WHERE acctname LIKE ? OR meterno LIKE ?`,
-                        [`%${search}%`,`%${search}%`],
+                        [`%${search}%`, `%${search}%`],
                         (txObj, resultSet) => {
                             setSearchRes([]);
                             if (resultSet.rows._array.length > 0) {
@@ -91,7 +95,13 @@ const BatchInfo = ({ navigation, route }) => {
     }
 
     const clearInput = () => {
+        inputRef.current.blur();
         setSearch("")
+    }
+
+    const seeLoc = (coordinate) => {
+        console.log(coordinate)
+        navigation.navigate("Map", { batchname, coordinate })
     }
 
 
@@ -102,7 +112,7 @@ const BatchInfo = ({ navigation, route }) => {
                 <KeyboardAvoidingView style={{ flex: 1 }} behavior='height' keyboardVerticalOffset={0}>
                     <View style={{ flex: 1 }}>
                         <View style={styles.searchContainer}>
-                            <TextInput placeholder='Account Search' value={search} onChangeText={(input) => setSearch(input)} style={{ marginLeft: 10, flex: 1 }} />
+                            <TextInput ref={inputRef} placeholder='Account Search' value={search} onChangeText={(input) => setSearch(input)} style={{ marginLeft: 10, flex: 1 }} />
                             <Feather onPress={clearInput} name="x" size={30} color="rgba(0, 0, 0, 0.5)" style={search !== "" ? { marginRight: 10 } : { opacity: 0 }} />
                         </View>
                         {
@@ -111,19 +121,21 @@ const BatchInfo = ({ navigation, route }) => {
                                     <FlatList
                                         data={renderUsers()}
                                         renderItem={(data) => (
-                                            <Pressable onPress={() => handlePress(data.item.acctno)}>
-                                                <View style={data.item.reading === null ? styles.accountContainer : {...styles.accountContainer, backgroundColor: 'rgba(0, 0, 0, 0.2)' }}>
-                                                    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                                            <View>
+                                                <View style={data.item.reading === null ? styles.accountContainer : { ...styles.accountContainer, backgroundColor: 'rgba(0, 0, 0, 0.2)' }}>
+                                                    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', gap: 5 }}>
                                                         {data.item.acctno === '1' ?
                                                             <Ionicons name="location-sharp" size={50} color="red" /> :
                                                             <Ionicons name="location-outline" size={50} color="black" />
                                                         }
-                                                        <Text>1234</Text>
+                                                        <Pressable onPress={() =>seeLoc({longitude: 123.91016, latitude: 10.32234})} style={{backgroundColor: 'white', padding: 3, paddingHorizontal: 10, borderRadius: 5}}>
+                                                            <Text>View</Text>
+                                                        </Pressable>
                                                     </View>
-                                                    <View style={{ flex: 3, padding: 5 }}>
+                                                    <Pressable onPress={() => handlePress(data.item.acctno)} style={{ flex: 3, padding: 5 }}>
                                                         <View style={styles.info}>
                                                             <Text style={{ fontWeight: 'bold' }}>NAME: </Text>
-                                                            <Text style={data.item.acctname.length > 20 ? {fontSize: 12} : { fontSize: 15 }}>{data.item.acctname}</Text>
+                                                            <Text style={{ fontSize: 12 }}>{data.item.acctname}</Text>
                                                         </View>
                                                         <View style={styles.info}>
                                                             <Text style={{ fontWeight: 'bold' }}>CLASSIFICATION: </Text>
@@ -133,9 +145,9 @@ const BatchInfo = ({ navigation, route }) => {
                                                             <Text style={{ fontWeight: 'bold' }}>CURRENT READING: </Text>
                                                             <Text>{data.item.reading}</Text>
                                                         </View>
-                                                    </View>
+                                                    </Pressable>
                                                 </View>
-                                            </Pressable>
+                                            </View>
                                         )}
                                         showsVerticalScrollIndicator={false}
                                     />
@@ -165,7 +177,7 @@ const BatchInfo = ({ navigation, route }) => {
                                         data={searchRes}
                                         renderItem={(data) => (
                                             <Pressable onPress={() => handlePress(data.item.acctno)}>
-                                                <View style={data.item.reading === null ? styles.accountContainer : {...styles.accountContainer, backgroundColor: 'rgba(0, 0, 0, 0.2)' }}>
+                                                <View style={data.item.reading === null ? styles.accountContainer : { ...styles.accountContainer, backgroundColor: 'rgba(0, 0, 0, 0.2)' }}>
                                                     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
                                                         {data.item.acctno === '1' ?
                                                             <Ionicons name="location-sharp" size={50} color="red" /> :
@@ -176,7 +188,7 @@ const BatchInfo = ({ navigation, route }) => {
                                                     <View style={{ flex: 3, padding: 5 }}>
                                                         <View style={styles.info}>
                                                             <Text style={{ fontWeight: 'bold' }}>NAME: </Text>
-                                                            <Text style={data.item.acctname.length > 20 ? {fontSize: 12} : { fontSize: 15 }}>{data.item.acctname}</Text>
+                                                            <Text style={{ fontSize: 12 }}>{data.item.acctname}</Text>
                                                         </View>
                                                         <View style={styles.info}>
                                                             <Text style={{ fontWeight: 'bold' }}>CLASSIFICATION: </Text>

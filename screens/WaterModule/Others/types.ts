@@ -1,4 +1,5 @@
 export type UserType = {
+    id? : number,
     batchid: string,
     acctno: string,
     prevreading: number,
@@ -15,5 +16,28 @@ export type UserType = {
     amount?: number,
     classification: string,
     penalty: number,
-    discount: number
+    discount: number,
+    acctgroup: string,
+    pageNum: number
+}
+
+export type DataUserType = {
+    batchid: string,
+    acctno: string,
+    prevreading: number,
+    reading: number,
+    volume: number,
+    rate: number,
+    acctname: string,
+    capacity: number,
+    brand: string,
+    meterno: string,
+    billdate: string,
+    duedate: string,
+    discdate: string,
+    amount?: number,
+    classification: string,
+    penalty: number,
+    discount: number,
+    acctgroup: string
 }

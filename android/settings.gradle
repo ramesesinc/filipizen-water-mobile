@@ -1,4 +1,4 @@
-rootProject.name = 'sampleApp'
+rootProject.name = 'Etracs Water'
 
 dependencyResolutionManagement {
   versionCatalogs {

@@ -5,14 +5,17 @@ import { StatusBar, View } from "react-native";
 import Login from "./screens/login/login";
 import WaterModuleTab from "./navigation/Water/WaterModuleTab";
 import WaterTerminalStack from "./navigation/Water/WaterTerminalStack";
+import Map from "./screens/WaterModule/ReadAndBill/Map/Map";
 
 const Stack = createStackNavigator();
 
 export default function App() {
+
   return (
-    <View style={{flex: 1, marginTop: StatusBar.currentHeight}}>
+    <View style={{flex: 1,marginTop: StatusBar.currentHeight}}>
     <NavigationContainer>
       <Stack.Navigator>
+        {/* <Stack.Screen options={{ headerShown: false }} name="Map" component={Map} /> */}
         {/* <Stack.Screen options={{ headerShown: false }} name="Terminal" component={WaterTerminalStack}/> */}
         <Stack.Screen options={{ headerShown: false }} name="Login" component={Login} />
         <Stack.Screen options={{

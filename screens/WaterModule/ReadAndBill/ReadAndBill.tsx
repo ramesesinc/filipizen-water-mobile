@@ -6,22 +6,19 @@ import WaterHeader from '../../../components/Water/WaterHeader';
 
 import * as SQLITE from 'expo-sqlite'
 
+const db = SQLITE.openDatabase('example.db');
+
 const ReadAndBill = ({ navigation }) => {
   const [list, setList] = useState([])
 
   useEffect(() => {
-    const db = SQLITE.openDatabase('example.db');
     db.transaction(tx => {
       tx.executeSql(`SELECT * FROM sqlite_master WHERE type='table'`, null!,
         (txObj, resultSet) => {
-          setList(resultSet.rows._array.filter((item) => item.name !== ("android_metadata" || "headertable")))
+          setList(resultSet.rows._array.filter((item) => item.name !== ("android_metadata" && "sqlite_sequence")))
         }
       )
     })
-    return () => {
-      db.closeAsync()
-      console.log("db closed")
-    }
   }, [])
 
   return (
@@ -36,7 +33,7 @@ const ReadAndBill = ({ navigation }) => {
 
               return (
                 <View key={index} style={styles.batchListitem}>
-                  <Text style={{ fontSize: 20 }}>{newName}</Text>
+                  <Text style={{ fontSize: 20 }}>{item.name}</Text>
                   <Pressable style={styles.view}
                     onPress={() => navigation.navigate('Batch Info', { batchname: item.name })}
                   >

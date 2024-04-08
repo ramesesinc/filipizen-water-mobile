@@ -11,10 +11,10 @@ const WaterSettings = ({ navigation }) => {
 
   const handleSync = async () => {
     try {
-      const res = await fetch("http://192.168.2.198:3007/formula");
+      const res = await fetch("http://192.168.2.11:8040/osiris3/json/enterprise/WaterConsumptionFormulaService.getFormula");
       const data = await res.json();
       if (data) {
-        await AsyncStorage.setItem('formula', data.formula);
+        await AsyncStorage.setItem('formula', data.formula.toString());
         alert("Bill formula has been synced")
       }
     } catch (e) {

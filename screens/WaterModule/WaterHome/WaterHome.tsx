@@ -41,14 +41,14 @@ const WaterHome = ({ navigation }) => {
   },[isFocused])
 
   const handleNav = (name : string) => {
-    // if (name !== "Read & Bill") {
+    if (name !== "Read & Bill") {
       navigation.navigate(name)
-    // } else if (name === "Read & Bill" && !formula) {
-    //   // alert("Please sync the bill formula in the settings first!");
-    //   Alert.alert("Can't open Read & Bill", "Please sync the bill formula in the settings first!",[], {cancelable: true, onDismiss: () => navigation.navigate("Settings")})
-    // } else {
-    //   navigation.navigate(name)
-    // }
+    } else if (name === "Read & Bill" && !formula) {
+      // alert("Please sync the bill formula in the settings first!");
+      Alert.alert("Can't open Read & Bill", "Please sync the bill formula in the settings first!",[], {cancelable: true, onDismiss: () => navigation.navigate("Settings")})
+    } else {
+      navigation.navigate(name)
+    }
   }
 
   return (

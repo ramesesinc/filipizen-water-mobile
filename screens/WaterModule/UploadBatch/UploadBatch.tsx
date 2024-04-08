@@ -97,7 +97,7 @@ const UploadBatch = ({ navigation }) => {
     db.transaction(tx => {
       tx.executeSql(`SELECT * FROM sqlite_master WHERE type='table'`, null!,
         (txObj, resultSet) => {
-          setNotDone(resultSet.rows._array.filter((item) => item.name !== "android_metadata"))
+          setNotDone(resultSet.rows._array.filter((item) => item.name !== ("android_metadata" && "sqlite_sequence")))
         }
       )
     })
