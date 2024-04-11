@@ -38,7 +38,7 @@ const DownloadBatch = ({ navigation }) => {
 
   useEffect(() => {
     const unsubscribe = AppState.addEventListener('change', async (nextAppState) => {
-      if (nextAppState === 'background' || nextAppState === 'inactive' || isFocused === false) {
+      if (nextAppState === 'background' || nextAppState === 'inactive') {
         // If app goes to background or inactive state, navigate away from the current component
         exited.current = true
         // console.log("current", prevStart.current, currentBatch.current)
@@ -148,7 +148,8 @@ const DownloadBatch = ({ navigation }) => {
               penalty INTEGER,
               discount INTEGER,
               acctgroup TEXT,
-              pageNum INTEGER
+              pageNum INTEGER,
+              note TEXT
             )
           `);
         }, (err) => {
@@ -156,7 +157,8 @@ const DownloadBatch = ({ navigation }) => {
         });
         const newData = await dataRes.map((e: any, i: any) => ({
           ...e,
-          "pageNum": i + start
+          "pageNum": i + start,
+          "note": "",
         }))
 
         const checkVariableExists = async (key) => {
@@ -227,8 +229,8 @@ const DownloadBatch = ({ navigation }) => {
               break;
             }
             db.transaction(tx => {
-              tx.executeSql(`INSERT INTO ${batchTable} (batchid, acctno, prevreading, reading, volume, rate, acctname, capacity, brand, meterno, billdate, duedate, discdate, amount, classification, penalty, discount, acctgroup, pageNum) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
-                [data[i].batchid, data[i].acctno, data[i].prevreading, data[i].reading, data[i].volume, data[i].rate, data[i].acctname, data[i].meter.capacity, data[i].meter.brand, data[i].meterid, data[i].billdate, data[i].duedate, data[i].discdate, data[i].amount, data[i].classificationid, data[i].penalty, data[i].discount, data[i].acctgroup, data[i].pageNum],
+              tx.executeSql(`INSERT INTO ${batchTable} (batchid, acctno, prevreading, reading, volume, rate, acctname, capacity, brand, meterno, billdate, duedate, discdate, amount, classification, penalty, discount, acctgroup, pageNum, note) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+                [data[i].batchid, data[i].acctno, data[i].prevreading, data[i].reading, data[i].volume, data[i].rate, data[i].acctname, data[i].meter.capacity, data[i].meter.brand, data[i].meterid, data[i].billdate, data[i].duedate, data[i].discdate, data[i].amount, data[i].classificationid, data[i].penalty, data[i].discount, data[i].acctgroup, data[i].pageNum, data[i].note],
                 () => {
                   initCur = initCur + 1
                   setCurr(initCur)
@@ -237,7 +239,7 @@ const DownloadBatch = ({ navigation }) => {
                   if (i === newNum - 1 && exited.current !== true) {
                     AsyncStorage.setItem(`${batchTable}Start`, JSON.stringify(data[i].pageNum));
                     prevStart.current = data[i].pageNum;
-                    console.log(`new start saved:`, data[i].pageNum)
+                    console.log(`new pageNum saved:`, data[i].pageNum)
                   }
                 },
                 (_, e) => {
@@ -314,8 +316,6 @@ const DownloadBatch = ({ navigation }) => {
     )
   }
 
-  const inputRef = useRef()
-
   return (
     <View style={{ flex: 1, backgroundColor: 'white' }}>
       <WaterHeader navigation={navigation} backBut='Water Home' />
@@ -325,7 +325,7 @@ const DownloadBatch = ({ navigation }) => {
           <View style={styles.infoContainer}>
             <Text style={styles.menuText}>Download Batch</Text>
             <View style={{ gap: 15 }}>
-              <TextInput placeholder='Enter Batch Number' style={styles.textInput} value={batch} onChangeText={(inputText) => setBatch(inputText)} />
+              <TextInput placeholder='Enter Batch ID' cursorColor={"black"} style={styles.textInput} value={batch} onChangeText={(inputText) => setBatch(inputText)} />
               {error && <Text style={{ color: 'red', textAlign: 'center' }}>{error}</Text>}
               <View style={{ flexDirection: 'row', gap: 10 }}>
                 <View style={{flex: 2 }}>

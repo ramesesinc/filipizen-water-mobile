@@ -21,9 +21,9 @@ const UploadBatch = ({ navigation }) => {
     navigation.setParams({ tabBarVisible: !uploading });
   }, [uploading]);
 
-  const upLoadBatchNow = (batch, index, newName) => {
+  const upLoadBatchNow = (batch, index) => {
     setUploading(true);
-    setToUpload(newName)
+    setToUpload(batch.name)
     db.transaction(tx => {
       tx.executeSql(`SELECT * FROM ${batch.name}`, null,
         async (txObj, resultSet) => {
@@ -72,7 +72,7 @@ const UploadBatch = ({ navigation }) => {
                 })
                 setUploading(false);
                 setToUpload('')
-                setErr(`Batch: ${newName} has been uploaded`);
+                setErr(`Batch: ${batch.name} has been uploaded`);
                 setTimeout(() => {
                   setErr(null)
                 }, 5000)
@@ -82,7 +82,7 @@ const UploadBatch = ({ navigation }) => {
             setUploading(false);
             setToUpload('')
             setUploadStat('Failed')
-            setErr(`${newName} was not uploaded, cannot connect to the server.`)
+            setErr(`${batch.name} was not uploaded, cannot connect to the server.`)
             console.log("Error:", error);
             setTimeout(() => {
               setErr(null)
@@ -136,13 +136,13 @@ const UploadBatch = ({ navigation }) => {
               }
               <View >
                 {notDone.map((item, index) => {
-                  const newName = `${item.name.slice(0, 2)}-${item.name.slice(2, 6)}-${item.name.slice(6)}`
+                  // const newName = `${item.name.slice(0, 2)}-${item.name.slice(2, 6)}-${item.name.slice(6)}`
 
                   return (
                     <View key={index} style={styles.pendintListitem}>
-                      <Text>{newName}</Text>
+                      <Text>{item.name}</Text>
                       <Pressable style={{ padding: 5, paddingHorizontal: 10, backgroundColor: 'green' }}
-                        onPress={() => upLoadBatchNow(item, index, newName)}
+                        onPress={() => upLoadBatchNow(item, index)}
                       >
                         <Text style={{ color: 'white' }}>Upload</Text>
                       </Pressable>
@@ -158,12 +158,12 @@ const UploadBatch = ({ navigation }) => {
             // Completed page
             <View style={{ padding: 10, paddingHorizontal: 20 }}>
               {done.map((item, index) => {
-                const newName = `${item.name.slice(0, 2)}-${item.name.slice(2, 6)}-${item.name.slice(6)}`
+                // const newName = `${item.name.slice(0, 2)}-${item.name.slice(2, 6)}-${item.name.slice(6)}`
 
                 return (
                   <View key={index} style={styles.doneBox}>
                     <AntDesign name="checksquare" size={17} color="green" />
-                    <Text style={{ fontSize: 17 }}>{newName}</Text>
+                    <Text style={{ fontSize: 17 }}>{item.name}</Text>
                   </View>
                 )
               }

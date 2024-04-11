@@ -65,6 +65,15 @@ export const styles1 = StyleSheet.create({
         borderRadius: 20,
         justifyContent: 'space-around'
     },
+    noteModal: {
+        backgroundColor: 'white',
+        height: 250,
+        width: 250,
+        padding: 20,
+        borderRadius: 20,
+        justifyContent: 'space-around',
+        gap: 20
+    },
     save: {
         backgroundColor: "green",
         padding: 10,
@@ -83,8 +92,7 @@ export const styles1 = StyleSheet.create({
         alignItems: 'center',
         borderRadius: 10,
         borderWidth: 1,
-        borderColor: 'grey',
-        marginBottom: 10
+        borderColor: 'grey'
     },
     inputContainer: {
         flexDirection: 'row',
@@ -104,6 +112,14 @@ export const styles1 = StyleSheet.create({
         paddingHorizontal: 15,
         fontWeight: 'bold',
         fontSize: 15
+    },
+    hold : {
+        backgroundColor: 'rgba(0, 0, 0, 0.1)',
+        padding: 10,
+        width: 100,
+        alignSelf: 'center',
+        alignItems: 'center',
+        borderRadius: 10,
     }
 })
 
@@ -146,7 +162,7 @@ export const styles2 = StyleSheet.create({
         alignItems: 'center'
     },
     infoGap: {
-        gap: 15
+        gap: 10
     },
     infoName: {
         fontWeight: '700',
@@ -180,6 +196,15 @@ export const styles2 = StyleSheet.create({
         justifyContent: 'space-around',
         gap: 20
     },
+    noteModal: {
+        backgroundColor: 'white',
+        height: 250,
+        width: 250,
+        padding: 20,
+        borderRadius: 20,
+        justifyContent: 'space-around',
+        gap: 20
+    },
     save: {
         backgroundColor: "green",
         padding: 10,
@@ -199,7 +224,6 @@ export const styles2 = StyleSheet.create({
         borderRadius: 10,
         borderWidth: 1,
         borderColor: 'grey',
-        marginBottom: 10
     },
     inputContainer: {
         flexDirection: 'row',
@@ -208,6 +232,7 @@ export const styles2 = StyleSheet.create({
     },
     inputBox: {
         borderWidth: 1,
+        borderColor: 'gray',
         padding: 10,
         paddingHorizontal: 15,
         fontWeight: 'bold',
@@ -215,9 +240,18 @@ export const styles2 = StyleSheet.create({
     },
     decimalBox: {
         borderWidth: 1,
+        borderColor: 'gray',
         padding: 5,
         paddingHorizontal: 10,
         fontWeight: 'bold',
         fontSize: 15
+    },
+    hold : {
+        backgroundColor: 'rgba(0, 0, 0, 0.1)',
+        padding: 10,
+        width: 100,
+        alignSelf: 'center',
+        alignItems: 'center',
+        borderRadius: 10
     }
 })

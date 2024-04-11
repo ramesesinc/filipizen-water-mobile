@@ -18,7 +18,8 @@ export type UserType = {
     penalty: number,
     discount: number,
     acctgroup: string,
-    pageNum: number
+    pageNum: number,
+    note: string
 }
 
 export type DataUserType = {

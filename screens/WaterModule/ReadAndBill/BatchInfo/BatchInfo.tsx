@@ -14,7 +14,7 @@ const BatchInfo = ({ navigation, route }) => {
     const [dataInfo, setDataInfo] = useState<UserType[]>([])
     const [currentPage, setCurrentPage] = useState(0);
 
-    const pageSize = 20;
+    const pageSize = 10;
 
     const [search, setSearch] = useState('')
     const [searchRes, setSearchRes] = useState([])
@@ -48,8 +48,8 @@ const BatchInfo = ({ navigation, route }) => {
             if (search !== "") {
                 db.transaction(tx => {
                     tx.executeSql(
-                        `SELECT * FROM ${batchname} WHERE acctname LIKE ? OR meterno LIKE ?`,
-                        [`%${search}%`, `%${search}%`],
+                        `SELECT * FROM ${batchname} WHERE acctname LIKE ? OR meterno LIKE ?  OR acctno LIKE ?`,
+                        [`%${search}%`, `%${search}%`, `%${search}%`],
                         (txObj, resultSet) => {
                             setSearchRes([]);
                             if (resultSet.rows._array.length > 0) {
@@ -130,8 +130,8 @@ const BatchInfo = ({ navigation, route }) => {
                                                             <Ionicons name="location-sharp" size={50} color="red" /> :
                                                             <Ionicons name="location-outline" size={50} color="black" />
                                                         }
-                                                        <Pressable style={{backgroundColor: 'white', padding: 3, paddingHorizontal: 10, borderRadius: 5}}>
-                                                            <Text>View</Text>
+                                                        <Pressable style={{ backgroundColor: 'white', padding: 3, paddingHorizontal: 10, borderRadius: 5 }}>
+                                                            <Text>{data.item.pageNum + 1}</Text>
                                                         </Pressable>
                                                     </View>
                                                     <Pressable onPress={() => handlePress(data.item.acctno)} style={{ flex: 3, padding: 5 }}>
@@ -180,12 +180,14 @@ const BatchInfo = ({ navigation, route }) => {
                                         renderItem={(data) => (
                                             <Pressable onPress={() => handlePress(data.item.acctno)}>
                                                 <View style={data.item.reading === null ? styles.accountContainer : { ...styles.accountContainer, backgroundColor: 'rgba(0, 0, 0, 0.2)' }}>
-                                                    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                                                    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', gap: 5 }}>
                                                         {data.item.acctno === '1' ?
                                                             <Ionicons name="location-sharp" size={50} color="red" /> :
                                                             <Ionicons name="location-outline" size={50} color="black" />
                                                         }
-                                                        <Text>1234</Text>
+                                                        <Pressable style={{ backgroundColor: 'white', padding: 3, paddingHorizontal: 10, borderRadius: 5 }}>
+                                                            <Text>{data.item.pageNum + 1}</Text>
+                                                        </Pressable>
                                                     </View>
                                                     <View style={{ flex: 3, padding: 5 }}>
                                                         <View style={styles.info}>

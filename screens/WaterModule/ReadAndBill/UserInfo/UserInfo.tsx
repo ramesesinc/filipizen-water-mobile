@@ -1,7 +1,7 @@
 import { View, Text, Pressable, Modal, ActivityIndicator, TextInput } from 'react-native'
 import React, { useEffect, useState, useRef } from 'react'
 import { styles1, styles2 } from './styles'
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, AntDesign } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import WaterHeader from '../../../../components/Water/WaterHeader'
@@ -24,6 +24,7 @@ const db = SQLITE.openDatabase('example.db');
 
 const UserInfo = ({ navigation, route }) => {
     const [open, setOpen] = useState(false)
+    const [noteOpen, setNoteOpen] = useState(false)
     const [user, setUser] = useState<UserType>({
         batchid: null,
         acctno: null,
@@ -43,7 +44,8 @@ const UserInfo = ({ navigation, route }) => {
         penalty: null,
         discount: null,
         acctgroup: null,
-        pageNum: null
+        pageNum: null,
+        note: null
     })
     const [headers, setHeaders] = useState({
         header1: "",
@@ -52,6 +54,7 @@ const UserInfo = ({ navigation, route }) => {
     })
     const [numberValue, setNumberValue] = useState([])
     const [decimalValue, setDecimalValue] = useState(["0", "0", "0", "0"]);
+    const [noteInput, setNoteInput] = useState("")
     const [formula, setFormula] = useState(null)
 
     // const hdb = SQLITE.openDatabase('headers.db');
@@ -66,6 +69,29 @@ const UserInfo = ({ navigation, route }) => {
     } else if (height > 600 && height < 1000) {
         styles = styles2
     }
+
+    const retrieveData = async () => {
+        try {
+            const storedString = await AsyncStorage.getItem('header');
+            if (storedString !== null) {
+                const storedObject = await JSON.parse(storedString);
+                setHeaders(storedObject)
+            }
+        } catch (error) {
+            console.error('Error retrieving object:', error);
+        }
+    };
+
+    const retrieveFormula = async () => {
+        try {
+            const storedString = await AsyncStorage.getItem('formula');
+            if (storedString !== null) {
+                setFormula(storedString)
+            }
+        } catch (error) {
+            console.error('Error retrieving object:', error);
+        }
+    };
 
     useEffect(() => {
         if (isFocused) {
@@ -94,34 +120,11 @@ const UserInfo = ({ navigation, route }) => {
                 }
             );
 
-            const retrieveData = async () => {
-                try {
-                    const storedString = await AsyncStorage.getItem('header');
-                    if (storedString !== null) {
-                        const storedObject = await JSON.parse(storedString);
-                        setHeaders(storedObject)
-                    }
-                } catch (error) {
-                    console.error('Error retrieving object:', error);
-                }
-            };
-
-            const retrieveFormula = async () => {
-                try {
-                    const storedString = await AsyncStorage.getItem('formula');
-                    if (storedString !== null) {
-                        setFormula(storedString)
-                    }
-                } catch (error) {
-                    console.error('Error retrieving object:', error);
-                }
-            };
-
             retrieveFormula();
             retrieveData();
         }
 
-    }, [open, isFocused]);
+    }, [open, isFocused, noteOpen]);
 
     const printReceipt = async () => {
         try {
@@ -191,12 +194,77 @@ const UserInfo = ({ navigation, route }) => {
         }
     }
 
+    const saveNote = () => {
+        db.transaction(
+            tx => {
+                tx.executeSql(
+                    `UPDATE ${batchname} SET note = ? WHERE acctno = ?`,
+                    [noteInput, user.acctno],
+                    (txObj, resultSet) => {
+                        console.log('Updated note');
+                    },
+                    (txObj, error) => {
+                        console.error('Error updating note:', error);
+                        return false
+                    }
+                );
+            }
+        );
+        setNoteInput("")
+        setNoteOpen(false)
+    }
+
+    const unHold = () => {
+        db.transaction(
+            tx => {
+                tx.executeSql(
+                    `UPDATE ${batchname} SET note = ? WHERE acctno = ?`,
+                    ["", user.acctno],
+                    (txObj, resultSet) => {
+                        console.log('Updated note');
+                    },
+                    (txObj, error) => {
+                        console.error('Error updating note:', error);
+                        return false
+                    }
+                );
+            }
+        );
+        db.transaction(
+            tx => {
+                tx.executeSql(`SELECT * FROM ${batchname} WHERE acctno = ?`, [userAccNo],
+                    (txObj, resultSet) => {
+                        setUser(resultSet.rows._array[0]);
+                        const numberString = resultSet.rows._array[0].capacity.toString().match(/0/g) || [];
+                        const newArr = []
+                        numberString.map(() => {
+                            newArr.push('0')
+                        });
+
+                        if (user.reading !== null) {
+                            const val = Math.floor(user.reading).toString()
+                            let arrIndex = newArr.length - 1
+                            for (let i = val.length - 1; i >= 0; i--) {
+                                newArr[arrIndex] = val[i];
+                                arrIndex = arrIndex - 1
+                            }
+                            setNumberValue(newArr)
+                        }
+                    }
+                );
+            }
+        );
+
+        retrieveFormula();
+        retrieveData();
+    }
+
     return (
         <View style={{ flex: 1, backgroundColor: 'white' }}>
             <WaterHeader navigation={navigation} backBut="Batch Info" data={{ batchname }} />
             <View style={styles.container}>
-                <View style={{ flex: 1, marginBottom: 60, marginTop: 20 }}>
-                    <View style={{ flex: 1, flexDirection: 'row', marginBottom: 30 }}>
+                <View style={{ flex: 1, marginBottom: 10, marginTop: 20 }}>
+                    <View style={{ flex: 1, flexDirection: 'row', marginBottom: 10 }}>
                         <View style={{ flex: 2, alignItems: 'center', justifyContent: 'space-between' }}>
                             <View style={{ alignItems: 'center' }}>
                                 <Pressable onPress={() => console.log(user)}>
@@ -205,7 +273,7 @@ const UserInfo = ({ navigation, route }) => {
                                         <Ionicons name="location-outline" size={50} color="black" />
                                     }
                                 </Pressable>
-                                <Text style={{ fontWeight: 'bold' }}>1234</Text>
+                                <Text style={{ fontWeight: 'bold' }}>{user.pageNum + 1}</Text>
                             </View>
                             {
                                 user.reading === null ?
@@ -213,12 +281,26 @@ const UserInfo = ({ navigation, route }) => {
                                         <Text style={{ color: 'white', fontSize: 17 }}>Read</Text>
                                     </Pressable> :
                                     <View>
-                                        <Pressable onPress={() => setOpen(true)} style={styles.reRead}>
-                                            <Text style={{ color: 'black', fontSize: 17 }}>Re-read</Text>
-                                        </Pressable>
-                                        <Pressable onPress={printReceipt} style={styles.print}>
-                                            <Text style={{ color: 'white', fontSize: 17 }}>Print</Text>
-                                        </Pressable>
+                                        {!user.note ? <View style={{justifyContent:'space-between', gap: 10}}>
+                                            <Pressable onPress={() => setNoteOpen(true)} style={styles.hold}>
+                                                <Text style={{ color: 'black', fontSize: 17 }}>Hold</Text>
+                                            </Pressable>
+                                            <Pressable onPress={() => setOpen(true)} style={styles.reRead}>
+                                                <Text style={{ color: 'black', fontSize: 17 }}>Re-read</Text>
+                                            </Pressable>
+                                            <Pressable onPress={printReceipt} style={styles.print}>
+                                                <Text style={{ color: 'white', fontSize: 17 }}>Print</Text>
+                                            </Pressable>
+                                        </View> :
+                                            <View style={{justifyContent:'space-between', gap: 10}}>
+                                                <Pressable onPress={unHold} style={styles.hold}>
+                                                    <Text style={{ color: 'black', fontSize: 17 }}>Un-hold</Text>
+                                                </Pressable>
+                                                <Pressable onPress={() => setOpen(true)} style={styles.reRead}>
+                                                    <Text style={{ color: 'black', fontSize: 17 }}>Re-read</Text>
+                                                </Pressable>
+                                            </View>
+                                        }
                                     </View>
                             }
                         </View>
@@ -315,7 +397,7 @@ const UserInfo = ({ navigation, route }) => {
                                         ))}
                                     </View>
                                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, marginTop: 30 }}>
-                                        <Pressable onPress={() => setOpen(false)} style={{...styles.save, backgroundColor: 'white'}}>
+                                        <Pressable onPress={() => setOpen(false)} style={{ ...styles.save, backgroundColor: 'white' }}>
                                             <Text style={{ color: 'black' }}>Back</Text>
                                         </Pressable>
                                         <Pressable onPress={handleSave} style={styles.save}>
@@ -326,9 +408,46 @@ const UserInfo = ({ navigation, route }) => {
                             </View>
                         </Modal>
                     }
+                    {noteOpen &&
+                        <Modal transparent={true} onRequestClose={() => setOpen(false)}>
+                            <View style={styles.modalContainer}>
+                                <View style={styles.noteModal}>
+                                    <View style={{ gap: 10 }}>
+                                        <Text style={{ alignSelf: 'center' }}>Hold the Account</Text>
+                                        <Text>Put a note:</Text>
+                                        <TextInput
+                                            style={{ borderWidth: 1, height: 100, textAlignVertical: 'top', padding: 5 }}
+                                            value={noteInput}
+                                            multiline={true}
+                                            numberOfLines={10}
+                                            onChangeText={(inputText) => setNoteInput(inputText)}
+                                        />
+
+                                    </View>
+
+                                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, marginTop: 10 }}>
+                                        <Pressable onPress={() => setNoteOpen(false)} style={{ ...styles.save, backgroundColor: 'white' }}>
+                                            <Text style={{ color: 'black' }}>Back</Text>
+                                        </Pressable>
+                                        <Pressable onPress={saveNote} style={styles.save}>
+                                            <Text style={{ color: 'white' }}>Save</Text>
+                                        </Pressable>
+                                    </View>
+                                </View>
+                            </View>
+                        </Modal>
+                    }
+                </View>
+                <View style={{ gap: 10, height: 100, paddingHorizontal: 20, alignItems: 'center' }}>
+                    {user.note &&
+                        <View>
+                            <Text style={{ fontWeight: 'bold', alignSelf: 'center' }}>Note <AntDesign name="exclamationcircleo" size={14} color="black" /></Text>
+                            <Text style={{ flex: 1, marginTop: 10 }}>{user.note ? user.note : '"There is no note on this account"'}</Text>
+                        </View>
+                    }
                 </View>
             </View>
-            {!open && <Pressable onPress={() => navigation.navigate('Batch Info', { batchname })} style={styles.backButton}>
+            {(!open && !noteOpen) && <Pressable onPress={() => navigation.navigate('Batch Info', { batchname })} style={styles.backButton}>
                 <Text style={{ color: 'black' }}>Back to List</Text>
             </Pressable>}
         </View>
