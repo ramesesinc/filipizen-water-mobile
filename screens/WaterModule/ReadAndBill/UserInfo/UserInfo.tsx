@@ -167,7 +167,13 @@ const UserInfo = ({ navigation, route }) => {
             const newDecimal = decimalValue.map((item) => item === "" ? item = "0" : item)
             const newReadStr = newNumber.join('') + '.' + newDecimal.join('');
             const newRead = parseFloat(newReadStr);
-            const newVol = newRead - user.prevreading;
+
+            let toSubstractFrom = newRead
+            if (user.prevreading > newRead) {
+                toSubstractFrom += user.capacity
+            }
+            
+            const newVol = toSubstractFrom - user.prevreading;
             const newFormula = await formula + `({acctgroup: '${user.acctgroup}', volume: ${newVol}})`
             // const result = await eval(formula.replace(/vol/g, newVol.toString()));
             const result = await eval(newFormula)
@@ -281,7 +287,7 @@ const UserInfo = ({ navigation, route }) => {
                                         <Text style={{ color: 'white', fontSize: 17 }}>Read</Text>
                                     </Pressable> :
                                     <View>
-                                        {!user.note ? <View style={{justifyContent:'space-between', gap: 10}}>
+                                        {!user.note ? <View style={{ justifyContent: 'space-between', gap: 10 }}>
                                             <Pressable onPress={() => setNoteOpen(true)} style={styles.hold}>
                                                 <Text style={{ color: 'black', fontSize: 17 }}>Hold</Text>
                                             </Pressable>
@@ -292,7 +298,7 @@ const UserInfo = ({ navigation, route }) => {
                                                 <Text style={{ color: 'white', fontSize: 17 }}>Print</Text>
                                             </Pressable>
                                         </View> :
-                                            <View style={{justifyContent:'space-between', gap: 10}}>
+                                            <View style={{ justifyContent: 'space-between', gap: 10 }}>
                                                 <Pressable onPress={unHold} style={styles.hold}>
                                                     <Text style={{ color: 'black', fontSize: 17 }}>Un-hold</Text>
                                                 </Pressable>

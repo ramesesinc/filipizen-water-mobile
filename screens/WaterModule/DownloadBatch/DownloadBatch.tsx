@@ -287,7 +287,7 @@ const DownloadBatch = ({ navigation }) => {
                 <Text style={{ ...styles.menuText, color: 'green' }}>Downloading ...</Text>
                 <Text style={{ fontSize: 20, fontWeight: '400' }}>Batch: {batch}</Text>
                 <Progress.Bar progress={percent} width={200} height={20} color='green' />
-                <Text>Records Downloaded:  {curr} / {fileNum}</Text>
+                <Text>Records Downloaded:  {curr}</Text>
               </View>
             </View>
             :
