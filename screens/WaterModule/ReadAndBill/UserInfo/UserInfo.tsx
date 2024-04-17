@@ -44,6 +44,11 @@ const UserInfo = ({ navigation, route }) => {
         penalty: null,
         discount: null,
         acctgroup: null,
+        fromdate: null,
+        todate: null,
+        location: null,
+        reader: null,
+        balance: null,
         pageNum: null,
         note: null
     })
@@ -172,7 +177,7 @@ const UserInfo = ({ navigation, route }) => {
             if (user.prevreading > newRead) {
                 toSubstractFrom += user.capacity
             }
-            
+
             const newVol = toSubstractFrom - user.prevreading;
             const newFormula = await formula + `({acctgroup: '${user.acctgroup}', volume: ${newVol}})`
             // const result = await eval(formula.replace(/vol/g, newVol.toString()));
@@ -265,6 +270,8 @@ const UserInfo = ({ navigation, route }) => {
         retrieveData();
     }
 
+    console.log(user)
+
     return (
         <View style={{ flex: 1, backgroundColor: 'white' }}>
             <WaterHeader navigation={navigation} backBut="Batch Info" data={{ batchname }} />
@@ -319,7 +326,7 @@ const UserInfo = ({ navigation, route }) => {
                                     </View>
                                     <View style={styles.info}>
                                         <Text style={styles.infoName}>Address:</Text>
-                                        <Text style={styles.infoValue}> 055 Camias St. Cebu CIty</Text>
+                                        <Text style={styles.infoValue}>{user.location}</Text>
                                     </View>
                                 </View>
                                 <View style={styles.infoGap}>

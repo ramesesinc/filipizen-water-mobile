@@ -4,7 +4,6 @@ import { styles } from './styles'
 import { useEffect, useRef, useState } from 'react'
 import WaterHeader from '../../../components/Water/WaterHeader'
 import * as Progress from 'react-native-progress'
-import { useIsFocused, useNavigationState } from '@react-navigation/native';
 
 import * as SQLITE from 'expo-sqlite'
 import React from 'react'
@@ -30,14 +29,15 @@ const DownloadBatch = ({ navigation }) => {
 
   const currentBatch = useRef(null)
   const prevStart = useRef(null)
-
+  const batchDownloading = useRef(null)
 
   useEffect(() => {
+    exited.current = false
     const unsubscribe = AppState.addEventListener('change', async (nextAppState) => {
       if (nextAppState === 'background' || nextAppState === 'inactive') {
         exited.current = true
-        // console.log("current", prevStart.current, currentBatch.current)
-        if (prevStart.current !== null && currentBatch.current !== null) {
+        console.log("current", prevStart.current, currentBatch.current)
+        if (prevStart.current !== null && currentBatch.current !== null && batchDownloading.current === true) {
           db.transaction(tx => {
             tx.executeSql(
               `DELETE FROM ${currentBatch.current} WHERE pageNum >= ?`,
@@ -73,9 +73,10 @@ const DownloadBatch = ({ navigation }) => {
               }
             )
           })
+          console.log(exited.current)
+          navigation.navigate("Water Home");
+          batchDownloading.current = false
         }
-        console.log(exited.current)
-        navigation.navigate("Water Home");
       }
     });
 
@@ -91,18 +92,20 @@ const DownloadBatch = ({ navigation }) => {
     getPrevFetchSize();
 
     return () => {
-      console.log("closing")
+      console.log("closing");
       unsubscribe.remove();
+      exited.current = true;
     };
-  }, [downloaded]);
+  }, [downloaded, batchDownloading]);
 
 
   const downloadBatch = async () => {
 
     const batchTable = batch.replace(/-/g, '')
     currentBatch.current = batchTable
-    
+
     const getdata = async () => {
+      batchDownloading.current = true
       setPreDownloading(true)
       console.log("getData function run")
 
@@ -110,7 +113,7 @@ const DownloadBatch = ({ navigation }) => {
         try {
           const value = await AsyncStorage.getItem(key);
           // If the value is not null, the variable exists
-          if (value !== null) {
+          if (value !== null && value !== "0") {
             // console.log(`Variable ${key} exists with value:`, value);
             const toStart = Number(value) + 1
             return toStart;
@@ -124,7 +127,7 @@ const DownloadBatch = ({ navigation }) => {
       };
 
       let start: any = await checkStartExists(`${batchTable}Start`);
-      prevStart.current = start
+      prevStart.current = await start
       try {
         console.log("start is:", start)
 
@@ -158,6 +161,11 @@ const DownloadBatch = ({ navigation }) => {
                 penalty INTEGER,
                 discount INTEGER,
                 acctgroup TEXT,
+                fromdate TEXT,
+                todate TEXT,
+                location TEXT,
+                reader TEXT,
+                balance INTEGER,
                 pageNum INTEGER,
                 note TEXT
               )
@@ -187,17 +195,58 @@ const DownloadBatch = ({ navigation }) => {
           for (let i = 0; i < newNum; i++) {
             await new Promise((res) => setTimeout(res, 50))
             if (exited.current) {
+              console.log("break")
+              if (prevStart.current !== null && currentBatch.current !== null && batchDownloading.current === true) {
+                db.transaction(tx => {
+                  tx.executeSql(
+                    `DELETE FROM ${currentBatch.current} WHERE pageNum >= ?`,
+                    [prevStart.current],
+                    (_, resultSet) => {
+                      console.log('Rows deleted successfully');
+                    },
+                    (_, error) => {
+                      console.error('Error deleting rows:', error);
+                      return false
+                    }
+                  );
+                });
+                db.transaction(tx => {
+                  tx.executeSql(
+                    `SELECT * FROM ${currentBatch.current}`, null,
+                    (txt, resultSet) => {
+                      console.log("total", resultSet.rows._array.length)
+                      const total = resultSet.rows._array.length
+                      if (total === 0) {
+                        db.transaction(tx => {
+                          tx.executeSql(`DROP TABLE ${currentBatch.current}`, null, (txObj, resultSet) => {
+                            AsyncStorage.setItem(`${currentBatch.current}Start`, JSON.stringify(0));
+                            console.log(`${currentBatch.current} now deleted`);
+                          },
+                            (_, e) => {
+                              console.log("table not deleted", e)
+                              return false
+                            }
+                          );
+                        })
+                      }
+                    }
+                  )
+                })
+                console.log(exited.current)
+                navigation.navigate("Water Home");
+              }
               break;
             }
             db.transaction(tx => {
-              tx.executeSql(`INSERT INTO ${batchTable} (batchid, acctno, prevreading, reading, volume, rate, acctname, capacity, brand, meterno, billdate, duedate, discdate, amount, classification, penalty, discount, acctgroup, pageNum, note) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
-                [data[i].batchid, data[i].acctno, data[i].prevreading, data[i].reading, data[i].volume, data[i].rate, data[i].acctname, data[i].meter.capacity, data[i].meter.brand, data[i].meterid, data[i].billdate, data[i].duedate, data[i].discdate, data[i].amount, data[i].classificationid, data[i].penalty, data[i].discount, data[i].acctgroup, data[i].pageNum, data[i].note],
+              tx.executeSql(`INSERT INTO ${batchTable} (batchid, acctno, prevreading, reading, volume, rate, acctname, capacity, brand, meterno, billdate, duedate, discdate, amount, classification, penalty, discount, acctgroup, fromdate, todate, location, reader, balance, pageNum, note) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+                [data[i].batchid, data[i].acctno, data[i].prevreading, data[i].reading, data[i].volume, data[i].rate, data[i].acctname, data[i].meter.capacity, data[i].meter.brand, data[i].meterid, data[i].billdate, data[i].duedate, data[i].discdate, data[i].amount, data[i].classificationid, data[i].penalty, data[i].discount, data[i].acctgroup, data[i].fromdate, data[i].todate, data[i].location.text, data[i].reader.name, data[i].balance, data[i].pageNum, data[i].note],
                 () => {
                   initCur = initCur + 1
                   setCurr(initCur)
                   setPercent((initCur) / newNum);
                   // console.log(`data ${i + 1} saved`)
                   if (i === newNum - 1 && exited.current !== true) {
+                    batchDownloading.current = false
                     AsyncStorage.setItem(`${batchTable}Start`, JSON.stringify(data[i].pageNum));
                     prevStart.current = data[i].pageNum;
                     console.log(`new pageNum saved:`, data[i].pageNum)
@@ -259,7 +308,7 @@ const DownloadBatch = ({ navigation }) => {
       }
     };
 
-    let lastRec = await checkVariableExists(batchTable); 
+    let lastRec = await checkVariableExists(batchTable);
 
     console.log("LastRec is :", lastRec)
 

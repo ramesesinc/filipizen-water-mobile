@@ -18,6 +18,11 @@ export type UserType = {
     penalty: number,
     discount: number,
     acctgroup: string,
+    fromdate: string,
+    todate: string,
+    location:string,
+    reader: string,
+    balance: number,
     pageNum: number,
     note: string
 }
