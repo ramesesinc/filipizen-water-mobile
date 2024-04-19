@@ -1,7 +1,7 @@
 import { View, Text, Pressable, Modal, ActivityIndicator, TextInput } from 'react-native'
 import React, { useEffect, useState, useRef } from 'react'
 import { styles1, styles2 } from './styles'
-import { Ionicons, AntDesign } from '@expo/vector-icons';
+import { Ionicons, FontAwesome6, Entypo } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import WaterHeader from '../../../../components/Water/WaterHeader'
@@ -25,6 +25,7 @@ const db = SQLITE.openDatabase('example.db');
 const UserInfo = ({ navigation, route }) => {
     const [open, setOpen] = useState(false)
     const [noteOpen, setNoteOpen] = useState(false)
+    const [edit, setEdit] = useState(false)
     const [user, setUser] = useState<UserType>({
         batchid: null,
         acctno: null,
@@ -246,31 +247,45 @@ const UserInfo = ({ navigation, route }) => {
                 tx.executeSql(`SELECT * FROM ${batchname} WHERE acctno = ?`, [userAccNo],
                     (txObj, resultSet) => {
                         setUser(resultSet.rows._array[0]);
-                        const numberString = resultSet.rows._array[0].capacity.toString().match(/0/g) || [];
-                        const newArr = []
-                        numberString.map(() => {
-                            newArr.push('0')
-                        });
+                        // const numberString = resultSet.rows._array[0].capacity.toString().match(/0/g) || [];
+                        // const newArr = []
+                        // numberString.map(() => {
+                        //     newArr.push('0')
+                        // });
 
-                        if (user.reading !== null) {
-                            const val = Math.floor(user.reading).toString()
-                            let arrIndex = newArr.length - 1
-                            for (let i = val.length - 1; i >= 0; i--) {
-                                newArr[arrIndex] = val[i];
-                                arrIndex = arrIndex - 1
-                            }
-                            setNumberValue(newArr)
-                        }
+                        // if (user.reading !== null) {
+                        //     const val = Math.floor(user.reading).toString()
+                        //     let arrIndex = newArr.length - 1
+                        //     for (let i = val.length - 1; i >= 0; i--) {
+                        //         newArr[arrIndex] = val[i];
+                        //         arrIndex = arrIndex - 1
+                        //     }
+                        //     setNumberValue(newArr)
+                        // }
                     }
                 );
             }
         );
 
-        retrieveFormula();
-        retrieveData();
+        // retrieveFormula();
+        // retrieveData();
+
+        setEdit(false)
     }
 
-    console.log(user)
+    const editNote = () => {
+        db.transaction(
+            tx => {
+                tx.executeSql(`SELECT * FROM ${batchname} WHERE acctno = ?`, [userAccNo],
+                    (txObj, resultSet) => {
+                        setNoteInput(resultSet.rows._array[0].note)
+                    }
+                );
+            }
+        );
+        setEdit(true)
+        setNoteOpen(true)
+    }
 
     return (
         <View style={{ flex: 1, backgroundColor: 'white' }}>
@@ -426,8 +441,8 @@ const UserInfo = ({ navigation, route }) => {
                             <View style={styles.modalContainer}>
                                 <View style={styles.noteModal}>
                                     <View style={{ gap: 10 }}>
-                                        <Text style={{ alignSelf: 'center' }}>Hold the Account</Text>
-                                        <Text>Put a note:</Text>
+                                        {!edit && <Text style={{ alignSelf: 'center' }}>Hold the account</Text>}
+                                        <Text>{edit ? "Edit note:" : "Put a note:"}</Text>
                                         <TextInput
                                             style={{ borderWidth: 1, height: 100, textAlignVertical: 'top', padding: 5 }}
                                             value={noteInput}
@@ -454,8 +469,13 @@ const UserInfo = ({ navigation, route }) => {
                 <View style={{ gap: 10, height: 100, paddingHorizontal: 20, alignItems: 'center' }}>
                     {user.note &&
                         <View>
-                            <Text style={{ fontWeight: 'bold', alignSelf: 'center' }}>Note <AntDesign name="exclamationcircleo" size={14} color="black" /></Text>
-                            <Text style={{ flex: 1, marginTop: 10 }}>{user.note ? user.note : '"There is no note on this account"'}</Text>
+                            <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center' }}>
+                                <Text style={{ fontWeight: 'bold', alignSelf: 'center' }}>Note</Text>
+                                <Pressable onPress={editNote}>
+                                    <FontAwesome6 name="edit" size={15} color="black" />
+                                </Pressable>
+                            </View>
+                            <Text style={{ flex: 1, marginTop: 10 }}>{user.note}</Text>
                         </View>
                     }
                 </View>
