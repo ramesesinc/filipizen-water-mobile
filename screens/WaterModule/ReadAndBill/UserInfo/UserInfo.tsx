@@ -120,6 +120,15 @@ const UserInfo = ({ navigation, route }) => {
                                     arrIndex = arrIndex - 1
                                 }
                                 setNumberValue(newArr)
+
+                                const retrievedDecimal = user.reading.toFixed(4).split(".")[1].split("")
+                                console.log(retrievedDecimal)
+                                // const decimalArr = []
+
+                                // for (let i = 0; i < retrievedDecimal.length; i++) {
+                                //     decimalArr[i] = retrievedDecimal[i];
+                                // }
+                                setDecimalValue(retrievedDecimal)
                             }
                         }
                     );
