@@ -131,7 +131,22 @@ const DownloadBatch = ({ navigation }) => {
       try {
         console.log("start is:", start)
 
-        const res = await fetch(`http://192.168.2.11:8040/osiris3/json/enterprise/WaterMobileReadingService.getBatchItems?batchid=${batch}&start=${start}&limit=${selected + 1}`);
+        const readerInfo = await AsyncStorage.getItem('readerInfo');
+        const storedObject = JSON.parse(readerInfo);
+
+        const res = await fetch(`http://192.168.2.11:8040/osiris3/json/enterprise/WaterMobileReadingService.getBatchItems?batchid=${batch}&start=${start}&limit=${selected + 1}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+              env: {
+                  CLIENTTYPE: 'mobile',
+                  USERID: storedObject.USERID
+              },
+              args: {
+                  batchid: batch
+              },
+          }),
+      });
         // const res = await fetch(`http://192.168.2.88:8040/osiris3/json/enterprise/WaterMobileReadingService.getBatchItems?batchid=${batch}`);
         const dataRes = await res.json();
 

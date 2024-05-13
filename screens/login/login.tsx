@@ -44,7 +44,8 @@ export default function Login({ navigation }) {
 
         setLoading(true);
 
-        const hash = await generateHmacMD5(username, password);
+        const lowercasedUsername = username.toLowerCase().toString()
+        const hash = await generateHmacMD5(lowercasedUsername, password);
 
         try {
             const res = await fetch('http://192.168.2.11:8070/osiris3/json/etracs25/LoginService.login', {
@@ -55,7 +56,7 @@ export default function Login({ navigation }) {
                         CLIENTTYPE: 'mobile',
                     },
                     args: {
-                        username,
+                        username : username,
                         password: hash,
                     },
                 }),

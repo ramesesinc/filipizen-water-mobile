@@ -107,6 +107,7 @@ const UserInfo = ({ navigation, route }) => {
                         (txObj, resultSet) => {
                             setUser(resultSet.rows._array[0]);
                             const numberString = resultSet.rows._array[0].capacity.toString().match(/0/g) || [];
+                            console.log(numberString)
                             const newArr = []
                             numberString.map(() => {
                                 newArr.push('0')
@@ -129,6 +130,8 @@ const UserInfo = ({ navigation, route }) => {
                                 //     decimalArr[i] = retrievedDecimal[i];
                                 // }
                                 setDecimalValue(retrievedDecimal)
+                            } else {
+                                setNumberValue(numberString)
                             }
                         }
                     );
@@ -183,31 +186,35 @@ const UserInfo = ({ navigation, route }) => {
             const newReadStr = newNumber.join('') + '.' + newDecimal.join('');
             const newRead = parseFloat(newReadStr);
 
-            let toSubstractFrom = newRead
-            if (user.prevreading > newRead) {
-                toSubstractFrom += user.capacity
+            if (newRead !== 0) {
+                let toSubstractFrom = newRead
+                if (user.prevreading > newRead) {
+                    toSubstractFrom += user.capacity
+                }
+
+                const newVol = toSubstractFrom - user.prevreading;
+                const newFormula = await formula + `({acctgroup: '${user.acctgroup}', volume: ${newVol}})`
+                console.log(newFormula)
+                // const result = await eval(formula.replace(/vol/g, newVol.toString()));
+                const result = await eval(newFormula)
+
+                db.transaction(
+                    tx => {
+                        tx.executeSql(
+                            `UPDATE ${batchname} SET reading = ?, volume = ?, amount = ? WHERE acctno = ?`,
+                            [newRead, newVol, result, user.acctno],
+                            (txObj, resultSet) => {
+                                console.log('Updated reading, volume, and amount');
+                            },
+                            (txObj, error) => {
+                                console.error('Error updating reading, volume, and amount:', error);
+                                return false
+                            }
+                        );
+                    }
+                );
             }
 
-            const newVol = toSubstractFrom - user.prevreading;
-            const newFormula = await formula + `({acctgroup: '${user.acctgroup}', volume: ${newVol}})`
-            // const result = await eval(formula.replace(/vol/g, newVol.toString()));
-            const result = await eval(newFormula)
-
-            db.transaction(
-                tx => {
-                    tx.executeSql(
-                        `UPDATE ${batchname} SET reading = ?, volume = ?, amount = ? WHERE acctno = ?`,
-                        [newRead, newVol, result, user.acctno],
-                        (txObj, resultSet) => {
-                            console.log('Updated reading, volume, and amount');
-                        },
-                        (txObj, error) => {
-                            console.error('Error updating reading, volume, and amount:', error);
-                            return false
-                        }
-                    );
-                }
-            );
         } catch (e) {
             console.log("error:", e)
         } finally {
