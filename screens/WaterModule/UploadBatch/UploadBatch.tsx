@@ -30,7 +30,7 @@ const UploadBatch = ({ navigation }) => {
           const data = resultSet.rows._array;
 
           try {
-            const toUpload = data.map((user) => {
+            const initList = data.map((user) => {
               return {
                 "batchid": user.batchid,
                 "acctno": user.acctno,
@@ -41,10 +41,13 @@ const UploadBatch = ({ navigation }) => {
               }
             })
 
+            const finalList = initList.filter((user) => user.reading !== null && user.reading > 0)
+            console.log("toUPload", toUpload)
+
             const storedString = await AsyncStorage.getItem('readerInfo');
             if (storedString !== null) {
               const readerObj = JSON.parse(storedString);
-              const res = await fetch(`http://192.168.2.88:8040/osiris3/json/enterprise/WaterMobileReadingService.uploadReadings
+              const res = await fetch(`http://192.168.2.11:8040/osiris3/json/enterprise/WaterMobileReadingService.uploadReadings
               `, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -52,27 +55,28 @@ const UploadBatch = ({ navigation }) => {
                   env: {
                     CLIENTTYPE: "mobile",
                     USERID: readerObj.USERID,
-                    SESSIONID: readerObj.env.SESSIONID
+                    SESSIONID: readerObj.SESSIONID
                   },
-                  args: toUpload
+                  args: { items: finalList }
                 })
               });
 
               if (res.ok) {
-                const newList = [...notDone];
-                newList.splice(index, 1);
-                setNotDone(newList);
-                setDone([...done, batch]);
-                setUploadStat("Success")
-
                 db.transaction(tx => {
                   tx.executeSql(`DROP TABLE ${batch.name}`, null, (txObj, resultSet) => {
+                    AsyncStorage.removeItem(`${batch.name}Start`);
+                    AsyncStorage.removeItem(`${batch.name}`);
+                    const newList = [...notDone];
+                    newList.splice(index, 1);
+                    setNotDone(newList);
+                    setDone([...done, batch]);
+                    setUploadStat("Success")
+                    setUploading(false);
+                    setToUpload('')
+                    setErr(`Batch: ${batch.name} has been uploaded`);
                     console.log(`${batch.name} now deleted/uploaded`);
                   });
                 })
-                setUploading(false);
-                setToUpload('')
-                setErr(`Batch: ${batch.name} has been uploaded`);
                 setTimeout(() => {
                   setErr(null)
                 }, 5000)
@@ -152,7 +156,7 @@ const UploadBatch = ({ navigation }) => {
                 )}
               </View>
               {
-                err && <Text style={uploadStat === "Failed" ? styles.error : {...styles.error ,color: 'green'}}>{err}</Text>
+                err && <Text style={uploadStat === "Failed" ? styles.error : { ...styles.error, color: 'green' }}>{err}</Text>
               }
             </View> :
             // Completed page

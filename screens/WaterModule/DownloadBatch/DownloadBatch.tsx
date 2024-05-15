@@ -50,18 +50,19 @@ const DownloadBatch = ({ navigation }) => {
                 return false
               }
             );
-          });
-          db.transaction(tx => {
+
             tx.executeSql(
               `SELECT * FROM ${currentBatch.current}`, null,
-              (txt, resultSet) => {
+              async (txt, resultSet) => {
                 console.log("total", resultSet.rows._array.length)
                 const total = resultSet.rows._array.length
                 if (total === 0) {
+                  await AsyncStorage.removeItem(`${batch.replace(/-/g, '')}Start`);
+                  await AsyncStorage.removeItem(`${batch.replace(/-/g, '')}`);
                   db.transaction(tx => {
                     tx.executeSql(`DROP TABLE ${currentBatch.current}`, null, (txObj, resultSet) => {
-                      AsyncStorage.setItem(`${currentBatch.current}Start`, JSON.stringify(0));
-                      console.log(`${currentBatch.current} now deleted`);
+                      // AsyncStorage.setItem(`${currentBatch.current}Start`, JSON.stringify(0));
+                      console.log(`${currentBatch.current} now deleted in eventlistener`);
                     },
                       (_, e) => {
                         console.log("table not deleted", e)
@@ -72,8 +73,14 @@ const DownloadBatch = ({ navigation }) => {
                 }
               }
             )
-          })
+          });
+
+          // await AsyncStorage.removeItem(`${currentBatch.current.replace(/-/g, '')}Start`);
+          // await AsyncStorage.removeItem(`${currentBatch.current.replace(/-/g, '')}`);
+          // AsyncStorage.removeItem(`${currentBatch.current.replace(/-/g, '')}Start`);
+          // AsyncStorage.removeItem(`${currentBatch.current.replace(/-/g, '')}`);
           console.log(exited.current)
+          console.log(currentBatch.current)
           navigation.navigate("Water Home");
           batchDownloading.current = false
         }
@@ -104,49 +111,53 @@ const DownloadBatch = ({ navigation }) => {
     const batchTable = batch.replace(/-/g, '')
     currentBatch.current = batchTable
 
-    const getdata = async () => {
-      batchDownloading.current = true
-      setPreDownloading(true)
-      console.log("getData function run")
+    // let booleanValueToSave;
 
-      const checkStartExists = async (key) => {
-        try {
-          const value = await AsyncStorage.getItem(key);
-          // If the value is not null, the variable exists
-          if (value !== null && value !== "0") {
-            // console.log(`Variable ${key} exists with value:`, value);
-            const toStart = Number(value) + 1
-            return toStart;
-          } else {
+    const getdata = async () => {
+      try {
+        batchDownloading.current = true
+        setPreDownloading(true)
+        console.log("getData function run")
+
+        const checkStartExists = async (key: string) => {
+          try {
+            const value = await AsyncStorage.getItem(key);
+            // If the value is not null, the variable exists
+            if (value !== null && value !== "0") {
+              // console.log(`Variable ${key} exists with value:`, value);
+              const toStart = Number(value) + 1
+              return toStart;
+            } else {
+              return 0;
+            }
+          } catch (error) {
+            console.error('Error checking variable existence:', error);
             return 0;
           }
-        } catch (error) {
-          console.error('Error checking variable existence:', error);
-          return 0;
-        }
-      };
+        };
 
-      let start: any = await checkStartExists(`${batchTable}Start`);
-      prevStart.current = await start
-      try {
-        console.log("start is:", start)
-
+        const start: number = await checkStartExists(`${batchTable}Start`);
+        prevStart.current = await start
         const readerInfo = await AsyncStorage.getItem('readerInfo');
-        const storedObject = JSON.parse(readerInfo);
+        const storedObject = await JSON.parse(readerInfo);
 
-        const res = await fetch(`http://192.168.2.11:8040/osiris3/json/enterprise/WaterMobileReadingService.getBatchItems?batchid=${batch}&start=${start}&limit=${selected + 1}`, {
+        console.log(`start is : ${start}, limit is : ${selected + 1}`)
+
+        const res = await fetch(`http://192.168.2.11:8040/osiris3/json/enterprise/WaterMobileReadingService.getBatchItems`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-              env: {
-                  CLIENTTYPE: 'mobile',
-                  USERID: storedObject.USERID
-              },
-              args: {
-                  batchid: batch
-              },
+            env: {
+              CLIENTTYPE: 'mobile',
+              USERID: storedObject.USERID
+            },
+            args: {
+              batchid: batch,
+              start,
+              limit: selected + 1
+            },
           }),
-      });
+        });
         // const res = await fetch(`http://192.168.2.88:8040/osiris3/json/enterprise/WaterMobileReadingService.getBatchItems?batchid=${batch}`);
         const dataRes = await res.json();
 
@@ -197,13 +208,15 @@ const DownloadBatch = ({ navigation }) => {
           // if (lastRec == limit || lastRec === 0) {
           let data;
 
-          newData.length === selected + 1 ? data = newData.slice(0, newData.length - 1) : data = newData;
+          newData.length === selected + 1 ? data = await newData.slice(0, newData.length - 1) : data = await newData;
 
           setPreDownloading(false)
           setDownloading(true)
 
           let initCur = 0;
           let newNum = data.length;
+
+          console.log("newnum:", newNum)
 
           setFileNum(newNum)
 
@@ -233,8 +246,10 @@ const DownloadBatch = ({ navigation }) => {
                       const total = resultSet.rows._array.length
                       if (total === 0) {
                         db.transaction(tx => {
-                          tx.executeSql(`DROP TABLE ${currentBatch.current}`, null, (txObj, resultSet) => {
-                            AsyncStorage.setItem(`${currentBatch.current}Start`, JSON.stringify(0));
+                          tx.executeSql(`DROP TABLE ${currentBatch.current}`, null, async (txObj, resultSet) => {
+                            await AsyncStorage.removeItem(`${batch.replace(/-/g, '')}Start`);
+                            await AsyncStorage.removeItem(`${batch.replace(/-/g, '')}`);
+                            // AsyncStorage.setItem(`${currentBatch.current}Start`, JSON.stringify(0));
                             console.log(`${currentBatch.current} now deleted`);
                           },
                             (_, e) => {
@@ -251,70 +266,72 @@ const DownloadBatch = ({ navigation }) => {
                 navigation.navigate("Water Home");
               }
               break;
-            }
-            db.transaction(tx => {
-              tx.executeSql(`INSERT INTO ${batchTable} (batchid, acctno, prevreading, reading, volume, rate, acctname, capacity, brand, meterno, billdate, duedate, discdate, amount, classification, penalty, discount, acctgroup, fromdate, todate, location, reader, balance, pageNum, note) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
-                [data[i].batchid, data[i].acctno, data[i].prevreading, data[i].reading, data[i].volume, data[i].rate, data[i].acctname, data[i].meter.capacity, data[i].meter.brand, data[i].meterid, data[i].billdate, data[i].duedate, data[i].discdate, data[i].amount, data[i].classificationid, data[i].penalty, data[i].discount, data[i].acctgroup, data[i].fromdate, data[i].todate, data[i].location.text, data[i].reader.name, data[i].balance, data[i].pageNum, data[i].note],
-                () => {
-                  initCur = initCur + 1
-                  setCurr(initCur)
-                  setPercent((initCur) / newNum);
-                  // console.log(`data ${i + 1} saved`)
-                  if (i === newNum - 1 && exited.current !== true) {
-                    batchDownloading.current = false
-                    AsyncStorage.setItem(`${batchTable}Start`, JSON.stringify(data[i].pageNum));
-                    prevStart.current = data[i].pageNum;
-                    console.log(`new pageNum saved:`, data[i].pageNum)
+            } else {
+              await new Promise((res) => setTimeout(res, 100))
+              db.transaction(tx => {
+                tx.executeSql(`INSERT INTO ${batchTable} (batchid, acctno, prevreading, reading, volume, rate, acctname, capacity, brand, meterno, billdate, duedate, discdate, amount, classification, penalty, discount, acctgroup, fromdate, todate, location, reader, balance, pageNum, note) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+                  [data[i].batchid, data[i].acctno, data[i].prevreading, data[i].reading, data[i].volume, data[i].rate, data[i].acctname, data[i].meter.capacity, data[i].meter.brand, data[i].meterid, data[i].billdate, data[i].duedate, data[i].discdate, data[i].amount, data[i].classificationid, data[i].penalty, data[i].discount, data[i].acctgroup, data[i].fromdate, data[i].todate, data[i].location.text, data[i].reader.name, data[i].balance, data[i].pageNum, data[i].note],
+                  async () => {
+                    initCur = initCur + 1
+                    setCurr(data[i].pageNum + 1)
+                    // setPercent((initCur) / newNum);
+                    // console.log(`data ${i + 1} saved`)
+                    if (i === newNum - 1 && exited.current !== true) {
+                      batchDownloading.current = false
+                      await AsyncStorage.setItem(`${batchTable}Start`, JSON.stringify(data[i].pageNum), () => {
+                        console.log("new start saved at: " + data[i].pageNum)
+                      });
+                      // prevStart.current = data[i].pageNum;
+                      // console.log(`new pageNum saved:`, data[i].pageNum)
+                    }
+                  },
+                  (_, e) => {
+                    console.log("not saved:", e)
+                    return false
                   }
-                },
-                (_, e) => {
-                  console.log("not saved:", e)
-                  return false
-                }
-              )
-            })
+                )
+              })
+            }
           }
 
-          console.log("done")
+          console.log("done iterate")
 
           const booleanValueToSave = dataRes.length === selected + 1 ? true : false
 
-          AsyncStorage.setItem(batchTable, JSON.stringify(booleanValueToSave));
-          AsyncStorage.setItem("prevFetchSize", JSON.stringify(selected));
-          setPercent(0)
-          setPreDownloading(false)
-          setDownloaded(true)
-          setBatch('')
-          setError('')
+          await AsyncStorage.setItem(batchTable, JSON.stringify(booleanValueToSave));
+          // await AsyncStorage.setItem("prevFetchSize", JSON.stringify(selected));
 
-          // } else {
-          //   setError("All accounts already downloaded")
-          // }
+          if (booleanValueToSave && !exited.current) {
+            await getdata();
+          } else {
+            setError("All accounts already downloaded")
+          }
+
         } else {
           setError("All accounts already downloaded")
         }
-
-
-        // console.log(start)
 
       } catch (error) {
         console.log(error)
         setPreDownloading(false)
         setDownloading(false)
         setError(`Error: ${error}`)
+      } finally {
+        setPercent(0)
+        setPreDownloading(false)
+        setDownloaded(true)
+        setBatch('')
+        setError('')
+        batchDownloading.current = false;
       }
     }
 
     const checkVariableExists = async (key) => {
       try {
         const value = await AsyncStorage.getItem(key);
-        // If the value is not null, the variable exists
         if (value !== null) {
-          // console.log(`Variable ${key} exists with value:`, value);
           return JSON.parse(value);
         } else {
-          // console.log(`Variable ${key} does not exist`);
-          // AsyncStorage.setItem(batchTable, JSON.stringify(dataRes.length));
           return true;
         }
       } catch (error) {
@@ -327,8 +344,8 @@ const DownloadBatch = ({ navigation }) => {
 
     console.log("LastRec is :", lastRec)
 
-    if (lastRec) {
-      getdata();
+    if (lastRec && !exited.current) {
+      await getdata();
     } else {
       setError("All accounts already downloaded")
     }
@@ -350,7 +367,7 @@ const DownloadBatch = ({ navigation }) => {
               <View style={styles.infoContainer}>
                 <Text style={{ ...styles.menuText, color: 'green' }}>Downloading ...</Text>
                 <Text style={{ fontSize: 20, fontWeight: '400' }}>Batch: {batch}</Text>
-                <Progress.Bar progress={percent} width={200} height={20} color='green' />
+                {/* <Progress.Bar progress={percent} width={200} height={20} color='green' /> */}
                 <Text>Records Downloaded:  {curr}</Text>
               </View>
             </View>
@@ -358,7 +375,7 @@ const DownloadBatch = ({ navigation }) => {
             <View style={styles.container}>
               <View style={styles.infoContainer}>
                 <Text style={{ ...styles.menuText, color: 'green' }}>Download Complete !!!</Text>
-                <Text>{fileNum}/{fileNum} records downloaded.</Text>
+                {/* <Text>{fileNum}/{fileNum} records downloaded.</Text> */}
               </View>
               <Pressable onPress={() => navigation.navigate('Water Home')} style={styles.goToHomeButton}>
                 <Text style={{ color: 'white' }}>Go to Home</Text>

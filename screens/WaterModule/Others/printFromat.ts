@@ -62,7 +62,7 @@ export const printFormat = (imageUrl: string, user: UserType, headers) => {
         `[C]<b>--------------------------------</b>\n` +
         `[L]<font size='normal'>Consumption</font>[R]<font size='normal'>${user.volume}</font>\n` +
         `[L]\n` +
-        `[L]<font size='normal'>Amount Due</font>[R]<font size='normal'>${user.amount}</font>\n` +
+        `[L]<font size='normal'>Amount Due</font>[R]<font size='normal'>${user.rate ? user.rate : 0}</font>\n` +
         `[L]<font size='normal'>Prev Balance</font>[R]<font size='normal'>${user.balance ? user.balance : ""}</font>\n` +
         `[L]<font size='normal'>Other Charges</font>[R]<font size='normal'></font>\n` +
         `[L]\n` +

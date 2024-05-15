@@ -180,6 +180,7 @@ const UserInfo = ({ navigation, route }) => {
     };
 
     const handleSave = async () => {
+        console.log("acctgroup",user.acctgroup)
         try {
             const newNumber = numberValue.map((item) => item === "" ? item = "0" : item)
             const newDecimal = decimalValue.map((item) => item === "" ? item = "0" : item)
@@ -194,20 +195,20 @@ const UserInfo = ({ navigation, route }) => {
 
                 const newVol = toSubstractFrom - user.prevreading;
                 const newFormula = await formula + `({acctgroup: '${user.acctgroup}', volume: ${newVol}})`
-                console.log(newFormula)
                 // const result = await eval(formula.replace(/vol/g, newVol.toString()));
                 const result = await eval(newFormula)
+                const finalRes = result ? result : null
 
                 db.transaction(
                     tx => {
                         tx.executeSql(
-                            `UPDATE ${batchname} SET reading = ?, volume = ?, amount = ? WHERE acctno = ?`,
-                            [newRead, newVol, result, user.acctno],
+                            `UPDATE ${batchname} SET reading = ?, volume = ?, rate = ? WHERE acctno = ?`,
+                            [newRead, newVol, finalRes, user.acctno],
                             (txObj, resultSet) => {
-                                console.log('Updated reading, volume, and amount');
+                                console.log('Updated reading, volume, and rate');
                             },
                             (txObj, error) => {
-                                console.error('Error updating reading, volume, and amount:', error);
+                                console.error('Error updating reading, volume, and rate:', error);
                                 return false
                             }
                         );
@@ -391,10 +392,10 @@ const UserInfo = ({ navigation, route }) => {
                                             <Text style={styles.infoValue}>{user.volume}</Text>
                                         </View>
                                     }
-                                    {user.amount !== null &&
+                                    {user.rate !== null &&
                                         <View style={styles.info}>
                                             <Text style={styles.infoName}>Bill Amount:</Text>
-                                            <Text style={styles.infoValue}>{user.amount}</Text>
+                                            <Text style={styles.infoValue}>{user.rate}</Text>
                                         </View>
                                     }
                                 </View>
