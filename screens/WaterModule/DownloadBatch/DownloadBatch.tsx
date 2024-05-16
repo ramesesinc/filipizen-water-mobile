@@ -303,13 +303,6 @@ const DownloadBatch = ({ navigation }) => {
           await AsyncStorage.setItem(batchTable, JSON.stringify(booleanValueToSave));
           // await AsyncStorage.setItem("prevFetchSize", JSON.stringify(selected));
 
-          setPercent(0)
-          setPreDownloading(false)
-          setDownloaded(true)
-          setBatch('')
-          setError('')
-          batchDownloading.current = false;
-
           if (booleanValueToSave && !exited.current) {
             await getdata();
           } else {
@@ -325,6 +318,13 @@ const DownloadBatch = ({ navigation }) => {
         setPreDownloading(false)
         setDownloading(false)
         setError(`Error: ${error}`)
+      } finally {
+        setPercent(0)
+        setPreDownloading(false)
+        setDownloaded(true)
+        setBatch('')
+        setError('')
+        batchDownloading.current = false;
       }
     }
 
@@ -427,12 +427,6 @@ const DownloadBatch = ({ navigation }) => {
                   />
                 </View>
               </View>
-              {/* <Pressable style={styles.downloadButton} onPress={downloadBatch}>
-                <Text style={{ color: 'white' }}>Download</Text>
-              </Pressable>
-              <Pressable onPress={() => navigation.navigate('Water Home')} style={styles.backButton}>
-                <Text style={{ color: 'black' }}>Back</Text>
-              </Pressable> */}
             </View>
           </View>
         }
