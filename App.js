@@ -12,24 +12,24 @@ const Stack = createStackNavigator();
 export default function App() {
 
   return (
-    <View style={{flex: 1}}>
+    <View style={{ flex: 1 }}>
       <StatusBar backgroundColor="black" barStyle="default" />
-    <NavigationContainer>
-      <Stack.Navigator>
-        <Stack.Screen options={{ headerShown: false }} name="Login" component={Login} />
-        <Stack.Screen options={{
-          headerShown: false,
-          title: 'Water Module',
-          headerTintColor: 'white',
-          headerTitleAlign: 'center',
-          headerStyle: {
-            backgroundColor: '#00669B'
-          }
-        }}
-          name="Water"
-          component={WaterModuleTab} />
-      </Stack.Navigator>
-    </NavigationContainer>
+      <NavigationContainer>
+        <Stack.Navigator>
+          <Stack.Screen options={{ headerShown: false }} name="Login" component={Login} />
+          <Stack.Screen options={{
+            headerShown: false,
+            title: 'Water Module',
+            headerTintColor: 'white',
+            headerTitleAlign: 'center',
+            headerStyle: {
+              backgroundColor: '#00669B'
+            }
+          }}
+            name="Water"
+            component={WaterModuleTab} />
+        </Stack.Navigator>
+      </NavigationContainer>
     </View>
   );
 }
