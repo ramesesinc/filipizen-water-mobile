@@ -13,7 +13,7 @@ export default function App() {
 
   return (
     <View style={{ flex: 1 }}>
-      <StatusBar backgroundColor="black" barStyle="default" />
+      <StatusBar backgroundColor="black" barStyle="light-content" />
       <NavigationContainer>
         <Stack.Navigator>
           <Stack.Screen options={{ headerShown: false }} name="Login" component={Login} />

@@ -13,6 +13,9 @@ import { UserType } from '../../Others/types';
 const BatchInfo = ({ navigation, route }) => {
     const [dataInfo, setDataInfo] = useState<UserType[]>([])
     const [currentPage, setCurrentPage] = useState(0);
+    const [pageCount, setPageCount] = useState(1)
+    const [nextButton, setNextButton] = useState(false)
+    
 
     const pageSize = 10;
 
@@ -32,14 +35,22 @@ const BatchInfo = ({ navigation, route }) => {
     useEffect(() => {
         if (isFocused) {
             db.transaction(tx => {
-                tx.executeSql(`SELECT * FROM ${batchname}`, null,
+                tx.executeSql(`SELECT * FROM ${batchname} WHERE pageNum BETWEEN ? AND ?`, [currentPage, currentPage + 10],
                     (txObj, resultSet) => {
-                        setDataInfo(resultSet.rows._array)
+                        console.log(resultSet.rows._array.length)
+                        if (resultSet.rows._array.length === 11) {
+                            const newArr = resultSet.rows._array.slice(0, -1)
+                            setDataInfo(newArr)
+                            setNextButton(true)
+                        } else {
+                            setDataInfo(resultSet.rows._array)
+                            setNextButton(false)
+                        }
                     }
                 )
             })
         }
-    }, [isFocused, batchname])
+    }, [isFocused, batchname, currentPage,nextButton])
 
     useEffect(() => {
         let timeoutId;
@@ -81,13 +92,17 @@ const BatchInfo = ({ navigation, route }) => {
     };
 
     const handleNextPage = () => {
-        setCurrentPage(currentPage + 1);
+        // setCurrentPage(currentPage + 1);
+        setCurrentPage(currentPage + 10);
+        setPageCount(pageCount+1)
     };
 
     const handlePrevPage = () => {
-        if (currentPage > 0) {
-            setCurrentPage(currentPage - 1);
-        }
+        // if (currentPage > 0) {
+        //     setCurrentPage(currentPage - 1);
+        // }
+        setCurrentPage(currentPage -10);
+        setPageCount(pageCount-1)
     };
 
     const handlePress = (id) => {
@@ -121,7 +136,7 @@ const BatchInfo = ({ navigation, route }) => {
                             (searchRes.length === 0 && !error) ?
                                 <View style={{ flex: 1 }}>
                                     <FlatList
-                                        data={renderUsers()}
+                                        data={dataInfo}
                                         renderItem={(data) => (
                                             <View>
                                                 <View style={data.item.reading === null ? styles.accountContainer : { ...styles.accountContainer, backgroundColor: 'rgba(0, 0, 0, 0.2)' }}>
@@ -162,10 +177,10 @@ const BatchInfo = ({ navigation, route }) => {
                                                 </Pressable>
                                         }
                                         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                                            <Text style={styles.pageText}>{currentPage + 1}</Text>
+                                            <Text style={styles.pageText}>{pageCount}</Text>
                                         </View>
                                         {
-                                            (currentPage + 1) * pageSize >= dataInfo.length ?
+                                            !nextButton ?
                                                 <View style={{ flex: 1 }}></View> :
                                                 <Pressable onPress={handleNextPage} style={{ flex: 1, alignItems: 'center' }}>
                                                     <Text style={styles.nextText}>Next</Text>

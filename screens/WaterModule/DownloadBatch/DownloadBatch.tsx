@@ -164,6 +164,8 @@ const DownloadBatch = ({ navigation }) => {
         if (dataRes.msg) {
           setError(dataRes.msg)
           setPreDownloading(false)
+          await AsyncStorage.removeItem(`${batchTable}Start`);
+          await AsyncStorage.removeItem(`${batchTable}`);
         } else if (dataRes.length !== 0) {
           db.transaction(tx => {
             tx.executeSql(`
@@ -301,6 +303,13 @@ const DownloadBatch = ({ navigation }) => {
           await AsyncStorage.setItem(batchTable, JSON.stringify(booleanValueToSave));
           // await AsyncStorage.setItem("prevFetchSize", JSON.stringify(selected));
 
+          setPercent(0)
+          setPreDownloading(false)
+          setDownloaded(true)
+          setBatch('')
+          setError('')
+          batchDownloading.current = false;
+
           if (booleanValueToSave && !exited.current) {
             await getdata();
           } else {
@@ -316,13 +325,6 @@ const DownloadBatch = ({ navigation }) => {
         setPreDownloading(false)
         setDownloading(false)
         setError(`Error: ${error}`)
-      } finally {
-        setPercent(0)
-        setPreDownloading(false)
-        setDownloaded(true)
-        setBatch('')
-        setError('')
-        batchDownloading.current = false;
       }
     }
 
