@@ -14,9 +14,6 @@ import { Asset } from 'expo-asset';
 import { useIsFocused } from '@react-navigation/native';
 import { printFormat } from '../../Others/printFromat';
 
-const imageAsset = Asset.fromModule(require('../../../../assets/printerLogo.png'));
-const imageUrl = imageAsset.uri;
-
 import { Dimensions } from 'react-native';
 
 const { height } = Dimensions.get('window');
@@ -67,6 +64,9 @@ const UserInfo = ({ navigation, route }) => {
 
     const isFocused = useIsFocused()
     const { userAccNo, batchname } = route.params;
+
+    const imageAsset = Asset.fromModule(require('../../../../assets/printerLogo.png'));
+    const imageUrl = imageAsset.uri;
 
     let styles = null
 
@@ -145,6 +145,7 @@ const UserInfo = ({ navigation, route }) => {
     }, [open, isFocused, noteOpen]);
 
     const printReceipt = async () => {
+        console.log(imageUrl)
         try {
             await ThermalPrinterModule.printBluetooth({
                 payload: printFormat(imageUrl, user, headers),
@@ -153,6 +154,7 @@ const UserInfo = ({ navigation, route }) => {
             });
         } catch (err) {
             //error handling
+            alert(err)
             console.log(err.message);
         }
     };
@@ -180,7 +182,7 @@ const UserInfo = ({ navigation, route }) => {
     };
 
     const handleSave = async () => {
-        console.log("acctgroup",user.acctgroup)
+        console.log("acctgroup", user.acctgroup)
         try {
             const newNumber = numberValue.map((item) => item === "" ? item = "0" : item)
             const newDecimal = decimalValue.map((item) => item === "" ? item = "0" : item)

@@ -1,6 +1,6 @@
 import { UserType } from '../../WaterModule/Others/types'
 
-export const printFormat = (imageUrl: string, user: UserType, headers) => {
+export const printFormat = (imageUrl: any, user: UserType, headers) => {
     const newMeterNo = user.meterno ? user.meterno.substring(0, user.meterno.indexOf(':')) : null;
     const { header1, header2, header3 } = headers;
     const newName = user.acctname.replace(/ñ/gi, (match) => {
