@@ -1,4 +1,4 @@
-import { View, Text, Pressable, FlatList, Button, TextInput, Keyboard, KeyboardAvoidingView } from 'react-native'
+import { View, Text, Pressable, FlatList, Button, TextInput, Keyboard, KeyboardAvoidingView, ActivityIndicator } from 'react-native'
 import { useEffect, useRef, useState } from 'react'
 import { Ionicons, Feather } from '@expo/vector-icons';
 
@@ -15,7 +15,9 @@ const BatchInfo = ({ navigation, route }) => {
     const [currentPage, setCurrentPage] = useState(0);
     const [pageCount, setPageCount] = useState(1)
     const [nextButton, setNextButton] = useState(false)
-    
+
+    const [loading, setLoading] = useState(false)
+
 
     const pageSize = 10;
 
@@ -46,11 +48,12 @@ const BatchInfo = ({ navigation, route }) => {
                             setDataInfo(resultSet.rows._array)
                             setNextButton(false)
                         }
+                        setLoading(false)
                     }
                 )
             })
         }
-    }, [isFocused, batchname, currentPage,nextButton])
+    }, [isFocused, batchname, currentPage, nextButton])
 
     useEffect(() => {
         let timeoutId;
@@ -93,16 +96,18 @@ const BatchInfo = ({ navigation, route }) => {
 
     const handleNextPage = () => {
         // setCurrentPage(currentPage + 1);
+        setLoading(true)
         setCurrentPage(currentPage + 10);
-        setPageCount(pageCount+1)
+        setPageCount(pageCount + 1)
     };
 
     const handlePrevPage = () => {
         // if (currentPage > 0) {
         //     setCurrentPage(currentPage - 1);
         // }
-        setCurrentPage(currentPage -10);
-        setPageCount(pageCount-1)
+        setLoading(true)
+        setCurrentPage(currentPage - 10);
+        setPageCount(pageCount - 1)
     };
 
     const handlePress = (id) => {
@@ -127,105 +132,111 @@ const BatchInfo = ({ navigation, route }) => {
             <WaterHeader navigation={navigation} backBut='Read And Bill' />
             <View style={styles.container}>
                 <KeyboardAvoidingView style={{ flex: 1 }} behavior='height' keyboardVerticalOffset={0}>
-                    <View style={{ flex: 1 }}>
-                        <View style={styles.searchContainer}>
-                            <TextInput ref={inputRef} placeholder='Account Search' value={search} onChangeText={(input) => setSearch(input)} style={{ marginLeft: 10, flex: 1 }} />
-                            <Feather onPress={clearInput} name="x" size={30} color="rgba(0, 0, 0, 0.5)" style={search !== "" ? { marginRight: 10 } : { opacity: 0 }} />
-                        </View>
-                        {
-                            (searchRes.length === 0 && !error) ?
-                                <View style={{ flex: 1 }}>
-                                    <FlatList
-                                        data={dataInfo}
-                                        renderItem={(data) => (
-                                            <View>
-                                                <View style={data.item.reading === null ? styles.accountContainer : { ...styles.accountContainer, backgroundColor: 'rgba(0, 0, 0, 0.2)' }}>
-                                                    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', gap: 5 }}>
-                                                        {data.item.acctno === '1' ?
-                                                            <Ionicons name="location-sharp" size={50} color="red" /> :
-                                                            <Ionicons name="location-outline" size={50} color="black" />
-                                                        }
-                                                        <Pressable style={{ backgroundColor: 'white', padding: 3, paddingHorizontal: 10, borderRadius: 5 }}>
-                                                            <Text>{data.item.pageNum + 1}</Text>
+                    {!loading ?
+                        <View style={{ flex: 1 }}>
+                            <View style={styles.searchContainer}>
+                                <TextInput ref={inputRef} placeholder='Account Search' value={search} onChangeText={(input) => setSearch(input)} style={{ marginLeft: 10, flex: 1 }} />
+                                <Feather onPress={clearInput} name="x" size={30} color="rgba(0, 0, 0, 0.5)" style={search !== "" ? { marginRight: 10 } : { opacity: 0 }} />
+                            </View>
+                            {
+                                (searchRes.length === 0 && !error) ?
+                                    <View style={{ flex: 1 }}>
+                                        <FlatList
+                                            data={dataInfo}
+                                            renderItem={(data) => (
+                                                <View>
+                                                    <View style={data.item.reading === null ? styles.accountContainer : { ...styles.accountContainer, backgroundColor: 'rgba(0, 0, 0, 0.2)' }}>
+                                                        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', gap: 5 }}>
+                                                            {data.item.acctno === '1' ?
+                                                                <Ionicons name="location-sharp" size={50} color="red" /> :
+                                                                <Ionicons name="location-outline" size={50} color="black" />
+                                                            }
+                                                            <Pressable style={{ backgroundColor: 'white', padding: 3, paddingHorizontal: 10, borderRadius: 5 }}>
+                                                                <Text>{data.item.pageNum + 1}</Text>
+                                                            </Pressable>
+                                                        </View>
+                                                        <Pressable onPress={() => handlePress(data.item.acctno)} style={{ flex: 3, padding: 5 }}>
+                                                            <View style={styles.info}>
+                                                                <Text style={{ fontWeight: 'bold' }}>NAME: </Text>
+                                                                <Text style={{ fontSize: 12 }}>{data.item.acctname}</Text>
+                                                            </View>
+                                                            <View style={styles.info}>
+                                                                <Text style={{ fontWeight: 'bold' }}>CLASSIFICATION: </Text>
+                                                                <Text>{data.item.classification}</Text>
+                                                            </View>
+                                                            <View style={styles.info}>
+                                                                <Text style={{ fontWeight: 'bold' }}>CURRENT READING: </Text>
+                                                                <Text>{data.item.reading}</Text>
+                                                            </View>
                                                         </Pressable>
                                                     </View>
-                                                    <Pressable onPress={() => handlePress(data.item.acctno)} style={{ flex: 3, padding: 5 }}>
-                                                        <View style={styles.info}>
-                                                            <Text style={{ fontWeight: 'bold' }}>NAME: </Text>
-                                                            <Text style={{ fontSize: 12 }}>{data.item.acctname}</Text>
-                                                        </View>
-                                                        <View style={styles.info}>
-                                                            <Text style={{ fontWeight: 'bold' }}>CLASSIFICATION: </Text>
-                                                            <Text>{data.item.classification}</Text>
-                                                        </View>
-                                                        <View style={styles.info}>
-                                                            <Text style={{ fontWeight: 'bold' }}>CURRENT READING: </Text>
-                                                            <Text>{data.item.reading}</Text>
-                                                        </View>
+                                                </View>
+                                            )}
+                                            showsVerticalScrollIndicator={false}
+                                        />
+                                        <View style={styles.navContainer}>
+                                            {
+                                                currentPage === 0 ?
+                                                    <View style={{ flex: 1 }}></View> :
+                                                    <Pressable onPress={handlePrevPage} style={{ flex: 1, alignItems: 'center' }}>
+                                                        <Text style={styles.prevText}>Previous</Text>
                                                     </Pressable>
-                                                </View>
+                                            }
+                                            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                                                <Text style={styles.pageText}>{pageCount}</Text>
                                             </View>
-                                        )}
-                                        showsVerticalScrollIndicator={false}
-                                    />
-                                    <View style={styles.navContainer}>
-                                        {
-                                            currentPage === 0 ?
-                                                <View style={{ flex: 1 }}></View> :
-                                                <Pressable onPress={handlePrevPage} style={{ flex: 1, alignItems: 'center' }}>
-                                                    <Text style={styles.prevText}>Previous</Text>
-                                                </Pressable>
-                                        }
-                                        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                                            <Text style={styles.pageText}>{pageCount}</Text>
+                                            {
+                                                !nextButton ?
+                                                    <View style={{ flex: 1 }}></View> :
+                                                    <Pressable onPress={handleNextPage} style={{ flex: 1, alignItems: 'center' }}>
+                                                        <Text style={styles.nextText}>Next</Text>
+                                                    </Pressable>
+                                            }
                                         </View>
-                                        {
-                                            !nextButton ?
-                                                <View style={{ flex: 1 }}></View> :
-                                                <Pressable onPress={handleNextPage} style={{ flex: 1, alignItems: 'center' }}>
-                                                    <Text style={styles.nextText}>Next</Text>
+                                    </View> :
+                                    <View style={{ flex: 15 }}>
+                                        {searchRes.length === 0 && <Text style={{ textAlign: 'center', fontSize: 20 }}>No result for "{search}"</Text>}
+                                        <FlatList
+                                            data={searchRes}
+                                            renderItem={(data) => (
+                                                <Pressable onPress={() => handlePress(data.item.acctno)}>
+                                                    <View style={data.item.reading === null ? styles.accountContainer : { ...styles.accountContainer, backgroundColor: 'rgba(0, 0, 0, 0.2)' }}>
+                                                        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', gap: 5 }}>
+                                                            {data.item.acctno === '1' ?
+                                                                <Ionicons name="location-sharp" size={50} color="red" /> :
+                                                                <Ionicons name="location-outline" size={50} color="black" />
+                                                            }
+                                                            <Pressable style={{ backgroundColor: 'white', padding: 3, paddingHorizontal: 10, borderRadius: 5 }}>
+                                                                <Text>{data.item.pageNum + 1}</Text>
+                                                            </Pressable>
+                                                        </View>
+                                                        <View style={{ flex: 3, padding: 5 }}>
+                                                            <View style={styles.info}>
+                                                                <Text style={{ fontWeight: 'bold' }}>NAME: </Text>
+                                                                <Text style={{ fontSize: 12 }}>{data.item.acctname}</Text>
+                                                            </View>
+                                                            <View style={styles.info}>
+                                                                <Text style={{ fontWeight: 'bold' }}>CLASSIFICATION: </Text>
+                                                                <Text>{data.item.classification}</Text>
+                                                            </View>
+                                                            <View style={styles.info}>
+                                                                <Text style={{ fontWeight: 'bold' }}>CURRENT READING: </Text>
+                                                                <Text>{data.item.reading}</Text>
+                                                            </View>
+                                                        </View>
+                                                    </View>
                                                 </Pressable>
-                                        }
+                                            )}
+                                            showsVerticalScrollIndicator={false}
+                                        />
                                     </View>
-                                </View> :
-                                <View style={{ flex: 15 }}>
-                                    {searchRes.length === 0 && <Text style={{ textAlign: 'center', fontSize: 20 }}>No result for "{search}"</Text>}
-                                    <FlatList
-                                        data={searchRes}
-                                        renderItem={(data) => (
-                                            <Pressable onPress={() => handlePress(data.item.acctno)}>
-                                                <View style={data.item.reading === null ? styles.accountContainer : { ...styles.accountContainer, backgroundColor: 'rgba(0, 0, 0, 0.2)' }}>
-                                                    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', gap: 5 }}>
-                                                        {data.item.acctno === '1' ?
-                                                            <Ionicons name="location-sharp" size={50} color="red" /> :
-                                                            <Ionicons name="location-outline" size={50} color="black" />
-                                                        }
-                                                        <Pressable style={{ backgroundColor: 'white', padding: 3, paddingHorizontal: 10, borderRadius: 5 }}>
-                                                            <Text>{data.item.pageNum + 1}</Text>
-                                                        </Pressable>
-                                                    </View>
-                                                    <View style={{ flex: 3, padding: 5 }}>
-                                                        <View style={styles.info}>
-                                                            <Text style={{ fontWeight: 'bold' }}>NAME: </Text>
-                                                            <Text style={{ fontSize: 12 }}>{data.item.acctname}</Text>
-                                                        </View>
-                                                        <View style={styles.info}>
-                                                            <Text style={{ fontWeight: 'bold' }}>CLASSIFICATION: </Text>
-                                                            <Text>{data.item.classification}</Text>
-                                                        </View>
-                                                        <View style={styles.info}>
-                                                            <Text style={{ fontWeight: 'bold' }}>CURRENT READING: </Text>
-                                                            <Text>{data.item.reading}</Text>
-                                                        </View>
-                                                    </View>
-                                                </View>
-                                            </Pressable>
-                                        )}
-                                        showsVerticalScrollIndicator={false}
-                                    />
-                                </View>
-                        }
-                    </View>
+                            }
+                        </View> :
+                        <View style={styles.container}>
+                            <ActivityIndicator style={{ flex: 1 }} size={50} color="#00669B" />
+                        </View>
+
+                    }
                 </KeyboardAvoidingView>
             </View>
         </View>

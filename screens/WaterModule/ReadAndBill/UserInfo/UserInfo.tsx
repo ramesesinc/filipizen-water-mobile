@@ -148,7 +148,7 @@ const UserInfo = ({ navigation, route }) => {
         console.log(imageUrl)
         try {
             await ThermalPrinterModule.printBluetooth({
-                payload: printFormat(imageUrl, user, headers),
+                payload: printFormat(user, headers),
                 printerWidthMM: 48,
                 printerNbrCharactersPerLine: 32
             });

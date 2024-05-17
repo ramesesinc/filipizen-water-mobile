@@ -1,6 +1,6 @@
 import { UserType } from '../../WaterModule/Others/types'
 
-export const printFormat = (imageUrl: any, user: UserType, headers) => {
+export const printFormat = ( user: UserType, headers) => {
     const newMeterNo = user.meterno ? user.meterno.substring(0, user.meterno.indexOf(':')) : null;
     const { header1, header2, header3 } = headers;
     const newName = user.acctname.replace(/ñ/gi, (match) => {
@@ -37,7 +37,6 @@ export const printFormat = (imageUrl: any, user: UserType, headers) => {
         (header1 !== "" ? `[C]<font size='normal'>${header1}</font>\n`: "") +
         (header2 !== "" ? `[C]<font size='normal'>${header2}</font>\n`: "") +
         (header3 !== "" ? `[C]<font size='normal'>${header3}</font>\n`: "") +
-        `[C]<img>${imageUrl}</img>\n` +
         `[L]<font size='normal'>${user.acctno}</font>\n`+
         `[L]<font size='normal'>${newName}</font>\n` +
         `[L]<font size='normal'>${newLoc}</font>\n`+
@@ -67,7 +66,7 @@ export const printFormat = (imageUrl: any, user: UserType, headers) => {
         `[L]<font size='normal'>Other Charges</font>[R]<font size='normal'></font>\n` +
         `[L]\n` +
         `[L]\n` +
-        `[L]<font size='normal'>Total Amount Due</font>[R]<font size='normal'>PHP ${user.amount + user.balance}</font>\n` +
+        `[L]<font size='normal'>Total Amount Due</font>[R]<font size='normal'>PHP ${user.rate + user.balance}</font>\n` +
         `[C]<b>================================</b>\n` +
         `[L]\n` +
         `[L]<font size='normal'>Due Date</font>[R]<font size='normal'>:${user.duedate}</font>\n` +

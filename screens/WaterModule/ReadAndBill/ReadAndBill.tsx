@@ -24,8 +24,8 @@ const ReadAndBill = ({ navigation }) => {
 
   const deleteBatch = (batchName) => {
     db.transaction(tx => {
-      tx.executeSql(`DROP TABLE ${batchName}`, null,  (txObj, resultSet) => {
-         console.log(`${batchName} has been deleted`)
+      tx.executeSql(`DROP TABLE ${batchName}`, null, (txObj, resultSet) => {
+        console.log(`${batchName} has been deleted`)
       });
       tx.executeSql(`SELECT * FROM sqlite_master WHERE type='table'`, null!,
         (txObj, resultSet) => {
@@ -34,7 +34,7 @@ const ReadAndBill = ({ navigation }) => {
       )
     }, () => console.log("error delete batch"), () => {
       AsyncStorage.removeItem(`${batchName}Start`);
-        AsyncStorage.removeItem(`${batchName}`);
+      AsyncStorage.removeItem(`${batchName}`);
     })
   }
 
@@ -50,15 +50,16 @@ const ReadAndBill = ({ navigation }) => {
 
               return (
                 <View key={index} style={styles.batchListitem}>
-                  <Text style={{ fontSize: 20, flex: 3 }}>{item.name.slice(0, 12)}</Text>
-                  <View style={{ flexDirection: 'row', flex: 2, gap: 10, justifyContent: 'space-between'}}>
-                    <Pressable style={{...styles.view, backgroundColor: 'white', borderWidth: 1, borderColor: 'rgba(0, 0, 0, 0.1)'}}
+                  <Text style={{ fontSize: 20, flex: 1 }}>{item.name.slice(0, 10)}</Text>
+                  <View style={{ flexDirection: 'row', flex: 1, gap: 15, justifyContent: 'space-between' }}>
+                    <Pressable style={{ ...styles.view, backgroundColor: 'white', borderWidth: 1, borderColor: 'rgba(0, 0, 0, 0.1)' }}
                       onPress={() => deleteBatch(item.name)}
                     >
                       <Text style={{ color: 'black' }}>Delete</Text>
                     </Pressable>
                     <Pressable style={styles.view}
-                      onPress={() => navigation.navigate('Batch Info', { batchname: item.name })}
+                      onPress={() => {
+                        navigation.navigate('Batch Info', { batchname: item.name })}}
                     >
                       <Text style={{ color: 'white' }}>View</Text>
                     </Pressable>

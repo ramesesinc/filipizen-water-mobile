@@ -166,6 +166,8 @@ const DownloadBatch = ({ navigation }) => {
           setPreDownloading(false)
           await AsyncStorage.removeItem(`${batchTable}Start`);
           await AsyncStorage.removeItem(`${batchTable}`);
+          setPreDownloading(false)
+          batchDownloading.current = false;
         } else if (dataRes.length !== 0) {
           db.transaction(tx => {
             tx.executeSql(`
@@ -217,10 +219,6 @@ const DownloadBatch = ({ navigation }) => {
 
           let initCur = 0;
           let newNum = data.length;
-
-          console.log("newnum:", newNum)
-
-          setFileNum(newNum)
 
           for (let i = 0; i < newNum; i++) {
             await new Promise((res) => setTimeout(res, 50))
@@ -296,8 +294,6 @@ const DownloadBatch = ({ navigation }) => {
             }
           }
 
-          console.log("done iterate")
-
           const booleanValueToSave = dataRes.length === selected + 1 ? true : false
 
           await AsyncStorage.setItem(batchTable, JSON.stringify(booleanValueToSave));
@@ -308,6 +304,9 @@ const DownloadBatch = ({ navigation }) => {
           } else {
             setError("All accounts already downloaded")
           }
+
+          setDownloaded(true)
+          setError('')
 
         } else {
           setError("All accounts already downloaded")
@@ -321,36 +320,57 @@ const DownloadBatch = ({ navigation }) => {
       } finally {
         setPercent(0)
         setPreDownloading(false)
-        setDownloaded(true)
         setBatch('')
-        setError('')
         batchDownloading.current = false;
       }
     }
 
-    const checkVariableExists = async (key) => {
-      try {
-        const value = await AsyncStorage.getItem(key);
-        if (value !== null) {
-          return JSON.parse(value);
-        } else {
-          return true;
+    // const checkVariableExists = async (key) => {
+    //   try {
+    //     const value = await AsyncStorage.getItem(key);
+    //     if (value !== null) {
+    //       return JSON.parse(value);
+    //     } else {
+    //       return true;
+    //     }
+    //   } catch (error) {
+    //     console.error('Error checking variable existence:', error);
+    //     return true;
+    //   }
+    // };
+
+    // let lastRec = await checkVariableExists(batchTable);
+
+    // console.log("LastRec is :", lastRec)
+
+    // if (lastRec && !exited.current) {
+    db.transaction(tx => {
+      tx.executeSql(
+        `SELECT name FROM sqlite_master WHERE type='table' AND name=?`,
+        [batchTable],
+        (txObj, resultSet) => {
+          if (resultSet.rows.length > 0) {
+            tx.executeSql(`DROP TABLE ${batchTable}`, null, async (txObj, resultSet) => {
+              await AsyncStorage.removeItem(`${batchTable}Start`);
+              await AsyncStorage.removeItem(`${batchTable}`);
+              console.log("table dropped")
+            });
+          } else {
+            console.log(`Table ${batchTable} does not exist.`);
+          }
+        },
+        (txObj, error) => {
+          console.log("Error checking for table existence:", error);
+          return false
         }
-      } catch (error) {
-        console.error('Error checking variable existence:', error);
-        return true;
-      }
-    };
+      );
+    });
 
-    let lastRec = await checkVariableExists(batchTable);
-
-    console.log("LastRec is :", lastRec)
-
-    if (lastRec && !exited.current) {
-      await getdata();
-    } else {
-      setError("All accounts already downloaded")
-    }
+    await new Promise((res) => setTimeout(res, 100))
+    await getdata();
+    // } else {
+    //   setError("All accounts already downloaded")
+    // }
 
   }
 
