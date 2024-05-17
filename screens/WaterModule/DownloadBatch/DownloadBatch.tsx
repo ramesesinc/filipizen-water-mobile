@@ -1,4 +1,6 @@
 import { View, Text, Pressable, TextInput, ActivityIndicator, AppState } from 'react-native'
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+
 
 import { styles } from './styles'
 import { useEffect, useRef, useState } from 'react'
@@ -22,6 +24,8 @@ const DownloadBatch = ({ navigation }) => {
   const [downloaded, setDownloaded] = useState(false)
   const [selected, setSelected] = useState<any>()
   const [prevFetchNum, setPrevFetchNum] = useState(0)
+
+  const [formula, setFormula] = useState(null);
 
   const db = SQLITE.openDatabase('example.db');
 
@@ -97,6 +101,20 @@ const DownloadBatch = ({ navigation }) => {
     }
 
     getPrevFetchSize();
+
+    const retrieveFormula = async () => {
+      try {
+        const formulaString = await AsyncStorage.getItem('formula');
+        if (formulaString) {
+          setFormula(formulaString)
+        }
+      } catch (error) {
+        alert(error)
+      }
+    };
+
+
+    retrieveFormula();
 
     return () => {
       console.log("closing");
@@ -398,11 +416,23 @@ const DownloadBatch = ({ navigation }) => {
             <View style={styles.container}>
               <View style={styles.infoContainer}>
                 <Text style={{ ...styles.menuText, color: 'green' }}>Download Complete !!!</Text>
-                <Text>{fileNum} records downloaded.</Text>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
+                  <Text>Records Downloaded  {fileNum}</Text>
+                  <Pressable style={{ flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center', gap: 5, borderRadius: 5, borderWidth: 1, paddingHorizontal: 5, borderColor: 'rgba(0, 0, 0, 0.1)' }}
+                  onPress={() => {
+                    if (formula) {
+                      navigation.navigate('Batch Info', { batchname: currentBatch.current })
+                    } else {
+                      alert("Cannot View Batch items ,Please sync the bill formula first!")
+                    }
+                  }}>
+                    <Text>View</Text>
+                    <MaterialIcons name="pageview" size={24} color="#00669B" />
+                  </Pressable>
+                </View>
               </View>
-              <Pressable onPress={() => {
-                        navigation.navigate('Batch Info', { batchname: currentBatch.current })}} style={styles.goToHomeButton}>
-                <Text style={{ color: 'white' }}>View Batch Items</Text>
+              <Pressable onPress={() => navigation.navigate("Water Home")} style={styles.goToHomeButton}>
+                <Text style={{ color: 'white' }}>Go to Home</Text>
               </Pressable>
               <Pressable onPress={downloadAnotherBatch} style={styles.downloadedbackButton}>
                 <Text style={{ color: 'black' }}>Download Another Batch</Text>
