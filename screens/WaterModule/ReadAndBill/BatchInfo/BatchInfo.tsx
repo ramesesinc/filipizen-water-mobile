@@ -1,4 +1,4 @@
-import { View, Text, Pressable, FlatList, Button, TextInput, Keyboard, KeyboardAvoidingView, ActivityIndicator } from 'react-native'
+import { View, Text, Pressable, FlatList, Button, TextInput, Keyboard, KeyboardAvoidingView, ActivityIndicator, TouchableOpacity } from 'react-native'
 import { useEffect, useRef, useState } from 'react'
 import { Ionicons, Feather } from '@expo/vector-icons';
 
@@ -155,7 +155,7 @@ const BatchInfo = ({ navigation, route }) => {
                                                                 <Text>{data.item.pageNum + 1}</Text>
                                                             </Pressable>
                                                         </View>
-                                                        <Pressable onPress={() => handlePress(data.item.acctno)} style={{ flex: 3, padding: 5 }}>
+                                                        <TouchableOpacity onPress={() => handlePress(data.item.acctno)} style={{ flex: 3, padding: 5 }}>
                                                             <View style={styles.info}>
                                                                 <Text style={{ fontWeight: 'bold' }}>NAME: </Text>
                                                                 <Text style={{ fontSize: 12 }}>{data.item.acctname}</Text>
@@ -168,7 +168,7 @@ const BatchInfo = ({ navigation, route }) => {
                                                                 <Text style={{ fontWeight: 'bold' }}>CURRENT READING: </Text>
                                                                 <Text>{data.item.reading}</Text>
                                                             </View>
-                                                        </Pressable>
+                                                        </TouchableOpacity>
                                                     </View>
                                                 </View>
                                             )}
@@ -178,9 +178,9 @@ const BatchInfo = ({ navigation, route }) => {
                                             {
                                                 currentPage === 0 ?
                                                     <View style={{ flex: 1 }}></View> :
-                                                    <Pressable onPress={handlePrevPage} style={{ flex: 1, alignItems: 'center' }}>
+                                                    <TouchableOpacity onPress={handlePrevPage} style={{ flex: 1, alignItems: 'center' }}>
                                                         <Text style={styles.prevText}>Previous</Text>
-                                                    </Pressable>
+                                                    </TouchableOpacity>
                                             }
                                             <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
                                                 <Text style={styles.pageText}>{pageCount}</Text>
@@ -188,9 +188,9 @@ const BatchInfo = ({ navigation, route }) => {
                                             {
                                                 !nextButton ?
                                                     <View style={{ flex: 1 }}></View> :
-                                                    <Pressable onPress={handleNextPage} style={{ flex: 1, alignItems: 'center' }}>
+                                                    <TouchableOpacity onPress={handleNextPage} style={{ flex: 1, alignItems: 'center' }}>
                                                         <Text style={styles.nextText}>Next</Text>
-                                                    </Pressable>
+                                                    </TouchableOpacity>
                                             }
                                         </View>
                                     </View> :

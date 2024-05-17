@@ -47,7 +47,6 @@ export const styles = StyleSheet.create({
     view: {
         padding: 5,
         paddingHorizontal: 10,
-        backgroundColor: '#00669B',
     },
     batchListitem: {
         padding: 10,
@@ -55,9 +54,7 @@ export const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        backgroundColor: 'white',
-        borderWidth: 1,
-        borderColor: 'rgba(0, 0, 0, 0.3)',
-        margin: 10
+        backgroundColor: 'rgba(0, 0, 0, 0.04)',
+        width: '100%'
     }
 })

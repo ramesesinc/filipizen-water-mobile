@@ -1,4 +1,4 @@
-import { View, Text, FlatList, Pressable, Alert } from 'react-native'
+import { View, Text, FlatList, Pressable, Alert, TouchableOpacity } from 'react-native'
 import { Ionicons, FontAwesome5, MaterialIcons } from '@expo/vector-icons';
 
 import { styles } from './styles'
@@ -78,12 +78,12 @@ const WaterHome = ({ navigation }) => {
         <FlatList
           data={menu}
           renderItem={(data) =>
-            <Pressable style={styles.menuItemContainer} onPress={() => handleNav(data.item.name)} disabled={data.item.name === null}>
+            <TouchableOpacity style={styles.menuItemContainer} onPress={() => handleNav(data.item.name)} disabled={data.item.name === null}>
               <View style={styles.moduleItem}>
                 {data.item.icon}
                 <Text style={styles.menuTextStyle}>{data.item.name}</Text>
               </View>
-            </Pressable>
+            </TouchableOpacity>
           }
           keyExtractor={(item) => item.name}
           numColumns={2}

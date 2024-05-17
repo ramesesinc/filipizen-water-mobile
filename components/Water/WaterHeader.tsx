@@ -1,4 +1,4 @@
-import { View, Text, Pressable, Modal, Image } from 'react-native'
+import { View, Text, Pressable, Modal, Image, TouchableOpacity } from 'react-native'
 import React, { useState } from 'react'
 import { FontAwesome } from '@expo/vector-icons';
 import { MaterialIcons, Ionicons } from '@expo/vector-icons';
@@ -22,9 +22,9 @@ const WaterHeader = ({ navigation, backBut, data, option }: PropType) => {
     <View style={styles.componentContainer}>
       {
         backBut ?
-          <Pressable style={styles.backButContainer} onPress={() => navigation.navigate(backBut, data)}>
+          <TouchableOpacity style={styles.backButContainer} onPress={() => navigation.navigate(backBut, data)}>
             <MaterialIcons name="arrow-back-ios" size={24} color="#00669B" />
-          </Pressable> :
+          </TouchableOpacity> :
           <View style={{ flex: 1 }}></View>
       }
       <Image
@@ -33,9 +33,9 @@ const WaterHeader = ({ navigation, backBut, data, option }: PropType) => {
       />
       {
         option ?
-          <Pressable style={styles.backButContainer} onPress={() => navigation.navigate(option)}>
+          <TouchableOpacity style={styles.backButContainer} onPress={() => navigation.navigate(option)}>
             <Ionicons name="settings-sharp" size={24} color="#00669B" />
-          </Pressable> :
+          </TouchableOpacity> :
           <View style={{ flex: 1 }}></View>
       }
     </View>

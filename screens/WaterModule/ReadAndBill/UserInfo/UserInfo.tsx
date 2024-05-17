@@ -1,4 +1,4 @@
-import { View, Text, Pressable, Modal, ActivityIndicator, TextInput } from 'react-native'
+import { View, Text, Pressable, Modal, ActivityIndicator, TextInput, TouchableOpacity } from 'react-native'
 import React, { useEffect, useState, useRef } from 'react'
 import { styles1, styles2 } from './styles'
 import { Ionicons, FontAwesome6, Entypo } from '@expo/vector-icons';
@@ -342,23 +342,23 @@ const UserInfo = ({ navigation, route }) => {
                                     </Pressable> :
                                     <View>
                                         {!user.note ? <View style={{ justifyContent: 'space-between', gap: 10 }}>
-                                            <Pressable onPress={() => setNoteOpen(true)} style={styles.hold}>
+                                            <TouchableOpacity onPress={() => setNoteOpen(true)} style={styles.hold}>
                                                 <Text style={{ color: 'black', fontSize: 17 }}>Hold</Text>
-                                            </Pressable>
-                                            <Pressable onPress={() => setOpen(true)} style={styles.reRead}>
+                                            </TouchableOpacity>
+                                            <TouchableOpacity onPress={() => setOpen(true)} style={styles.reRead}>
                                                 <Text style={{ color: 'black', fontSize: 17 }}>Re-read</Text>
-                                            </Pressable>
-                                            <Pressable onPress={printReceipt} style={styles.print}>
+                                            </TouchableOpacity>
+                                            <TouchableOpacity onPress={printReceipt} style={styles.print}>
                                                 <Text style={{ color: 'white', fontSize: 17 }}>Print</Text>
-                                            </Pressable>
+                                            </TouchableOpacity>
                                         </View> :
                                             <View style={{ justifyContent: 'space-between', gap: 10 }}>
-                                                <Pressable onPress={unHold} style={styles.hold}>
+                                                <TouchableOpacity onPress={unHold} style={styles.hold}>
                                                     <Text style={{ color: 'black', fontSize: 17 }}>Un-hold</Text>
-                                                </Pressable>
-                                                <Pressable onPress={() => setOpen(true)} style={styles.reRead}>
+                                                </TouchableOpacity>
+                                                <TouchableOpacity onPress={() => setOpen(true)} style={styles.reRead}>
                                                     <Text style={{ color: 'black', fontSize: 17 }}>Re-read</Text>
-                                                </Pressable>
+                                                </TouchableOpacity>
                                             </View>
                                         }
                                     </View>
@@ -457,12 +457,12 @@ const UserInfo = ({ navigation, route }) => {
                                         ))}
                                     </View>
                                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, marginTop: 30 }}>
-                                        <Pressable onPress={() => setOpen(false)} style={{ ...styles.save, backgroundColor: 'white' }}>
+                                        <TouchableOpacity onPress={() => setOpen(false)} style={{ ...styles.save, backgroundColor: 'white' }}>
                                             <Text style={{ color: 'black' }}>Back</Text>
-                                        </Pressable>
-                                        <Pressable onPress={handleSave} style={styles.save}>
+                                        </TouchableOpacity>
+                                        <TouchableOpacity onPress={handleSave} style={styles.save}>
                                             <Text style={{ color: 'white' }}>Save</Text>
-                                        </Pressable>
+                                        </TouchableOpacity>
                                     </View>
                                 </View>
                             </View>
@@ -486,12 +486,12 @@ const UserInfo = ({ navigation, route }) => {
                                     </View>
 
                                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, marginTop: 10 }}>
-                                        <Pressable onPress={() => setNoteOpen(false)} style={{ ...styles.save, backgroundColor: 'white' }}>
-                                            <Text style={{ color: 'black' }}>Back</Text>
-                                        </Pressable>
-                                        <Pressable onPress={saveNote} style={styles.save}>
+                                        <TouchableOpacity onPress={() => setNoteOpen(false)} style={{ ...styles.save, backgroundColor: 'white', width: 100 }}>
+                                            <Text style={{ color: 'black' }}>Cancel</Text>
+                                        </TouchableOpacity>
+                                        <TouchableOpacity onPress={saveNote} style={{...styles.save,width: 100}}>
                                             <Text style={{ color: 'white' }}>Save</Text>
-                                        </Pressable>
+                                        </TouchableOpacity>
                                     </View>
                                 </View>
                             </View>
@@ -512,9 +512,9 @@ const UserInfo = ({ navigation, route }) => {
                     }
                 </View>
             </View>
-            {(!open && !noteOpen) && <Pressable onPress={() => navigation.navigate('Batch Info', { batchname })} style={styles.backButton}>
+            {(!open && !noteOpen) && <TouchableOpacity onPress={() => navigation.navigate('Batch Info', { batchname })} style={styles.backButton}>
                 <Text style={{ color: 'black' }}>Back to List</Text>
-            </Pressable>}
+            </TouchableOpacity>}
         </View>
     )
 }

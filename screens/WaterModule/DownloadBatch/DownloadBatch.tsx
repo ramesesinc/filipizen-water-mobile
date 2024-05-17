@@ -1,4 +1,4 @@
-import { View, Text, Pressable, TextInput, ActivityIndicator, AppState } from 'react-native'
+import { View, Text, Pressable, TextInput, ActivityIndicator, AppState, TouchableOpacity } from 'react-native'
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
 
@@ -418,7 +418,7 @@ const DownloadBatch = ({ navigation }) => {
                 <Text style={{ ...styles.menuText, color: 'green' }}>Download Complete !!!</Text>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
                   <Text>Records Downloaded  {fileNum}</Text>
-                  <Pressable style={{ flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center', gap: 5, borderRadius: 5, borderWidth: 1, paddingHorizontal: 5, borderColor: 'rgba(0, 0, 0, 0.1)' }}
+                  <TouchableOpacity style={{ flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center', gap: 5, borderRadius: 5, borderWidth: 1, paddingHorizontal: 5, borderColor: 'rgba(0, 0, 0, 0.1)' }}
                   onPress={() => {
                     if (formula) {
                       navigation.navigate('Batch Info', { batchname: currentBatch.current })
@@ -428,15 +428,15 @@ const DownloadBatch = ({ navigation }) => {
                   }}>
                     <Text>View</Text>
                     <MaterialIcons name="pageview" size={24} color="#00669B" />
-                  </Pressable>
+                  </TouchableOpacity>
                 </View>
               </View>
-              <Pressable onPress={() => navigation.navigate("Water Home")} style={styles.goToHomeButton}>
+              <TouchableOpacity onPress={() => navigation.navigate("Water Home")} style={styles.goToHomeButton}>
                 <Text style={{ color: 'white' }}>Go to Home</Text>
-              </Pressable>
-              <Pressable onPress={downloadAnotherBatch} style={styles.downloadedbackButton}>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={downloadAnotherBatch} style={styles.downloadedbackButton}>
                 <Text style={{ color: 'black' }}>Download Another Batch</Text>
-              </Pressable>
+              </TouchableOpacity>
             </View>
         }
 
@@ -457,9 +457,9 @@ const DownloadBatch = ({ navigation }) => {
               {error && <Text style={{ color: 'red', textAlign: 'center' }}>{error}</Text>}
               <View style={{ flexDirection: 'row', gap: 10 }}>
                 <View style={{ flex: 2 }}>
-                  <Pressable style={styles.downloadButton} onPress={downloadBatch}>
+                  <TouchableOpacity style={styles.downloadButton} onPress={downloadBatch}>
                     <Text style={{ color: 'white', textAlign: 'center' }}>Download</Text>
-                  </Pressable>
+                  </TouchableOpacity>
                 </View>
                 <View style={{ flex: 1 }}>
                   <SelectList

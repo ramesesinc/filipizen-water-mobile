@@ -1,5 +1,9 @@
-import { View, Text, Pressable } from 'react-native'
+import { View, Text, Pressable, TouchableOpacity } from 'react-native'
 import { useEffect, useState } from 'react'
+import AntDesign from '@expo/vector-icons/AntDesign';
+import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
+import Ionicons from '@expo/vector-icons/Ionicons';
+
 
 import { styles } from './styles'
 import WaterHeader from '../../../components/Water/WaterHeader';
@@ -46,23 +50,25 @@ const ReadAndBill = ({ navigation }) => {
           <View style={styles.withBatchContainer}>
             <Text style={styles.select}>Select a Batch to View</Text>
             {list.map((item, index) => {
-              const newName = `${item.name.slice(0, 2)}-${item.name.slice(2, 6)}-${item.name.slice(6)}`
+              const newName = item.name.toUpperCase()
 
               return (
                 <View key={index} style={styles.batchListitem}>
-                  <Text style={{ fontSize: 20, flex: 1 }}>{item.name.slice(0, 10)}</Text>
-                  <View style={{ flexDirection: 'row', flex: 1, gap: 15, justifyContent: 'space-between' }}>
-                    <Pressable style={{ ...styles.view, backgroundColor: 'white', borderWidth: 1, borderColor: 'rgba(0, 0, 0, 0.1)' }}
+                  <AntDesign name="caretright" size={15} color="black" style={{marginRight: 10}}/>
+                  <Text style={{ fontSize: 20, flex: 3 }}>{newName.slice(0, 10)}</Text>
+                  <View style={{ flexDirection: 'row', flex: 2, justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Pressable style={{ ...styles.view, backgroundColor: 'white' }}
                       onPress={() => deleteBatch(item.name)}
                     >
-                      <Text style={{ color: 'black' }}>Delete</Text>
+                      <Ionicons name="trash-outline" size={20} color='rgba(0, 0, 0, 0.5)' />
                     </Pressable>
-                    <Pressable style={styles.view}
+                    <TouchableOpacity style={{ ...styles.view, backgroundColor: 'white' }}
                       onPress={() => {
                         navigation.navigate('Batch Info', { batchname: item.name })}}
                     >
-                      <Text style={{ color: 'white' }}>View</Text>
-                    </Pressable>
+                      <FontAwesome6 name="magnifying-glass" size={20} color="#00669B" />
+
+                    </TouchableOpacity>
                   </View>
                 </View>
               )
@@ -71,9 +77,9 @@ const ReadAndBill = ({ navigation }) => {
           </View> :
           <View style={styles.noBatchContainer}>
             <Text style={{ textAlign: 'center', fontSize: 25 }}>No Batches Downloaded</Text>
-            <Pressable onPress={() => navigation.navigate('Download Batch')} style={styles.goToDownload}>
+            <TouchableOpacity onPress={() => navigation.navigate('Download Batch')} style={styles.goToDownload}>
               <Text style={{ color: 'white' }}>Download Batches</Text>
-            </Pressable>
+            </TouchableOpacity>
           </View>
       }
       <Pressable onPress={() => navigation.navigate('Water Home')} style={styles.backButton}>
