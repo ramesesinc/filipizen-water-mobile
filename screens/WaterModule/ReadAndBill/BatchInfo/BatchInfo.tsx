@@ -129,7 +129,7 @@ const BatchInfo = ({ navigation, route }) => {
 
     return (
         <View style={{ flex: 1, backgroundColor: 'white' }}>
-            <WaterHeader navigation={navigation} backBut='Read And Bill' />
+            <WaterHeader navigation={navigation} backBut='Read & Bill' />
             <View style={styles.container}>
                 <KeyboardAvoidingView style={{ flex: 1 }} behavior='height' keyboardVerticalOffset={0}>
                     {!loading ?

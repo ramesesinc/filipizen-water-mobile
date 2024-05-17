@@ -19,6 +19,9 @@ import { Dimensions } from 'react-native';
 const { height } = Dimensions.get('window');
 const db = SQLITE.openDatabase('example.db');
 
+const imageAsset = Asset.fromModule(require('../../../../assets/printerLogo.png'));
+const imageUrl = imageAsset.uri;
+
 const UserInfo = ({ navigation, route }) => {
     const [open, setOpen] = useState(false)
     const [noteOpen, setNoteOpen] = useState(false)
@@ -64,9 +67,6 @@ const UserInfo = ({ navigation, route }) => {
 
     const isFocused = useIsFocused()
     const { userAccNo, batchname } = route.params;
-
-    const imageAsset = Asset.fromModule(require('../../../../assets/printerLogo.png'));
-    const imageUrl = imageAsset.uri;
 
     let styles = null
 
@@ -130,6 +130,20 @@ const UserInfo = ({ navigation, route }) => {
                                 //     decimalArr[i] = retrievedDecimal[i];
                                 // }
                                 setDecimalValue(retrievedDecimal)
+                            } else if (user.prevreading !== 0 && user.prevreading !== null) {
+                                const val = Math.floor(user.prevreading).toString()
+                                let arrIndex = newArr.length - 1
+                                for (let i = val.length - 1; i >= 0; i--) {
+                                    newArr[arrIndex] = val[i];
+                                    arrIndex = arrIndex - 1
+                                }
+                                setNumberValue(newArr)
+
+                                if (user.reading) {
+                                    const retrievedDecimal = user.reading.toFixed(4).split(".")[1].split("")
+                                    console.log(retrievedDecimal)
+                                    setDecimalValue(retrievedDecimal)
+                                }
                             } else {
                                 setNumberValue(numberString)
                             }
@@ -145,7 +159,6 @@ const UserInfo = ({ navigation, route }) => {
     }, [open, isFocused, noteOpen]);
 
     const printReceipt = async () => {
-        console.log(imageUrl)
         try {
             await ThermalPrinterModule.printBluetooth({
                 payload: printFormat(user, headers),

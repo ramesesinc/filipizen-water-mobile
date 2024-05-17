@@ -277,6 +277,7 @@ const DownloadBatch = ({ navigation }) => {
                     // setPercent((initCur) / newNum);
                     // console.log(`data ${i + 1} saved`)
                     if (i === newNum - 1 && exited.current !== true) {
+                      setFileNum(data[i].pageNum + 1)
                       batchDownloading.current = false
                       await AsyncStorage.setItem(`${batchTable}Start`, JSON.stringify(data[i].pageNum), () => {
                         console.log("new start saved at: " + data[i].pageNum)
@@ -397,10 +398,11 @@ const DownloadBatch = ({ navigation }) => {
             <View style={styles.container}>
               <View style={styles.infoContainer}>
                 <Text style={{ ...styles.menuText, color: 'green' }}>Download Complete !!!</Text>
-                {/* <Text>{fileNum}/{fileNum} records downloaded.</Text> */}
+                <Text>{fileNum} records downloaded.</Text>
               </View>
-              <Pressable onPress={() => navigation.navigate('Water Home')} style={styles.goToHomeButton}>
-                <Text style={{ color: 'white' }}>Go to Home</Text>
+              <Pressable onPress={() => {
+                        navigation.navigate('Batch Info', { batchname: currentBatch.current })}} style={styles.goToHomeButton}>
+                <Text style={{ color: 'white' }}>View Batch Items</Text>
               </Pressable>
               <Pressable onPress={downloadAnotherBatch} style={styles.downloadedbackButton}>
                 <Text style={{ color: 'black' }}>Download Another Batch</Text>

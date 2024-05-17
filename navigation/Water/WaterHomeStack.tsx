@@ -7,6 +7,9 @@ import ReandAndBIllStack from "../../screens/WaterModule/Navigations/ReandAndBIl
 
 import { useIsFocused } from "@react-navigation/native";
 import { useEffect } from "react";
+import ReadAndBill from "../../screens/WaterModule/ReadAndBill/ReadAndBill";
+import UserInfo from "../../screens/WaterModule/ReadAndBill/UserInfo/UserInfo";
+import BatchInfo from "../../screens/WaterModule/ReadAndBill/BatchInfo/BatchInfo";
 
 const Stack = createStackNavigator();
 
@@ -24,7 +27,9 @@ const WaterHomeStack = ({navigation}) => {
         <Stack.Screen name="Water Home" component={WaterHome} options={{headerShown: false}} />
         <Stack.Screen name="Download Batch" component={DownloadBatch} options={{headerShown: false}} />
         <Stack.Screen name="Upload Batch" component={UploadBatch} options={{headerShown: false}} />
-        <Stack.Screen name="Read & Bill" component={ReandAndBIllStack} options={{headerShown: false}} />
+        <Stack.Screen name="Read & Bill" component={ReadAndBill} options={{headerShown: false}} />
+        <Stack.Screen name="User Info" component={UserInfo} options={{headerShown: false}} />
+        <Stack.Screen name="Batch Info" component={BatchInfo} options={{headerShown: false}} />
     </Stack.Navigator>
   )
 }
