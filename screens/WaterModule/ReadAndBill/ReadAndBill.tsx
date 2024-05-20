@@ -1,4 +1,4 @@
-import { View, Text, Pressable, TouchableOpacity } from 'react-native'
+import { View, Text, Pressable, TouchableOpacity, Modal } from 'react-native'
 import { useEffect, useState } from 'react'
 import AntDesign from '@expo/vector-icons/AntDesign';
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
@@ -15,6 +15,8 @@ const db = SQLITE.openDatabase('example.db');
 
 const ReadAndBill = ({ navigation }) => {
   const [list, setList] = useState([])
+  const [open, setOpen] = useState(false)
+  const [bacthToDelete, setBatchToDelete] = useState("")
 
   useEffect(() => {
     db.transaction(tx => {
@@ -40,6 +42,12 @@ const ReadAndBill = ({ navigation }) => {
       AsyncStorage.removeItem(`${batchName}Start`);
       AsyncStorage.removeItem(`${batchName}`);
     })
+    setOpen(false)
+  }
+
+  const confirm = (name) => {
+    setBatchToDelete(name)
+    setOpen(true)
   }
 
   return (
@@ -54,17 +62,18 @@ const ReadAndBill = ({ navigation }) => {
 
               return (
                 <View key={index} style={styles.batchListitem}>
-                  <AntDesign name="caretright" size={15} color="black" style={{marginRight: 10}}/>
+                  <AntDesign name="caretright" size={15} color="black" style={{ marginRight: 10 }} />
                   <Text style={{ fontSize: 20, flex: 3 }}>{newName.slice(0, 10)}</Text>
                   <View style={{ flexDirection: 'row', flex: 2, justifyContent: 'space-between', alignItems: 'center' }}>
                     <Pressable style={{ ...styles.view, backgroundColor: 'white' }}
-                      onPress={() => deleteBatch(item.name)}
+                      onPress={() => confirm(item.name)}
                     >
                       <Ionicons name="trash-outline" size={20} color='rgba(0, 0, 0, 0.5)' />
                     </Pressable>
                     <TouchableOpacity style={{ ...styles.view, backgroundColor: 'white' }}
                       onPress={() => {
-                        navigation.navigate('Batch Info', { batchname: item.name })}}
+                        navigation.navigate('Batch Info', { batchname: item.name })
+                      }}
                     >
                       <FontAwesome6 name="magnifying-glass" size={20} color="#00669B" />
 
@@ -85,6 +94,26 @@ const ReadAndBill = ({ navigation }) => {
       <Pressable onPress={() => navigation.navigate('Water Home')} style={styles.backButton}>
         <Text style={{ color: 'black' }}>Back to Home</Text>
       </Pressable>
+      {open &&
+        <Modal transparent={true} onRequestClose={() => setOpen(false)}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modal}>
+              <Text>Are you sure you want to delete batch {bacthToDelete} ?</Text>
+              <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center', justifyContent: 'space-around' }}>
+                <TouchableOpacity style={{...styles.save, backgroundColor: 'white'}} onPress={() => {
+                  setBatchToDelete("")
+                  setOpen(false)
+                }}>
+                  <Text style={{textAlign: 'center'}}>No</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.save} onPress={() => deleteBatch(bacthToDelete)}>
+                  <Text style={{textAlign: 'center', color: 'white'}}>Yes</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
+      }
     </View>
   )
 

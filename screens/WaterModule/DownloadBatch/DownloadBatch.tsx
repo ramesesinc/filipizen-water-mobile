@@ -417,7 +417,7 @@ const DownloadBatch = ({ navigation }) => {
               <View style={styles.infoContainer}>
                 <Text style={{ ...styles.menuText, color: 'green' }}>Download Complete !!!</Text>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
-                  <Text>Records Downloaded  {fileNum}</Text>
+                  <Text>{fileNum} Records Downloaded</Text>
                   <TouchableOpacity style={{ flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center', gap: 5, borderRadius: 5, borderWidth: 1, paddingHorizontal: 5, borderColor: 'rgba(0, 0, 0, 0.1)' }}
                   onPress={() => {
                     if (formula) {
