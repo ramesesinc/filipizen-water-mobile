@@ -1,16 +1,14 @@
-import { View, Text, Pressable, TextInput, ActivityIndicator, AppState, TouchableOpacity } from 'react-native'
+import { View, Text, TextInput, ActivityIndicator, AppState, TouchableOpacity } from 'react-native'
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
 
 import { styles } from './styles'
 import { useEffect, useRef, useState } from 'react'
 import WaterHeader from '../../../components/Water/WaterHeader'
-import * as Progress from 'react-native-progress'
 
 import * as SQLITE from 'expo-sqlite'
 import React from 'react'
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import { UserType } from '../Others/types'
 import { SelectList } from 'react-native-dropdown-select-list'
 
 const DownloadBatch = ({ navigation }) => {
@@ -34,6 +32,8 @@ const DownloadBatch = ({ navigation }) => {
   const currentBatch = useRef(null)
   const prevStart = useRef(null)
   const batchDownloading = useRef(null)
+
+  const currentStart = useRef(0)
 
   useEffect(() => {
     exited.current = false
@@ -137,29 +137,29 @@ const DownloadBatch = ({ navigation }) => {
         setPreDownloading(true)
         console.log("getData function run")
 
-        const checkStartExists = async (key: string) => {
-          try {
-            const value = await AsyncStorage.getItem(key);
-            // If the value is not null, the variable exists
-            if (value !== null && value !== "0") {
-              // console.log(`Variable ${key} exists with value:`, value);
-              const toStart = Number(value) + 1
-              return toStart;
-            } else {
-              return 0;
-            }
-          } catch (error) {
-            console.error('Error checking variable existence:', error);
-            return 0;
-          }
-        };
+        // const checkStartExists = async (key: string) => {
+        //   try {
+        //     const value = await AsyncStorage.getItem(key);
+        //     // If the value is not null, the variable exists
+        //     if (value !== null && value !== "0") {
+        //       // console.log(`Variable ${key} exists with value:`, value);
+        //       const toStart = Number(value) + 1
+        //       return toStart;
+        //     } else {
+        //       return 0;
+        //     }
+        //   } catch (error) {
+        //     console.error('Error checking variable existence:', error);
+        //     return 0;
+        //   }
+        // };
 
-        const start: number = await checkStartExists(`${batchTable}Start`);
-        prevStart.current = await start
+        // const start: number = await checkStartExists(`${batchTable}Start`);
+        prevStart.current = currentStart.current
         const readerInfo = await AsyncStorage.getItem('readerInfo');
         const storedObject = await JSON.parse(readerInfo);
 
-        console.log(`start is : ${start}, limit is : ${selected + 1}`)
+        console.log(`start is : ${currentStart.current}, limit is : ${selected + 1}`)
 
         const res = await fetch(`http://192.168.2.11:8040/osiris3/json/enterprise/WaterMobileReadingService.getBatchItems`, {
           method: 'POST',
@@ -171,7 +171,7 @@ const DownloadBatch = ({ navigation }) => {
             },
             args: {
               batchid: batch,
-              start,
+              start: currentStart.current,
               limit: selected + 1
             },
           }),
@@ -223,7 +223,7 @@ const DownloadBatch = ({ navigation }) => {
           });
           const newData = await dataRes.map((e: any, i: any) => ({
             ...e,
-            "pageNum": i + start,
+            "pageNum": i + currentStart.current,
             "note": "",
           }))
 
@@ -297,9 +297,10 @@ const DownloadBatch = ({ navigation }) => {
                     if (i === newNum - 1 && exited.current !== true) {
                       setFileNum(data[i].pageNum + 1)
                       batchDownloading.current = false
-                      await AsyncStorage.setItem(`${batchTable}Start`, JSON.stringify(data[i].pageNum), () => {
-                        console.log("new start saved at: " + data[i].pageNum)
-                      });
+                      // await AsyncStorage.setItem(`${batchTable}Start`, JSON.stringify(data[i].pageNum), () => {
+                      //   console.log("new start saved at: " + data[i].pageNum)
+                      // });
+                      currentStart.current = data[i].pageNum + 1
                       // prevStart.current = data[i].pageNum;
                       // console.log(`new pageNum saved:`, data[i].pageNum)
                     }
@@ -370,13 +371,14 @@ const DownloadBatch = ({ navigation }) => {
         (txObj, resultSet) => {
           if (resultSet.rows.length > 0) {
             tx.executeSql(`DROP TABLE ${batchTable}`, null, async (txObj, resultSet) => {
-              await AsyncStorage.removeItem(`${batchTable}Start`);
-              await AsyncStorage.removeItem(`${batchTable}`);
+              // await AsyncStorage.removeItem(`${batchTable}Start`);
+              // await AsyncStorage.removeItem(`${batchTable}`);
               console.log("table dropped")
             });
           } else {
             console.log(`Table ${batchTable} does not exist.`);
           }
+          currentStart.current = 0
         },
         (txObj, error) => {
           console.log("Error checking for table existence:", error);
@@ -419,13 +421,18 @@ const DownloadBatch = ({ navigation }) => {
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
                   <Text>{fileNum} Records Downloaded</Text>
                   <TouchableOpacity style={{ flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center', gap: 5, borderRadius: 5, borderWidth: 1, paddingHorizontal: 5, borderColor: 'rgba(0, 0, 0, 0.1)' }}
-                  onPress={() => {
-                    if (formula) {
-                      navigation.navigate('Batch Info', { batchname: currentBatch.current })
-                    } else {
-                      alert("Cannot View Batch items ,Please sync the bill formula first!")
-                    }
-                  }}>
+                    onPress={() => {
+                      if (formula) {
+                        setPreDownloading(false)
+                        setBatch('')
+                        setError('')
+                        setDownloaded(false);
+                        setDownloading(false)
+                        navigation.navigate('Batch Info', { batchname: currentBatch.current })
+                      } else {
+                        alert("Cannot View Batch items ,Please sync the bill formula first!")
+                      }
+                    }}>
                     <Text>View</Text>
                     <MaterialIcons name="pageview" size={24} color="#00669B" />
                   </TouchableOpacity>
