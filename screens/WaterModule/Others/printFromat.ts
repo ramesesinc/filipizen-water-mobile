@@ -43,7 +43,7 @@ export const printFormat = ( user: UserType, headers) => {
         (header1 !== "" ? `[C]<font size='normal'>${header1}</font>\n`: "") +
         (header2 !== "" ? `[C]<font size='normal'>${header2}</font>\n`: "") +
         (header3 !== "" ? `[C]<font size='normal'>${header3}</font>\n`: "") +
-        `[C]<img>${'assets/?unstable_path=.%2Fassets/printerLogo.png?platform=android&hash=1bf9d5cee708603cdde88844b448f674'}</img>\n` +
+        `[C]<img>${imageUrl}</img>\n` +
         `[C]<b>================================</b>\n` +
         `[L]\n` +
         `[C]<b><font size='big'>BILLING NOTICE</font></b>\n` +
