@@ -1,4 +1,10 @@
 import { UserType } from '../../WaterModule/Others/types'
+import { Asset } from 'expo-asset';
+
+const imageAsset = Asset.fromModule(require('../../../assets/printerLogo.png'));
+const imageUrl = imageAsset.uri;
+
+const etracslogo = require('../../../assets/printerLogo.png')
 
 export const printFormat = ( user: UserType, headers) => {
     const newMeterNo = user.meterno ? user.meterno.substring(0, user.meterno.indexOf(':')) : null;
@@ -37,11 +43,7 @@ export const printFormat = ( user: UserType, headers) => {
         (header1 !== "" ? `[C]<font size='normal'>${header1}</font>\n`: "") +
         (header2 !== "" ? `[C]<font size='normal'>${header2}</font>\n`: "") +
         (header3 !== "" ? `[C]<font size='normal'>${header3}</font>\n`: "") +
-        `[L]<font size='normal'>${user.acctno}</font>\n`+
-        `[L]<font size='normal'>${newName}</font>\n` +
-        `[L]<font size='normal'>${newLoc}</font>\n`+
-        `[L]<font size='normal'>${user.acctgroup}</font>\n`+
-        `[L]<font size='normal'>${user.classification}</font>\n`+
+        `[C]<img>${'assets/?unstable_path=.%2Fassets/printerLogo.png?platform=android&hash=1bf9d5cee708603cdde88844b448f674'}</img>\n` +
         `[C]<b>================================</b>\n` +
         `[L]\n` +
         `[C]<b><font size='big'>BILLING NOTICE</font></b>\n` +
@@ -49,6 +51,12 @@ export const printFormat = ( user: UserType, headers) => {
         `[L]\n` +
         `[C]<font size='normal'>${newFromDate} to ${newToDate}</font>\n` +
         `[L]\n` +
+        `[L]<font size='normal'>${user.acctno}</font>\n`+
+        `[L]<font size='normal'>${newName}</font>\n` +
+        `[L]<font size='normal'>${newLoc}</font>\n`+
+        `[L]\n` +
+        `[L]<font size='normal'>Account Grooup: ${user.acctgroup}</font>\n` +
+        `[L]<font size='normal'>Classification: ${user.classification}</font>\n` +
         `[L]<font size='normal'>Meter No: ${user.brand} / ${newMeterNo}</font>\n` +
         `[L]<font size='normal'>Capacity: ${user.capacity}</font>\n` +
         `[L]<font size='normal'>Reader: ${user.reader}</font>\n` +

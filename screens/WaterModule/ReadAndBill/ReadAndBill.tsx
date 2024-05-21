@@ -26,7 +26,7 @@ const ReadAndBill = ({ navigation }) => {
         }
       )
     })
-  }, [])
+  }, [open])
 
   const deleteBatch = (batchName) => {
     db.transaction(tx => {
