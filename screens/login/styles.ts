@@ -9,7 +9,7 @@ export const styles = StyleSheet.create({
   },
   etracsLogo: {
     width: 180,
-    height: 100
+    height: 80
   },
   errorMsg: {
     color: 'red',

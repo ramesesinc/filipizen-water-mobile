@@ -5,7 +5,7 @@ import { MaterialIcons, Ionicons } from '@expo/vector-icons';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { styles } from './styles';
 
-const etracslogo = require('../../assets/entracslogo.png')
+const etracslogo = require('../../assets/etracsLogo.png')
 
 
 interface PropType {

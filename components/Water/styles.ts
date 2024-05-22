@@ -16,7 +16,7 @@ export const styles = StyleSheet.create({
         alignItems: 'center'
     },
     etracsLogo: {
-        width: 100,
+        width: 130,
         height: 60,
         marginTop: 10,
         alignSelf: 'center'

@@ -10,23 +10,28 @@ import WaterHeader from '../../../components/Water/WaterHeader';
 
 import * as SQLITE from 'expo-sqlite'
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useIsFocused } from '@react-navigation/native';
 
 const db = SQLITE.openDatabase('example.db');
 
 const ReadAndBill = ({ navigation }) => {
+  const isFocused = useIsFocused()
+
   const [list, setList] = useState([])
   const [open, setOpen] = useState(false)
   const [bacthToDelete, setBatchToDelete] = useState("")
 
   useEffect(() => {
-    db.transaction(tx => {
-      tx.executeSql(`SELECT * FROM sqlite_master WHERE type='table'`, null!,
-        (txObj, resultSet) => {
-          setList(resultSet.rows._array.filter((item) => item.name !== ("android_metadata" && "sqlite_sequence")))
-        }
-      )
-    })
-  }, [open])
+    if(isFocused) {
+      db.transaction(tx => {
+        tx.executeSql(`SELECT * FROM sqlite_master WHERE type='table'`, null!,
+          (txObj, resultSet) => {
+            setList(resultSet.rows._array.filter((item) => item.name !== ("android_metadata" && "sqlite_sequence")))
+          }
+        )
+      })
+    }
+  }, [open, isFocused])
 
   const deleteBatch = (batchName) => {
     db.transaction(tx => {

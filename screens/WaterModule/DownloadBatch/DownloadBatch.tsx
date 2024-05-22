@@ -47,7 +47,7 @@ const DownloadBatch = ({ navigation }) => {
               `DELETE FROM ${currentBatch.current} WHERE pageNum >= ?`,
               [prevStart.current],
               (_, resultSet) => {
-                console.log('Rows deleted successfully');
+                console.log('Rows deleted successfully from eventlistner');
               },
               (_, error) => {
                 console.error('Error deleting rows:', error);
@@ -61,8 +61,8 @@ const DownloadBatch = ({ navigation }) => {
                 console.log("total", resultSet.rows._array.length)
                 const total = resultSet.rows._array.length
                 if (total === 0) {
-                  await AsyncStorage.removeItem(`${batch.replace(/-/g, '')}Start`);
-                  await AsyncStorage.removeItem(`${batch.replace(/-/g, '')}`);
+                  // await AsyncStorage.removeItem(`${batch.replace(/-/g, '')}Start`);
+                  // await AsyncStorage.removeItem(`${batch.replace(/-/g, '')}`);
                   db.transaction(tx => {
                     tx.executeSql(`DROP TABLE ${currentBatch.current}`, null, (txObj, resultSet) => {
                       // AsyncStorage.setItem(`${currentBatch.current}Start`, JSON.stringify(0));
@@ -83,8 +83,8 @@ const DownloadBatch = ({ navigation }) => {
           // await AsyncStorage.removeItem(`${currentBatch.current.replace(/-/g, '')}`);
           // AsyncStorage.removeItem(`${currentBatch.current.replace(/-/g, '')}Start`);
           // AsyncStorage.removeItem(`${currentBatch.current.replace(/-/g, '')}`);
-          console.log(exited.current)
-          console.log(currentBatch.current)
+          // console.log(exited.current)
+          // console.log(currentBatch.current)
           navigation.navigate("Water Home");
           batchDownloading.current = false
         }
@@ -242,20 +242,26 @@ const DownloadBatch = ({ navigation }) => {
             await new Promise((res) => setTimeout(res, 50))
             if (exited.current) {
               console.log("break")
+              console.log("prevstart:", prevStart.current)
               if (prevStart.current !== null && currentBatch.current !== null && batchDownloading.current === true) {
                 db.transaction(tx => {
                   tx.executeSql(
                     `DELETE FROM ${currentBatch.current} WHERE pageNum >= ?`,
                     [prevStart.current],
                     (_, resultSet) => {
-                      console.log('Rows deleted successfully');
+                      console.log('Rows deleted successfully from function');
                     },
                     (_, error) => {
                       console.error('Error deleting rows:', error);
                       return false
                     }
                   );
-                });
+                },
+              (e) => {
+                console.log(e)
+                return false
+              }
+              );
                 db.transaction(tx => {
                   tx.executeSql(
                     `SELECT * FROM ${currentBatch.current}`, null,
@@ -265,10 +271,10 @@ const DownloadBatch = ({ navigation }) => {
                       if (total === 0) {
                         db.transaction(tx => {
                           tx.executeSql(`DROP TABLE ${currentBatch.current}`, null, async (txObj, resultSet) => {
-                            await AsyncStorage.removeItem(`${batch.replace(/-/g, '')}Start`);
-                            await AsyncStorage.removeItem(`${batch.replace(/-/g, '')}`);
+                            // await AsyncStorage.removeItem(`${batch.replace(/-/g, '')}Start`);
+                            // await AsyncStorage.removeItem(`${batch.replace(/-/g, '')}`);
                             // AsyncStorage.setItem(`${currentBatch.current}Start`, JSON.stringify(0));
-                            console.log(`${currentBatch.current} now deleted`);
+                            console.log(`${currentBatch.current} now deleted from function`);
                           },
                             (_, e) => {
                               console.log("table not deleted", e)
@@ -289,7 +295,7 @@ const DownloadBatch = ({ navigation }) => {
               db.transaction(tx => {
                 tx.executeSql(`INSERT INTO ${batchTable} (batchid, acctno, prevreading, reading, volume, rate, acctname, capacity, brand, meterno, billdate, duedate, discdate, amount, classification, penalty, discount, acctgroup, fromdate, todate, location, reader, balance, pageNum, note) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
                   [data[i].batchid, data[i].acctno, data[i].prevreading, data[i].reading, data[i].volume, data[i].rate, data[i].acctname, data[i].meter.capacity, data[i].meter.brand, data[i].meterid, data[i].billdate, data[i].duedate, data[i].discdate, data[i].amount, data[i].classificationid, data[i].penalty, data[i].discount, data[i].acctgroup, data[i].fromdate, data[i].todate, data[i].location.text, data[i].reader.name, data[i].balance, data[i].pageNum, data[i].note],
-                  async () => {
+                   () => {
                     initCur = initCur + 1
                     setCurr(data[i].pageNum + 1)
                     // setPercent((initCur) / newNum);
@@ -316,7 +322,9 @@ const DownloadBatch = ({ navigation }) => {
 
           const booleanValueToSave = dataRes.length === selected + 1 ? true : false
 
-          await AsyncStorage.setItem(batchTable, JSON.stringify(booleanValueToSave));
+          console.log("boolean to save :",booleanValueToSave)
+
+          // await AsyncStorage.setItem(batchTable, JSON.stringify(booleanValueToSave));
           // await AsyncStorage.setItem("prevFetchSize", JSON.stringify(selected));
 
           if (booleanValueToSave && !exited.current) {
@@ -328,8 +336,6 @@ const DownloadBatch = ({ navigation }) => {
           setDownloaded(true)
           setError('')
 
-        } else {
-          setError("All accounts already downloaded")
         }
 
       } catch (error) {

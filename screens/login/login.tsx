@@ -8,7 +8,7 @@ import { useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import CryptoJS from 'crypto-js';
 
-const etracslogo = require('../../assets/entracslogo.png')
+const etracslogo = require('../../assets/etracsLogo.png')
 
 // 557a4295dcca1a044b690f8b6486f33d
 
