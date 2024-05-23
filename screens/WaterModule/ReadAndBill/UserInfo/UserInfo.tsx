@@ -318,7 +318,7 @@ const UserInfo = ({ navigation, route }) => {
         setEdit(true)
         setNoteOpen(true)
     }
-
+    console.log(user.balance)
     return (
         <View style={{ flex: 1, backgroundColor: 'white' }}>
             <WaterHeader navigation={navigation} backBut="Batch Info" data={{ batchname }} />
@@ -409,8 +409,8 @@ const UserInfo = ({ navigation, route }) => {
                                     }
                                     {user.rate !== null &&
                                         <View style={styles.info}>
-                                            <Text style={styles.infoName}>Bill Amount:</Text>
-                                            <Text style={styles.infoValue}>{user.rate}</Text>
+                                            <Text style={styles.infoName}>Bill Amounts:</Text>
+                                            <Text style={styles.infoValue}>{user.rate !== 0 ? user.rate.toFixed(2): 0}</Text>
                                         </View>
                                     }
                                 </View>

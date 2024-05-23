@@ -235,7 +235,6 @@ const DownloadBatch = ({ navigation }) => {
           setPreDownloading(false)
           setDownloading(true)
 
-          let initCur = 0;
           let newNum = data.length;
 
           for (let i = 0; i < newNum; i++) {
@@ -257,11 +256,11 @@ const DownloadBatch = ({ navigation }) => {
                     }
                   );
                 },
-              (e) => {
-                console.log(e)
-                return false
-              }
-              );
+                  (e) => {
+                    console.log(e)
+                    return false
+                  }
+                );
                 db.transaction(tx => {
                   tx.executeSql(
                     `SELECT * FROM ${currentBatch.current}`, null,
@@ -291,38 +290,22 @@ const DownloadBatch = ({ navigation }) => {
               }
               break;
             } else {
-              await new Promise((res) => setTimeout(res, 100))
               db.transaction(tx => {
                 tx.executeSql(`INSERT INTO ${batchTable} (batchid, acctno, prevreading, reading, volume, rate, acctname, capacity, brand, meterno, billdate, duedate, discdate, amount, classification, penalty, discount, acctgroup, fromdate, todate, location, reader, balance, pageNum, note) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
-                  [data[i].batchid, data[i].acctno, data[i].prevreading, data[i].reading, data[i].volume, data[i].rate, data[i].acctname, data[i].meter.capacity, data[i].meter.brand, data[i].meterid, data[i].billdate, data[i].duedate, data[i].discdate, data[i].amount, data[i].classificationid, data[i].penalty, data[i].discount, data[i].acctgroup, data[i].fromdate, data[i].todate, data[i].location.text, data[i].reader.name, data[i].balance, data[i].pageNum, data[i].note],
-                   () => {
-                    initCur = initCur + 1
-                    setCurr(data[i].pageNum + 1)
-                    // setPercent((initCur) / newNum);
-                    // console.log(`data ${i + 1} saved`)
-                    if (i === newNum - 1 && exited.current !== true) {
-                      setFileNum(data[i].pageNum + 1)
-                      batchDownloading.current = false
-                      // await AsyncStorage.setItem(`${batchTable}Start`, JSON.stringify(data[i].pageNum), () => {
-                      //   console.log("new start saved at: " + data[i].pageNum)
-                      // });
-                      currentStart.current = data[i].pageNum + 1
-                      // prevStart.current = data[i].pageNum;
-                      // console.log(`new pageNum saved:`, data[i].pageNum)
-                    }
-                  },
-                  (_, e) => {
-                    console.log("not saved:", e)
-                    return false
-                  }
-                )
+                  [data[i].batchid, data[i].acctno, data[i].prevreading, data[i].reading, data[i].volume, data[i].rate, data[i].acctname, data[i].meter.capacity, data[i].meter.brand, data[i].meterid, data[i].billdate, data[i].duedate, data[i].discdate, data[i].amount, data[i].classificationid, data[i].penalty, data[i].discount, data[i].acctgroup, data[i].fromdate, data[i].todate, data[i].location.text, data[i].reader.name, data[i].balance, data[i].pageNum, data[i].note])
               })
+              setCurr(data[i].pageNum + 1)
+              if (i === newNum - 1 && exited.current !== true) {
+                setFileNum(data[i].pageNum + 1)
+                batchDownloading.current = false
+                currentStart.current = data[i].pageNum + 1
+              }
             }
           }
 
           const booleanValueToSave = dataRes.length === selected + 1 ? true : false
 
-          console.log("boolean to save :",booleanValueToSave)
+          console.log("boolean to save :", booleanValueToSave)
 
           // await AsyncStorage.setItem(batchTable, JSON.stringify(booleanValueToSave));
           // await AsyncStorage.setItem("prevFetchSize", JSON.stringify(selected));
