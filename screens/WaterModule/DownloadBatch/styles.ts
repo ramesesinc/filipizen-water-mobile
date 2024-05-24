@@ -34,7 +34,9 @@ export const styles = StyleSheet.create({
         paddingHorizontal: 40,
         borderRadius: 10,
         alignItems:'center',
-        justifyContent: 'center'
+        justifyContent: 'center',
+        marginBottom: 30,
+        width: 250
     },
     backButton: {
         bottom: 10,

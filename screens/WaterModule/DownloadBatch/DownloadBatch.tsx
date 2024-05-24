@@ -11,14 +11,10 @@ import React from 'react'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { SelectList } from 'react-native-dropdown-select-list'
 
-import {API_DOWNLOAD} from "react-native-dotenv"
-
 const DownloadBatch = ({ navigation }) => {
-  const [batch, setBatch] = useState('')
   const [downloading, setDownloading] = useState(false)
   const [predownloading, setPreDownloading] = useState(false)
   const [error, setError] = useState('');
-  const [percent, setPercent] = useState(0);
   const [fileNum, setFileNum] = useState(0);
   const [curr, setCurr] = useState(0);
   const [downloaded, setDownloaded] = useState(false)
@@ -26,6 +22,8 @@ const DownloadBatch = ({ navigation }) => {
   const [prevFetchNum, setPrevFetchNum] = useState(0)
 
   const [formula, setFormula] = useState(null);
+  const [readerBatches, setReaderbatcher] = useState([])
+  const [selectedBatch, setSelectedBatch] = useState("")
 
   const db = SQLITE.openDatabase('example.db');
 
@@ -102,8 +100,6 @@ const DownloadBatch = ({ navigation }) => {
       }
     }
 
-    getPrevFetchSize();
-
     const retrieveFormula = async () => {
       try {
         const formulaString = await AsyncStorage.getItem('formula');
@@ -115,8 +111,32 @@ const DownloadBatch = ({ navigation }) => {
       }
     };
 
+    const getBatch = async () => {
+      const readerInfo = await AsyncStorage.getItem('readerInfo');
+      const storedObject = await JSON.parse(readerInfo);
 
+      const res = await fetch("http://192.168.2.11:8040/osiris3/json/enterprise/WaterMobileReadingService.getBatches", {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          env: {
+            CLIENTTYPE: 'mobile',
+            USERID: storedObject.USERID,
+            SESSIONID: storedObject.SESSIONID
+          }
+        }),
+      });
+
+      const data = await res.json()
+
+      setReaderbatcher(data.map((i) => {
+        return { key: i.objid, value: i.objid }
+      }))
+    }
+
+    getPrevFetchSize();
     retrieveFormula();
+    getBatch();
 
     return () => {
       console.log("closing");
@@ -127,7 +147,7 @@ const DownloadBatch = ({ navigation }) => {
 
   const downloadBatch = async () => {
 
-    const batchTable = batch.replace(/-/g, '')
+    const batchTable = selectedBatch.replace(/-/g, '')
     currentBatch.current = batchTable
 
     // let booleanValueToSave;
@@ -173,7 +193,7 @@ const DownloadBatch = ({ navigation }) => {
               USERID: storedObject.USERID
             },
             args: {
-              batchid: batch,
+              batchid: selectedBatch,
               start: currentStart.current,
               limit: selected + 1
             },
@@ -330,9 +350,8 @@ const DownloadBatch = ({ navigation }) => {
         setDownloading(false)
         setError(`Error: ${error}`)
       } finally {
-        setPercent(0)
         setPreDownloading(false)
-        setBatch('')
+        setSelectedBatch('')
         batchDownloading.current = false;
       }
     }
@@ -401,7 +420,7 @@ const DownloadBatch = ({ navigation }) => {
             <View style={styles.container}>
               <View style={styles.infoContainer}>
                 <Text style={{ ...styles.menuText, color: 'green' }}>Downloading ...</Text>
-                <Text style={{ fontSize: 20, fontWeight: '400' }}>Batch: {batch}</Text>
+                <Text style={{ fontSize: 20, fontWeight: '400' }}>Batch: {selectedBatch}</Text>
                 {/* <Progress.Bar progress={percent} width={200} height={20} color='green' /> */}
                 <Text>Records Downloaded:  {curr}</Text>
               </View>
@@ -416,7 +435,7 @@ const DownloadBatch = ({ navigation }) => {
                     onPress={() => {
                       if (formula) {
                         setPreDownloading(false)
-                        setBatch('')
+                        setSelectedBatch('')
                         setError('')
                         setDownloaded(false);
                         setDownloading(false)
@@ -451,14 +470,21 @@ const DownloadBatch = ({ navigation }) => {
           <ActivityIndicator style={{ flex: 1 }} size={100} color="#00669B" /> :
           <View style={styles.infoContainer}>
             <Text style={styles.menuText}>Download Batch</Text>
-            <View style={{ gap: 15 }}>
-              <TextInput placeholder='Enter Batch ID' cursorColor={"black"} style={styles.textInput} value={batch} onChangeText={(inputText) => setBatch(inputText)} />
+            <View style={{ gap: 15, flex: 1, width: 250 }}>
               {error && <Text style={{ color: 'red', textAlign: 'center' }}>{error}</Text>}
               <View style={{ flexDirection: 'row', gap: 10 }}>
                 <View style={{ flex: 2 }}>
-                  <TouchableOpacity style={styles.downloadButton} onPress={downloadBatch}>
-                    <Text style={{ color: 'white', textAlign: 'center' }}>Download</Text>
-                  </TouchableOpacity>
+                  <SelectList
+                    data={readerBatches}
+                    setSelected={setSelectedBatch}
+                    search={false}
+                    placeholder='Select Batch ID'
+                    boxStyles={{ height: 50 }}
+                    onSelect={() => {
+                      console.log(selectedBatch)
+                    }}
+                    maxHeight={200}
+                  />
                 </View>
                 <View style={{ flex: 1 }}>
                   <SelectList
@@ -475,10 +501,14 @@ const DownloadBatch = ({ navigation }) => {
                     onSelect={() => {
                       console.log(selected)
                     }}
+                    maxHeight={200}
                   />
-                </View>
+                </View> 
               </View>
             </View>
+            <TouchableOpacity style={selectedBatch ? styles.downloadButton : {...styles.downloadButton, backgroundColor: 'grey'}} onPress={downloadBatch} disabled={selectedBatch ? false: true}>
+              <Text style={{ color: 'white', textAlign: 'center' }}>Download</Text>
+            </TouchableOpacity>
           </View>
         }
 
