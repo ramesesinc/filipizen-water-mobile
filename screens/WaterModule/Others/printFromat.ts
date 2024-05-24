@@ -39,65 +39,65 @@ export const printFormat = (user: UserType, headers) => {
     const newFromDate = formatDate(user.fromdate)
     const newToDate = formatDate(user.todate)
 
-    const totalAmount = Number((user.rate + user.balance).toFixed(2))
+    const formatVal = (num) => {
+        return new Intl.NumberFormat('en-US', {
+            style: 'decimal',
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }).format(num);
+    }
 
-    const formattedAmount = new Intl.NumberFormat('en-US', {
-        style: 'decimal',
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-    }).format(totalAmount);
-
-    console.log(user.rate + user.balance)
-    console.log(formattedAmount)
+    const amountDue = formatVal(user.rate.toFixed(2))
+    const totalAmount = formatVal(Number((user.rate + user.balance).toFixed(2)))
 
     return (
-        // (header1 !== "" ? `[C]<font size='normal'>${header1}</font>\n` : "") +
-        // (header2 !== "" ? `[C]<font size='normal'>${header2}</font>\n` : "") +
-        // (header3 !== "" ? `[C]<font size='normal'>${header3}</font>\n` : "") +
-        // `[C]<img>${imageUrl}</img>\n` +
-        // `[C]<b>================================</b>\n` +
-        // `[L]\n` +
-        // `[C]<b><font size='big'>BILLING NOTICE</font></b>\n` +
-        // `[C]<font size='normal'>${newBillDate}</font>\n` +
-        // `[L]\n` +
-        // `[C]<font size='normal'>${newFromDate} to ${newToDate}</font>\n` +
-        // `[L]\n` +
-        // `[L]<font size='normal'>${user.acctno}</font>\n` +
-        // `[L]<font size='normal'>${newName}</font>\n` +
-        // `[L]<font size='normal'>${newLoc}</font>\n` +
-        // `[L]\n` +
-        // `[L]<font size='normal'>Account Grooup: ${user.acctgroup}</font>\n` +
-        // `[L]<font size='normal'>Classification: ${user.classification}</font>\n` +
-        // `[L]<font size='normal'>Meter No: ${user.brand} / ${newMeterNo}</font>\n` +
-        // `[L]<font size='normal'>Capacity: ${user.capacity}</font>\n` +
-        // `[L]<font size='normal'>Reader: ${user.reader}</font>\n` +
-        // `[L]\n` +
-        // `[C]<b>================================</b>\n` +
-        // `[C]<b><font size='normal'>Reading</font></b>\n` +
-        // `[L]\n` +
-        // `[L]<font size='normal'>Current</font>[R]<font size='normal'>${user.reading}</font>\n` +
-        // `[L]<font size='normal'>Previous</font>[R]<font size='normal'>${user.prevreading}</font>\n` +
-        // `[C]<b>--------------------------------</b>\n` +
-        // `[L]<font size='normal'>Consumption</font>[R]<font size='normal'>${user.volume}</font>\n` +
-        // `[L]\n` +
-        // `[L]<font size='normal'>Amount Due</font>[R]<font size='normal'>${user.rate ? user.rate : 0}</font>\n` +
-        // `[L]<font size='normal'>Prev Balance</font>[R]<font size='normal'>${user.balance ? user.balance : ""}</font>\n` +
-        // `[L]<font size='normal'>Other Charges</font>[R]<font size='normal'></font>\n` +
-        // `[L]\n` +
-        // `[L]\n` +
-        `[L]<font size='normal'>Total Amount Due</font>[R]<font size='normal'>PHP ${formattedAmount}</font>\n` 
-        // `[C]<b>================================</b>\n` +
-        // `[L]\n` +
-        // `[L]<font size='normal'>Due Date</font>[R]<font size='normal'>:${user.duedate}</font>\n` +
-        // `[L]<font size='normal'>Disconnection Date</font>[R]<font size='normal'>${user.discdate ? (":" + user.discdate) : ""}</font>\n` +
-        // `[L]\n` +
-        // `[C]<b>================================</b>\n` +
-        // `[L]\n` +
-        // `[C]<qrcode size='25'>${user.acctname}</qrcode>\n` +
-        // `[L]\n` +
-        // `[C]<font size='normal'>Pay your bills on time to avoid</font>\n` +
-        // `[C]<font size='normal'>disconnection of your water</font>\n` +
-        // `[C]<font size='normal'>service</font>`
+        (header1 !== "" ? `[C]<font size='normal'>${header1}</font>\n` : "") +
+        (header2 !== "" ? `[C]<font size='normal'>${header2}</font>\n` : "") +
+        (header3 !== "" ? `[C]<font size='normal'>${header3}</font>\n` : "") +
+        `[C]<img>${imageUrl}</img>\n` +
+        `[C]<b>================================</b>\n` +
+        `[L]\n` +
+        `[C]<b><font size='big'>BILLING NOTICE</font></b>\n` +
+        `[C]<font size='normal'>${newBillDate}</font>\n` +
+        `[L]\n` +
+        `[C]<font size='normal'>${newFromDate} to ${newToDate}</font>\n` +
+        `[L]\n` +
+        `[L]<font size='normal'>${user.acctno}</font>\n` +
+        `[L]<font size='normal'>${newName}</font>\n` +
+        `[L]<font size='normal'>${newLoc}</font>\n` +
+        `[L]\n` +
+        `[L]<font size='normal'>Account Grooup: ${user.acctgroup}</font>\n` +
+        `[L]<font size='normal'>Classification: ${user.classification}</font>\n` +
+        `[L]<font size='normal'>Meter No: ${user.brand} / ${newMeterNo}</font>\n` +
+        `[L]<font size='normal'>Capacity: ${user.capacity}</font>\n` +
+        `[L]<font size='normal'>Reader: ${user.reader}</font>\n` +
+        `[L]\n` +
+        `[C]<b>================================</b>\n` +
+        `[C]<b><font size='normal'>Reading</font></b>\n` +
+        `[L]\n` +
+        `[L]<font size='normal'>Current</font>[R]<font size='normal'>${user.reading}</font>\n` +
+        `[L]<font size='normal'>Previous</font>[R]<font size='normal'>${user.prevreading}</font>\n` +
+        `[C]<b>--------------------------------</b>\n` +
+        `[L]<font size='normal'>Consumption</font>[R]<font size='normal'>${user.volume}</font>\n` +
+        `[L]\n` +
+        `[L]<font size='normal'>Amount Due</font>[R]<font size='normal'>${user.rate ? amountDue : 0}</font>\n` +
+        `[L]<font size='normal'>Prev Balance</font>[R]<font size='normal'>${user.balance ? user.balance : ""}</font>\n` +
+        `[L]<font size='normal'>Other Charges</font>[R]<font size='normal'></font>\n` +
+        `[L]\n` +
+        `[L]\n` +
+        `[L]<font size='normal'>Total Amount Due</font>[R]<font size='normal'>PHP ${totalAmount}</font>\n` +
+        `[C]<b>================================</b>\n` +
+        `[L]\n` +
+        `[L]<font size='normal'>Due Date</font>[R]<font size='normal'>:${user.duedate}</font>\n` +
+        `[L]<font size='normal'>Disconnection Date</font>[R]<font size='normal'>${user.discdate ? (":" + user.discdate) : ""}</font>\n` +
+        `[L]\n` +
+        `[C]<b>================================</b>\n` +
+        `[L]\n` +
+        `[C]<qrcode size='25'>${user.acctname}</qrcode>\n` +
+        `[L]\n` +
+        `[C]<font size='normal'>Pay your bills on time to avoid</font>\n` +
+        `[C]<font size='normal'>disconnection of your water</font>\n` +
+        `[C]<font size='normal'>service</font>`
 
     )
 }

@@ -3,7 +3,7 @@ import { StyleSheet } from 'react-native'
 export const styles1 = StyleSheet.create({
     container: {
         flex: 1,
-        padding: 10,
+        padding: 15,
         backgroundColor: 'white'
     },
     backToList: {
@@ -33,14 +33,19 @@ export const styles1 = StyleSheet.create({
     },
     info: {
         flexDirection: 'row',
-        gap: 10,
-        flexWrap: 'wrap'
+        gap: 0,
+        flexWrap: 'wrap',
+        justifyContent: 'space-between'
     },
     infoGap: {
-        gap: 5
+        gap: 0
     },
     infoName: {
         fontWeight: '700'
+    },
+    infoValue: {
+        fontSize: 15,
+        textAlign: 'left'
     },
     print: {
         backgroundColor: "green",
@@ -159,7 +164,8 @@ export const styles2 = StyleSheet.create({
         gap: 20,
         flexWrap: 'wrap',
         fontSize: 20,
-        alignItems: 'center'
+        alignItems: 'center',
+        justifyContent: 'space-between'
     },
     infoGap: {
         gap: 10
@@ -169,7 +175,10 @@ export const styles2 = StyleSheet.create({
         fontSize: 15
     },
     infoValue: {
-        fontSize: 15
+        backgroundColor: 'red',
+        flex: 1,
+        fontSize: 15,
+        textAlign: 'right'
     },
     print: {
         backgroundColor: "green",

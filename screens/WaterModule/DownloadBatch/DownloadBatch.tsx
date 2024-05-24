@@ -11,6 +11,8 @@ import React from 'react'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { SelectList } from 'react-native-dropdown-select-list'
 
+import {API_DOWNLOAD} from "react-native-dotenv"
+
 const DownloadBatch = ({ navigation }) => {
   const [batch, setBatch] = useState('')
   const [downloading, setDownloading] = useState(false)
@@ -123,13 +125,14 @@ const DownloadBatch = ({ navigation }) => {
     };
   }, [downloaded, batchDownloading]);
 
-
   const downloadBatch = async () => {
 
     const batchTable = batch.replace(/-/g, '')
     currentBatch.current = batchTable
 
     // let booleanValueToSave;
+
+    console.log("env", process.env.API_DOWNLOAD)
 
     const getdata = async () => {
       try {
@@ -161,7 +164,7 @@ const DownloadBatch = ({ navigation }) => {
 
         console.log(`start is : ${currentStart.current}, limit is : ${selected + 1}`)
 
-        const res = await fetch(`http://192.168.2.11:8040/osiris3/json/enterprise/WaterMobileReadingService.getBatchItems`, {
+        const res = await fetch(process.env.API_DOWNLOAD, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

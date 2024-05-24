@@ -7,7 +7,7 @@ export const styles = StyleSheet.create({
         borderTopWidth: 1,
         borderBottomWidth: 1,
         borderColor: 'rgba(0, 0, 0, 0.1)',
-        gap: 80,
+        gap: 60,
         backgroundColor: 'white'
     },
     backButContainer: {

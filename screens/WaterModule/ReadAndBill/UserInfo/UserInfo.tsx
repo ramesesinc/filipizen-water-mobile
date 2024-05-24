@@ -107,7 +107,6 @@ const UserInfo = ({ navigation, route }) => {
                         (txObj, resultSet) => {
                             setUser(resultSet.rows._array[0]);
                             const numberString = resultSet.rows._array[0].capacity.toString().match(/0/g) || [];
-                            console.log(numberString)
                             const newArr = []
                             numberString.map(() => {
                                 newArr.push('0')
@@ -123,12 +122,6 @@ const UserInfo = ({ navigation, route }) => {
                                 setNumberValue(newArr)
 
                                 const retrievedDecimal = user.reading.toFixed(4).split(".")[1].split("")
-                                console.log(retrievedDecimal)
-                                // const decimalArr = []
-
-                                // for (let i = 0; i < retrievedDecimal.length; i++) {
-                                //     decimalArr[i] = retrievedDecimal[i];
-                                // }
                                 setDecimalValue(retrievedDecimal)
                             } else if (user.prevreading !== 0 && user.prevreading !== null) {
                                 const val = Math.floor(user.prevreading).toString()
@@ -141,7 +134,6 @@ const UserInfo = ({ navigation, route }) => {
 
                                 if (user.reading) {
                                     const retrievedDecimal = user.reading.toFixed(4).split(".")[1].split("")
-                                    console.log(retrievedDecimal)
                                     setDecimalValue(retrievedDecimal)
                                 }
                             } else {
@@ -195,7 +187,6 @@ const UserInfo = ({ navigation, route }) => {
     };
 
     const handleSave = async () => {
-        console.log("acctgroup", user.acctgroup)
         try {
             const newNumber = numberValue.map((item) => item === "" ? item = "0" : item)
             const newDecimal = decimalValue.map((item) => item === "" ? item = "0" : item)
@@ -318,53 +309,56 @@ const UserInfo = ({ navigation, route }) => {
         setEdit(true)
         setNoteOpen(true)
     }
-    console.log(user.balance)
+
     return (
         <View style={{ flex: 1, backgroundColor: 'white' }}>
             <WaterHeader navigation={navigation} backBut="Batch Info" data={{ batchname }} />
             <View style={styles.container}>
-                <View style={{ flex: 1, marginBottom: 10, marginTop: 20 }}>
+                <View style={{ flex: 1, marginBottom: 0, marginTop: 10 }}>
                     <View style={{ flex: 1, flexDirection: 'row', marginBottom: 10 }}>
-                        <View style={{ flex: 2, alignItems: 'center', justifyContent: 'space-between' }}>
-                            <View style={{ alignItems: 'center' }}>
-                                <Pressable onPress={() => console.log(user)}>
-                                    {user.acctno === '1' ?
-                                        <Ionicons name="location-sharp" size={50} color="red" /> :
-                                        <Ionicons name="location-outline" size={50} color="black" />
-                                    }
-                                </Pressable>
-                                <Text style={{ fontWeight: 'bold' }}>{user.pageNum + 1}</Text>
-                            </View>
-                            {
-                                user.reading === null ?
-                                    <Pressable onPress={() => setOpen(true)} style={styles.print}>
-                                        <Text style={{ color: 'white', fontSize: 17 }}>Read</Text>
-                                    </Pressable> :
-                                    <View>
-                                        {!user.note ? <View style={{ justifyContent: 'space-between', gap: 10 }}>
-                                            <TouchableOpacity onPress={() => setNoteOpen(true)} style={styles.hold}>
-                                                <Text style={{ color: 'black', fontSize: 17 }}>Hold</Text>
-                                            </TouchableOpacity>
-                                            <TouchableOpacity onPress={() => setOpen(true)} style={styles.reRead}>
-                                                <Text style={{ color: 'black', fontSize: 17 }}>Re-read</Text>
-                                            </TouchableOpacity>
-                                            <TouchableOpacity onPress={printReceipt} style={styles.print}>
-                                                <Text style={{ color: 'white', fontSize: 17 }}>Print</Text>
-                                            </TouchableOpacity>
-                                        </View> :
-                                            <View style={{ justifyContent: 'space-between', gap: 10 }}>
-                                                <TouchableOpacity onPress={unHold} style={styles.hold}>
-                                                    <Text style={{ color: 'black', fontSize: 17 }}>Un-hold</Text>
+                        <View style={{ flex: 3, alignItems: 'flex-start' }}>
+                            <View style={{ flex: 1,justifyContent: 'space-between'}}>
+                                <View style={{ alignItems: 'center', alignSelf: 'center' }}>
+                                    <Pressable >
+                                        {user.acctno === '1' ?
+                                            <Ionicons name="location-sharp" size={50} color="red" /> :
+                                            <Ionicons name="location-outline" size={50} color="black" />
+                                        }
+                                    </Pressable>
+                                    <Text style={{ fontWeight: 'bold' }}>{user.pageNum + 1}</Text>
+                                </View>
+                                {
+                                    user.reading === null ?
+                                        <Pressable onPress={() => setOpen(true)} style={styles.print}>
+                                            <Text style={{ color: 'white', fontSize: 17 }}>Read</Text>
+                                        </Pressable> :
+                                        <View>
+                                            {!user.note ? <View style={{ justifyContent: 'space-between', gap: 10 }}>
+                                                <TouchableOpacity onPress={() => setNoteOpen(true)} style={styles.hold}>
+                                                    <Text style={{ color: 'black', fontSize: 17 }}>Hold</Text>
                                                 </TouchableOpacity>
                                                 <TouchableOpacity onPress={() => setOpen(true)} style={styles.reRead}>
                                                     <Text style={{ color: 'black', fontSize: 17 }}>Re-read</Text>
                                                 </TouchableOpacity>
-                                            </View>
-                                        }
-                                    </View>
-                            }
+                                                <TouchableOpacity onPress={printReceipt} style={styles.print}>
+                                                    <Text style={{ color: 'white', fontSize: 17 }}>Print</Text>
+                                                </TouchableOpacity>
+                                            </View> :
+                                                <View style={{ justifyContent: 'space-between', gap: 10 }}>
+                                                    <TouchableOpacity onPress={unHold} style={styles.hold}>
+                                                        <Text style={{ color: 'black', fontSize: 17 }}>Un-hold</Text>
+                                                    </TouchableOpacity>
+                                                    <TouchableOpacity onPress={() => setOpen(true)} style={styles.reRead}>
+                                                        <Text style={{ color: 'black', fontSize: 17 }}>Re-read</Text>
+                                                    </TouchableOpacity>
+                                                </View>
+                                            }
+                                        </View>
+                                }
+                            </View>
+
                         </View>
-                        <View style={{ flex: 3, alignItems: 'center', flexWrap: 'wrap' }}>
+                        <View style={{ flex: 6, alignItems: 'center', flexWrap: 'wrap' }}>
                             <View style={{ justifyContent: 'space-between', flex: 1 }}>
                                 <View style={styles.infoGap}>
                                     <View style={styles.info}>
@@ -379,7 +373,7 @@ const UserInfo = ({ navigation, route }) => {
                                 <View style={styles.infoGap}>
                                     <View style={styles.info}>
                                         <Text style={styles.infoName}>Meter Serial No.:</Text>
-                                        <Text style={styles.infoValue}>{user.meterno ? user.meterno.substring(0, user.meterno.indexOf(':')) : null}</Text>
+                                        <Text style={styles.infoValue}>{user.meterno ? user.meterno.slice(0,23) + " ..." : user.meterno}</Text>
                                     </View>
                                     <View style={styles.info}>
                                         <Text style={styles.infoName}>Brand:</Text>
@@ -409,8 +403,8 @@ const UserInfo = ({ navigation, route }) => {
                                     }
                                     {user.rate !== null &&
                                         <View style={styles.info}>
-                                            <Text style={styles.infoName}>Bill Amounts:</Text>
-                                            <Text style={styles.infoValue}>{user.rate !== 0 ? user.rate.toFixed(2): 0}</Text>
+                                            <Text style={styles.infoName}>Bill Amount:</Text>
+                                            <Text style={styles.infoValue}>{user.rate !== 0 ? user.rate.toFixed(2) : 0}</Text>
                                         </View>
                                     }
                                 </View>
@@ -489,7 +483,7 @@ const UserInfo = ({ navigation, route }) => {
                                         <TouchableOpacity onPress={() => setNoteOpen(false)} style={{ ...styles.save, backgroundColor: 'white', width: 100 }}>
                                             <Text style={{ color: 'black' }}>Cancel</Text>
                                         </TouchableOpacity>
-                                        <TouchableOpacity onPress={saveNote} style={{...styles.save,width: 100}}>
+                                        <TouchableOpacity onPress={saveNote} style={{ ...styles.save, width: 100 }}>
                                             <Text style={{ color: 'white' }}>Save</Text>
                                         </TouchableOpacity>
                                     </View>
@@ -498,7 +492,7 @@ const UserInfo = ({ navigation, route }) => {
                         </Modal>
                     }
                 </View>
-                <View style={{ gap: 10, height: 100, paddingHorizontal: 20, alignItems: 'center' }}>
+                <View style={{ gap: 10, height: 80, paddingHorizontal: 20, alignItems: 'center' }}>
                     {user.note &&
                         <View>
                             <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center' }}>
@@ -512,9 +506,9 @@ const UserInfo = ({ navigation, route }) => {
                     }
                 </View>
             </View>
-            {(!open && !noteOpen) && <TouchableOpacity onPress={() => navigation.navigate('Batch Info', { batchname })} style={styles.backButton}>
+            {/* {(!open && !noteOpen) && <TouchableOpacity onPress={() => navigation.navigate('Batch Info', { batchname })} style={styles.backButton}>
                 <Text style={{ color: 'black' }}>Back to List</Text>
-            </TouchableOpacity>}
+            </TouchableOpacity>} */}
         </View>
     )
 }
