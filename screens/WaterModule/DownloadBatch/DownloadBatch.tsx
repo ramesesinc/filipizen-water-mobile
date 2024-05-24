@@ -150,10 +150,6 @@ const DownloadBatch = ({ navigation }) => {
     const batchTable = selectedBatch.replace(/-/g, '')
     currentBatch.current = batchTable
 
-    // let booleanValueToSave;
-
-    console.log("env", process.env.API_DOWNLOAD)
-
     const getdata = async () => {
       try {
         batchDownloading.current = true
@@ -184,7 +180,7 @@ const DownloadBatch = ({ navigation }) => {
 
         console.log(`start is : ${currentStart.current}, limit is : ${selected + 1}`)
 
-        const res = await fetch(process.env.API_DOWNLOAD, {
+        const res = await fetch("http://192.168.2.11:8040/osiris3/json/enterprise/WaterMobileReadingService.getBatchItems", {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -327,11 +323,6 @@ const DownloadBatch = ({ navigation }) => {
           }
 
           const booleanValueToSave = dataRes.length === selected + 1 ? true : false
-
-          console.log("boolean to save :", booleanValueToSave)
-
-          // await AsyncStorage.setItem(batchTable, JSON.stringify(booleanValueToSave));
-          // await AsyncStorage.setItem("prevFetchSize", JSON.stringify(selected));
 
           if (booleanValueToSave && !exited.current) {
             await getdata();

@@ -7,8 +7,6 @@ import { styles } from './styles'
 import WaterHeader from '../../../components/Water/WaterHeader';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import {API_UPLOAD} from "react-native-dotenv"
-
 const UploadBatch = ({ navigation }) => {
   const [uploading, setUploading] = useState(false)
   const [completed, setCompleted] = useState(false);
@@ -49,7 +47,7 @@ const UploadBatch = ({ navigation }) => {
             const storedString = await AsyncStorage.getItem('readerInfo');
             if (storedString !== null) {
               const readerObj = JSON.parse(storedString);
-              const res = await fetch(API_UPLOAD, {
+              const res = await fetch("http://192.168.2.11:8040/osiris3/json/enterprise/WaterMobileReadingService.uploadReadings", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({

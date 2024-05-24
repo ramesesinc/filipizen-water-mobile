@@ -7,8 +7,6 @@ import { useEffect, useRef, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useIsFocused } from '@react-navigation/native';
 
-import {API_FORMULA} from "react-native-dotenv";
-
 const WaterHome = ({ navigation }) => {
   const menu = [
     { name: 'Download Batch', icon: <Ionicons style={styles.iconStyle} name="download-sharp" size={60} color="#00669B" /> },
@@ -46,7 +44,7 @@ const WaterHome = ({ navigation }) => {
 
   const handleSync = async () => {
     try {
-      const res = await fetch(API_FORMULA);
+      const res = await fetch("http://192.168.2.11:8040/osiris3/json/enterprise/WaterConsumptionFormulaService.getFormula");
       const data = await res.json();
       if (data) {
         const tobeFormula = await AsyncStorage.setItem('formula', data.formula.toString());
