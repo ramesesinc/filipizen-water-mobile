@@ -38,6 +38,16 @@ export const styles = StyleSheet.create({
         marginBottom: 30,
         width: 250
     },
+    refreshButton: {
+        borderWidth: 1,
+        height: 50,
+        backgroundColor: 'white',
+        borderRadius: 10,
+        alignItems:'center',
+        justifyContent: 'center',
+        marginBottom: 30,
+        width: 250
+    },
     backButton: {
         bottom: 10,
         backgroundColor: "white",

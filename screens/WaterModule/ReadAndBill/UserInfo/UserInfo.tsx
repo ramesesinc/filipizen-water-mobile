@@ -167,6 +167,7 @@ const UserInfo = ({ navigation, route }) => {
     const inputRefs = useRef([]);
 
     const handleInputChange = (text, index) => {
+        console.log(text)
         if (text.length > 0 && index < numberValue.length - 1) {
             inputRefs.current[index + 1].focus();
         }
@@ -199,7 +200,7 @@ const UserInfo = ({ navigation, route }) => {
                     toSubstractFrom += user.capacity
                 }
 
-                const newVol = toSubstractFrom - user.prevreading;
+                const newVol = (toSubstractFrom - user.prevreading) - 1;
                 const newFormula = await formula + `({acctgroup: '${user.acctgroup}', volume: ${newVol}})`
                 // const result = await eval(formula.replace(/vol/g, newVol.toString()));
                 const result = await eval(newFormula)

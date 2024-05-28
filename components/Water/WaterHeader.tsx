@@ -12,10 +12,11 @@ interface PropType {
   navigation: any,
   backBut?: string,
   data?: any,
-  option?: string
+  method?: any,
+  icon? :any
 }
 
-const WaterHeader = ({ navigation, backBut, data, option }: PropType) => {
+const WaterHeader = ({ navigation, backBut, data, icon, method }: PropType) => {
   const [show, setShow] = useState(false)
 
   return (
@@ -32,9 +33,9 @@ const WaterHeader = ({ navigation, backBut, data, option }: PropType) => {
         style={styles.etracsLogo}
       />
       {
-        option ?
-          <TouchableOpacity style={styles.backButContainer} onPress={() => navigation.navigate(option)}>
-            <Ionicons name="settings-sharp" size={24} color="#00669B" />
+        method ?
+          <TouchableOpacity style={styles.backButContainer} onPress={method}>
+            {icon}
           </TouchableOpacity> :
           <View style={{ flex: 1 }}></View>
       }

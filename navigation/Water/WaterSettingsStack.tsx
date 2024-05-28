@@ -6,6 +6,7 @@ import InputHeaders from "../../screens/WaterModule/WaterSettings/headersettings
 import { useIsFocused } from "@react-navigation/native";
 import { useEffect } from "react";
 import Formula from "../../screens/WaterModule/WaterSettings/formulasettings/formulasettings";
+import ServerSettings from "../../screens/WaterModule/WaterSettings/Server Settings/ServerSettings";
 
 const Stack = createStackNavigator();
 
@@ -23,7 +24,7 @@ const WaterSettingsStack = ({navigation}) => {
         <Stack.Screen name="Settings Home" component={WaterSettings} options={{headerShown: false}} />
         <Stack.Screen name="Header Settings" component={HeaderSettings} options={{headerShown: false}} />
         <Stack.Screen name="Input Headers" component={InputHeaders} options={{headerShown: false}} />
-        <Stack.Screen name="Formula Settings" component={Formula} options={{headerShown: false}} />
+        <Stack.Screen name="Server Settings" component={ServerSettings} options={{headerShown: false}} />
     </Stack.Navigator>
   )
 }

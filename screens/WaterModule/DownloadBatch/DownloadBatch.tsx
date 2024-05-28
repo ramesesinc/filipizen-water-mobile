@@ -1,6 +1,6 @@
 import { View, Text, TextInput, ActivityIndicator, AppState, TouchableOpacity } from 'react-native'
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-
+import FontAwesome from '@expo/vector-icons/FontAwesome';
 
 import { styles } from './styles'
 import { useEffect, useRef, useState } from 'react'
@@ -10,6 +10,7 @@ import * as SQLITE from 'expo-sqlite'
 import React from 'react'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { SelectList } from 'react-native-dropdown-select-list'
+import { removeDownloaded } from '../Others/removeDownloaded';
 
 const DownloadBatch = ({ navigation }) => {
   const [downloading, setDownloading] = useState(false)
@@ -22,7 +23,7 @@ const DownloadBatch = ({ navigation }) => {
   const [prevFetchNum, setPrevFetchNum] = useState(0)
 
   const [formula, setFormula] = useState(null);
-  const [readerBatches, setReaderbatcher] = useState([])
+  const [readerBatches, setReaderbatches] = useState([])
   const [selectedBatch, setSelectedBatch] = useState("")
 
   const db = SQLITE.openDatabase('example.db');
@@ -30,61 +31,48 @@ const DownloadBatch = ({ navigation }) => {
   const exited = useRef(false)
 
   const currentBatch = useRef(null)
-  const prevStart = useRef(null)
+  // const prevStart = useRef(null)
   const batchDownloading = useRef(null)
 
   const currentStart = useRef(0)
+
+  const getBatch = async () => {
+    console.log("getBatches running")
+    const readerInfo = await AsyncStorage.getItem('readerInfo');
+    const storedObject = await JSON.parse(readerInfo);
+
+    const res = await fetch("http://192.168.2.11:8040/osiris3/json/enterprise/WaterMobileReadingService.getBatches", {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        env: {
+          CLIENTTYPE: 'mobile',
+          USERID: storedObject.USERID,
+          SESSIONID: storedObject.SESSIONID
+        }
+      }),
+    });
+
+    const data = await res.json()
+
+    if (data.length > 0) {
+      setReaderbatches(data.map((i) => {
+        return { key: i.objid, value: i.objid }
+      }))
+    } else {
+      setReaderbatches([])
+    }
+  }
 
   useEffect(() => {
     exited.current = false
     const unsubscribe = AppState.addEventListener('change', async (nextAppState) => {
       if (nextAppState === 'background' || nextAppState === 'inactive') {
         exited.current = true
-        console.log("current", prevStart.current, currentBatch.current)
-        if (prevStart.current !== null && currentBatch.current !== null && batchDownloading.current === true) {
-          db.transaction(tx => {
-            tx.executeSql(
-              `DELETE FROM ${currentBatch.current} WHERE pageNum >= ?`,
-              [prevStart.current],
-              (_, resultSet) => {
-                console.log('Rows deleted successfully from eventlistner');
-              },
-              (_, error) => {
-                console.error('Error deleting rows:', error);
-                return false
-              }
-            );
+        console.log("current", currentStart.current, currentBatch.current, batchDownloading.current)
+        if (currentStart.current !== null && currentBatch.current !== null && batchDownloading.current === true) {
+          removeDownloaded(currentStart.current, currentBatch.current)
 
-            tx.executeSql(
-              `SELECT * FROM ${currentBatch.current}`, null,
-              async (txt, resultSet) => {
-                console.log("total", resultSet.rows._array.length)
-                const total = resultSet.rows._array.length
-                if (total === 0) {
-                  // await AsyncStorage.removeItem(`${batch.replace(/-/g, '')}Start`);
-                  // await AsyncStorage.removeItem(`${batch.replace(/-/g, '')}`);
-                  db.transaction(tx => {
-                    tx.executeSql(`DROP TABLE ${currentBatch.current}`, null, (txObj, resultSet) => {
-                      // AsyncStorage.setItem(`${currentBatch.current}Start`, JSON.stringify(0));
-                      console.log(`${currentBatch.current} now deleted in eventlistener`);
-                    },
-                      (_, e) => {
-                        console.log("table not deleted", e)
-                        return false
-                      }
-                    );
-                  })
-                }
-              }
-            )
-          });
-
-          // await AsyncStorage.removeItem(`${currentBatch.current.replace(/-/g, '')}Start`);
-          // await AsyncStorage.removeItem(`${currentBatch.current.replace(/-/g, '')}`);
-          // AsyncStorage.removeItem(`${currentBatch.current.replace(/-/g, '')}Start`);
-          // AsyncStorage.removeItem(`${currentBatch.current.replace(/-/g, '')}`);
-          // console.log(exited.current)
-          // console.log(currentBatch.current)
           navigation.navigate("Water Home");
           batchDownloading.current = false
         }
@@ -111,29 +99,6 @@ const DownloadBatch = ({ navigation }) => {
       }
     };
 
-    const getBatch = async () => {
-      const readerInfo = await AsyncStorage.getItem('readerInfo');
-      const storedObject = await JSON.parse(readerInfo);
-
-      const res = await fetch("http://192.168.2.11:8040/osiris3/json/enterprise/WaterMobileReadingService.getBatches", {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          env: {
-            CLIENTTYPE: 'mobile',
-            USERID: storedObject.USERID,
-            SESSIONID: storedObject.SESSIONID
-          }
-        }),
-      });
-
-      const data = await res.json()
-
-      setReaderbatcher(data.map((i) => {
-        return { key: i.objid, value: i.objid }
-      }))
-    }
-
     getPrevFetchSize();
     retrieveFormula();
     getBatch();
@@ -156,25 +121,7 @@ const DownloadBatch = ({ navigation }) => {
         setPreDownloading(true)
         console.log("getData function run")
 
-        // const checkStartExists = async (key: string) => {
-        //   try {
-        //     const value = await AsyncStorage.getItem(key);
-        //     // If the value is not null, the variable exists
-        //     if (value !== null && value !== "0") {
-        //       // console.log(`Variable ${key} exists with value:`, value);
-        //       const toStart = Number(value) + 1
-        //       return toStart;
-        //     } else {
-        //       return 0;
-        //     }
-        //   } catch (error) {
-        //     console.error('Error checking variable existence:', error);
-        //     return 0;
-        //   }
-        // };
-
-        // const start: number = await checkStartExists(`${batchTable}Start`);
-        prevStart.current = currentStart.current
+        // prevStart.current = currentStart.current
         const readerInfo = await AsyncStorage.getItem('readerInfo');
         const storedObject = await JSON.parse(readerInfo);
 
@@ -195,7 +142,7 @@ const DownloadBatch = ({ navigation }) => {
             },
           }),
         });
-        // const res = await fetch(`http://192.168.2.88:8040/osiris3/json/enterprise/WaterMobileReadingService.getBatchItems?batchid=${batch}`);
+
         const dataRes = await res.json();
 
         if (dataRes.msg) {
@@ -246,7 +193,6 @@ const DownloadBatch = ({ navigation }) => {
             "note": "",
           }))
 
-          // if (lastRec == limit || lastRec === 0) {
           let data;
 
           newData.length === selected + 1 ? data = await newData.slice(0, newData.length - 1) : data = await newData;
@@ -260,50 +206,9 @@ const DownloadBatch = ({ navigation }) => {
             await new Promise((res) => setTimeout(res, 50))
             if (exited.current) {
               console.log("break")
-              console.log("prevstart:", prevStart.current)
-              if (prevStart.current !== null && currentBatch.current !== null && batchDownloading.current === true) {
-                db.transaction(tx => {
-                  tx.executeSql(
-                    `DELETE FROM ${currentBatch.current} WHERE pageNum >= ?`,
-                    [prevStart.current],
-                    (_, resultSet) => {
-                      console.log('Rows deleted successfully from function');
-                    },
-                    (_, error) => {
-                      console.error('Error deleting rows:', error);
-                      return false
-                    }
-                  );
-                },
-                  (e) => {
-                    console.log(e)
-                    return false
-                  }
-                );
-                db.transaction(tx => {
-                  tx.executeSql(
-                    `SELECT * FROM ${currentBatch.current}`, null,
-                    (txt, resultSet) => {
-                      console.log("total", resultSet.rows._array.length)
-                      const total = resultSet.rows._array.length
-                      if (total === 0) {
-                        db.transaction(tx => {
-                          tx.executeSql(`DROP TABLE ${currentBatch.current}`, null, async (txObj, resultSet) => {
-                            // await AsyncStorage.removeItem(`${batch.replace(/-/g, '')}Start`);
-                            // await AsyncStorage.removeItem(`${batch.replace(/-/g, '')}`);
-                            // AsyncStorage.setItem(`${currentBatch.current}Start`, JSON.stringify(0));
-                            console.log(`${currentBatch.current} now deleted from function`);
-                          },
-                            (_, e) => {
-                              console.log("table not deleted", e)
-                              return false
-                            }
-                          );
-                        })
-                      }
-                    }
-                  )
-                })
+              // console.log("prevstart:", prevStart.current)
+              if (currentStart.current !== null && currentBatch.current !== null && batchDownloading.current === true) {
+                removeDownloaded(currentStart.current, currentBatch.current)
                 console.log(exited.current)
                 navigation.navigate("Water Home");
               }
@@ -347,25 +252,6 @@ const DownloadBatch = ({ navigation }) => {
       }
     }
 
-    // const checkVariableExists = async (key) => {
-    //   try {
-    //     const value = await AsyncStorage.getItem(key);
-    //     if (value !== null) {
-    //       return JSON.parse(value);
-    //     } else {
-    //       return true;
-    //     }
-    //   } catch (error) {
-    //     console.error('Error checking variable existence:', error);
-    //     return true;
-    //   }
-    // };
-
-    // let lastRec = await checkVariableExists(batchTable);
-
-    // console.log("LastRec is :", lastRec)
-
-    // if (lastRec && !exited.current) {
     db.transaction(tx => {
       tx.executeSql(
         `SELECT name FROM sqlite_master WHERE type='table' AND name=?`,
@@ -373,8 +259,6 @@ const DownloadBatch = ({ navigation }) => {
         (txObj, resultSet) => {
           if (resultSet.rows.length > 0) {
             tx.executeSql(`DROP TABLE ${batchTable}`, null, async (txObj, resultSet) => {
-              // await AsyncStorage.removeItem(`${batchTable}Start`);
-              // await AsyncStorage.removeItem(`${batchTable}`);
               console.log("table dropped")
             });
           } else {
@@ -391,10 +275,6 @@ const DownloadBatch = ({ navigation }) => {
 
     await new Promise((res) => setTimeout(res, 100))
     await getdata();
-    // } else {
-    //   setError("All accounts already downloaded")
-    // }
-
   }
 
   const downloadAnotherBatch = () => {
@@ -412,7 +292,6 @@ const DownloadBatch = ({ navigation }) => {
               <View style={styles.infoContainer}>
                 <Text style={{ ...styles.menuText, color: 'green' }}>Downloading ...</Text>
                 <Text style={{ fontSize: 20, fontWeight: '400' }}>Batch: {selectedBatch}</Text>
-                {/* <Progress.Bar progress={percent} width={200} height={20} color='green' /> */}
                 <Text>Records Downloaded:  {curr}</Text>
               </View>
             </View>
@@ -455,13 +334,13 @@ const DownloadBatch = ({ navigation }) => {
 
   return (
     <View style={{ flex: 1, backgroundColor: 'white' }}>
-      <WaterHeader navigation={navigation} backBut='Water Home' />
+      <WaterHeader navigation={navigation} backBut='Water Home' icon={<FontAwesome name="refresh" size={23} color="#00669B" />} method={getBatch} />
       <View style={styles.container}>
         {predownloading ?
           <ActivityIndicator style={{ flex: 1 }} size={100} color="#00669B" /> :
           <View style={styles.infoContainer}>
             <Text style={styles.menuText}>Download Batch</Text>
-            <View style={{ gap: 15, flex: 1, width: 250 }}>
+            <View style={{ flex: 1, width: 250 }}>
               {error && <Text style={{ color: 'red', textAlign: 'center' }}>{error}</Text>}
               <View style={{ flexDirection: 'row', gap: 10 }}>
                 <View style={{ flex: 2 }}>
@@ -470,6 +349,7 @@ const DownloadBatch = ({ navigation }) => {
                     setSelected={setSelectedBatch}
                     search={false}
                     placeholder='Select Batch ID'
+                    defaultOption={readerBatches[0] && readerBatches[0]}
                     boxStyles={{ height: 50 }}
                     onSelect={() => {
                       console.log(selectedBatch)
@@ -494,15 +374,16 @@ const DownloadBatch = ({ navigation }) => {
                     }}
                     maxHeight={200}
                   />
-                </View> 
+                </View>
               </View>
             </View>
-            <TouchableOpacity style={selectedBatch ? styles.downloadButton : {...styles.downloadButton, backgroundColor: 'grey'}} onPress={downloadBatch} disabled={selectedBatch ? false: true}>
-              <Text style={{ color: 'white', textAlign: 'center' }}>Download</Text>
-            </TouchableOpacity>
+            <View style={{ flexDirection: 'row', gap: 10, width: 250 }}>
+              <TouchableOpacity style={selectedBatch ? {...styles.downloadButton, flex: 2} : { ...styles.downloadButton, backgroundColor: 'grey' }} onPress={downloadBatch} disabled={selectedBatch ? false : true}>
+                <Text style={{ color: 'white', textAlign: 'center' }}>Download</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         }
-
       </View>
     </View>
   )

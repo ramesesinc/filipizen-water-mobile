@@ -22,10 +22,10 @@ const WaterSettings = ({ navigation }) => {
         (_, { rows }) => {
           // Step 2: Iterate over each table and drop it
           rows._array.forEach(({ name }) => {
-            tx.executeSql(`DROP TABLE IF EXISTS ${name};`, [], 
+            tx.executeSql(`DROP TABLE IF EXISTS ${name};`, [],
               () => {
                 console.log(`Dropped table ${name}`);
-              }, 
+              },
               (_, error) => {
                 console.error(`Error dropping table ${name}:`, error);
                 return true; // signal that an error occurred
@@ -52,13 +52,13 @@ const WaterSettings = ({ navigation }) => {
             <View style={styles.modal}>
               <Text>Are you sure you want to Clear All Data ?</Text>
               <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center', justifyContent: 'space-around' }}>
-                <Pressable style={{...styles.save, backgroundColor: 'white'}} onPress={() => {
+                <Pressable style={{ ...styles.save, backgroundColor: 'white' }} onPress={() => {
                   setOpen(false)
                 }}>
-                  <Text style={{textAlign: 'center'}}>No</Text>
+                  <Text style={{ textAlign: 'center' }}>No</Text>
                 </Pressable>
                 <Pressable style={styles.save} onPress={() => handleClearData()}>
-                  <Text style={{textAlign: 'center', color: 'white'}}>Yes</Text>
+                  <Text style={{ textAlign: 'center', color: 'white' }}>Yes</Text>
                 </Pressable>
               </View>
             </View>
@@ -70,8 +70,12 @@ const WaterSettings = ({ navigation }) => {
           <MaterialCommunityIcons name="printer" size={20} color="#00669B" />
           <Text style={styles.optionsText}>Headers Set-up</Text>
         </TouchableOpacity>
+        <TouchableOpacity style={styles.options} onPress={() => navigation.navigate("Server Settings")}>
+          <FontAwesome name="server" size={20} color="#00669B" />
+          <Text style={styles.optionsText}>Server Address</Text>
+        </TouchableOpacity>
         <TouchableOpacity style={styles.options} onPress={() => setOpen(true)}>
-        <MaterialCommunityIcons name="archive-remove" size={20} color="#00669B" />
+          <MaterialCommunityIcons name="archive-remove" size={20} color="#00669B" />
           <Text style={styles.optionsText}>Clear Data</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.options} onPress={() => navigation.navigate("Login")}>
