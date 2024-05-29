@@ -11,6 +11,7 @@ import React from 'react'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { SelectList } from 'react-native-dropdown-select-list'
 import { removeDownloaded } from '../Others/removeDownloaded';
+import { currencyFormat } from '../Others/formatCurrency';
 
 const DownloadBatch = ({ navigation }) => {
   const [downloading, setDownloading] = useState(false)
@@ -145,6 +146,8 @@ const DownloadBatch = ({ navigation }) => {
 
         const dataRes = await res.json();
 
+        console.log(dataRes)
+
         if (dataRes.msg) {
           setError(dataRes.msg)
           setPreDownloading(false)
@@ -216,7 +219,7 @@ const DownloadBatch = ({ navigation }) => {
             } else {
               db.transaction(tx => {
                 tx.executeSql(`INSERT INTO ${batchTable} (batchid, acctno, prevreading, reading, volume, rate, acctname, capacity, brand, meterno, billdate, duedate, discdate, amount, classification, penalty, discount, acctgroup, fromdate, todate, location, reader, balance, pageNum, note) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
-                  [data[i].batchid, data[i].acctno, data[i].prevreading, data[i].reading, data[i].volume, data[i].rate, data[i].acctname, data[i].meter.capacity, data[i].meter.brand, data[i].meterid, data[i].billdate, data[i].duedate, data[i].discdate, data[i].amount, data[i].classificationid, data[i].penalty, data[i].discount, data[i].acctgroup, data[i].fromdate, data[i].todate, data[i].location.text, data[i].reader.name, data[i].balance, data[i].pageNum, data[i].note])
+                  [data[i].batchid, data[i].acctno, data[i].prevreading, data[i].reading, data[i].volume, data[i].rate, data[i].acctname, data[i].meter.capacity, data[i].meter.brand, data[i].meter.serialno, data[i].billdate, data[i].duedate, data[i].discdate, data[i].amount, data[i].classificationid, data[i].penalty, data[i].discount, data[i].acctgroup, data[i].fromdate, data[i].todate, data[i].location.text, data[i].reader.name, data[i].balance, data[i].pageNum, data[i].note])
               })
               setCurr(data[i].pageNum + 1)
               if (i === newNum - 1 && exited.current !== true) {

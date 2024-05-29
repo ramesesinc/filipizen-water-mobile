@@ -60,11 +60,10 @@ export const printFormat = (user: UserType, headers) => {
         `[C]<b><font size='big'>BILLING NOTICE</font></b>\n` +
         `[C]<font size='normal'>${newBillDate}</font>\n` +
         `[L]\n` +
-        `[C]<font size='normal'>${newFromDate} to ${newToDate}</font>\n` +
         `[L]\n` +
-        `[L]<font size='normal'>${user.acctno}</font>\n` +
-        `[L]<font size='normal'>${newName}</font>\n` +
-        `[L]<font size='normal'>${newLoc}</font>\n` +
+        `[L]<font size='normal'>Account no: ${user.acctno}</font>\n` +
+        `[L]<font size='normal'>Name: ${newName}</font>\n` +
+        `[L]<font size='normal'>Address ${newLoc}</font>\n` +
         `[L]\n` +
         `[L]<font size='normal'>Account Grooup: ${user.acctgroup}</font>\n` +
         `[L]<font size='normal'>Classification: ${user.classification}</font>\n` +
@@ -74,6 +73,7 @@ export const printFormat = (user: UserType, headers) => {
         `[L]\n` +
         `[C]<b>================================</b>\n` +
         `[C]<b><font size='normal'>Reading</font></b>\n` +
+        `[C]<font size='normal'>${newFromDate} to ${newToDate}</font>\n` +
         `[L]\n` +
         `[L]<font size='normal'>Current</font>[R]<font size='normal'>${user.reading}</font>\n` +
         `[L]<font size='normal'>Previous</font>[R]<font size='normal'>${user.prevreading}</font>\n` +

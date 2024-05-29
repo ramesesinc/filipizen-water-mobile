@@ -145,7 +145,7 @@ const BatchInfo = ({ navigation, route }) => {
                                             data={dataInfo}
                                             renderItem={(data) => (
                                                 <View>
-                                                    <View style={data.item.reading === null ? styles.accountContainer : { ...styles.accountContainer, backgroundColor: 'rgba(0, 0, 0, 0.2)' }}>
+                                                    <View style={data.item.reading === null ? styles.accountContainer : { ...styles.accountContainer, backgroundColor: 'rgba(0, 0, 0, 0.15)' }}>
                                                         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', gap: 5 }}>
                                                             {data.item.acctno === '1' ?
                                                                 <Ionicons name="location-sharp" size={50} color="red" /> :
@@ -161,8 +161,8 @@ const BatchInfo = ({ navigation, route }) => {
                                                                 <Text style={{ fontSize: 12 }}>{data.item.acctname}</Text>
                                                             </View>
                                                             <View style={styles.info}>
-                                                                <Text style={{ fontWeight: 'bold' }}>CLASSIFICATION: </Text>
-                                                                <Text>{data.item.classification}</Text>
+                                                                <Text style={{ fontWeight: 'bold' }}>ACCOUNT NUMBER: </Text>
+                                                                <Text>{data.item.acctno}</Text>
                                                             </View>
                                                             <View style={styles.info}>
                                                                 <Text style={{ fontWeight: 'bold' }}>CURRENT READING: </Text>

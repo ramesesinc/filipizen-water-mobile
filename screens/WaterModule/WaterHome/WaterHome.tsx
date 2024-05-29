@@ -58,12 +58,14 @@ const WaterHome = ({ navigation }) => {
 
   const handleNav = (name : string) => {
 
-    if (name !== "Read & Bill" && name !== "Sync Formula") {
+    if (name !== "Read & Bill" && name !== "Sync Formula" && name !== "Download Batch") {
       navigation.navigate(name)
     } else if (name === "Read & Bill" && !formula) {
       // alert("Please sync the bill formula in the settings first!");
       // Alert.alert("Can't open Read & Bill", "Please sync the bill formula in the settings first!",[], {cancelable: true, onDismiss: () => navigation.navigate("Settings")})
-      alert("Can't open Read & Bill ,Please sync the bill formula first!")
+      alert("Please sync the bill formula first!")
+    } else if (name === "Download Batch" && !formula){
+      alert("Please sync the bill formula first!")
     } else if(name === "Sync Formula") {
       handleSync()
     } else {

@@ -167,9 +167,11 @@ const UserInfo = ({ navigation, route }) => {
     const inputRefs = useRef([]);
 
     const handleInputChange = (text, index) => {
-        console.log(text)
+        console.log("text:",text)
         if (text.length > 0 && index < numberValue.length - 1) {
             inputRefs.current[index + 1].focus();
+        } else {
+            inputRefs.current[index].blur();
         }
         const newInputs = [...numberValue];
         newInputs[index] = text;
@@ -192,25 +194,36 @@ const UserInfo = ({ navigation, route }) => {
             const newNumber = numberValue.map((item) => item === "" ? item = "0" : item)
             const newDecimal = decimalValue.map((item) => item === "" ? item = "0" : item)
             const newReadStr = newNumber.join('') + '.' + newDecimal.join('');
-            const newRead = parseFloat(newReadStr);
+            const newRead = Number(newReadStr);
+
+            // console.log(newNumber, newDecimal, newRead)
 
             if (newRead !== 0) {
                 let toSubstractFrom = newRead
                 if (user.prevreading > newRead) {
-                    toSubstractFrom += user.capacity
+                    toSubstractFrom = (user.capacity + toSubstractFrom) - 1
+                    
                 }
 
-                const newVol = (toSubstractFrom - user.prevreading) - 1;
-                const newFormula = await formula + `({acctgroup: '${user.acctgroup}', volume: ${newVol}})`
+                
+                // user.volume = Number((toSubstractFrom - user.prevreading).toFixed(4));
+                const newVol = Number((toSubstractFrom - user.prevreading).toFixed(4));
+                console.log(user.prevreading, newRead, user.volume)
+                const func = eval(formula)
+                const result = func(user)
+
+                // const newVol = (toSubstractFrom - user.prevreading) - 1;
+                // const newFormula = await formula + `(${user})`
                 // const result = await eval(formula.replace(/vol/g, newVol.toString()));
-                const result = await eval(newFormula)
-                const finalRes = result ? result : null
+                // console.log(user)
+                // const result = await eval(newFormula)
+                // const finalRes = result ? result : null
 
                 db.transaction(
                     tx => {
                         tx.executeSql(
                             `UPDATE ${batchname} SET reading = ?, volume = ?, rate = ? WHERE acctno = ?`,
-                            [newRead, newVol, finalRes, user.acctno],
+                            [newRead, newVol, result, user.acctno],
                             (txObj, resultSet) => {
                                 console.log('Updated reading, volume, and rate');
                             },
@@ -222,7 +235,7 @@ const UserInfo = ({ navigation, route }) => {
                     }
                 );
             }
-
+            
         } catch (e) {
             console.log("error:", e)
         } finally {
@@ -318,7 +331,7 @@ const UserInfo = ({ navigation, route }) => {
                 <View style={{ flex: 1, marginBottom: 0, marginTop: 10 }}>
                     <View style={{ flex: 1, flexDirection: 'row', marginBottom: 10 }}>
                         <View style={{ flex: 3, alignItems: 'flex-start' }}>
-                            <View style={{ flex: 1,justifyContent: 'space-between'}}>
+                            <View style={{ flex: 1, justifyContent: 'space-between' }}>
                                 <View style={{ alignItems: 'center', alignSelf: 'center' }}>
                                     <Pressable >
                                         {user.acctno === '1' ?
@@ -326,7 +339,8 @@ const UserInfo = ({ navigation, route }) => {
                                             <Ionicons name="location-outline" size={50} color="black" />
                                         }
                                     </Pressable>
-                                    <Text style={{ fontWeight: 'bold' }}>{user.pageNum + 1}</Text>
+                                    <Text></Text>
+                                    {/* <Text style={{ fontWeight: 'bold' }}>{user.pageNum + 1}</Text> */}
                                 </View>
                                 {
                                     user.reading === null ?
@@ -338,7 +352,9 @@ const UserInfo = ({ navigation, route }) => {
                                                 <TouchableOpacity onPress={() => setNoteOpen(true)} style={styles.hold}>
                                                     <Text style={{ color: 'black', fontSize: 17 }}>Hold</Text>
                                                 </TouchableOpacity>
-                                                <TouchableOpacity onPress={() => setOpen(true)} style={styles.reRead}>
+                                                <TouchableOpacity onPress={() => {
+                                                    setOpen(true)
+                                                    }} style={styles.reRead}>
                                                     <Text style={{ color: 'black', fontSize: 17 }}>Re-read</Text>
                                                 </TouchableOpacity>
                                                 <TouchableOpacity onPress={printReceipt} style={styles.print}>
@@ -374,7 +390,7 @@ const UserInfo = ({ navigation, route }) => {
                                 <View style={styles.infoGap}>
                                     <View style={styles.info}>
                                         <Text style={styles.infoName}>Meter Serial No.:</Text>
-                                        <Text style={styles.infoValue}>{user.meterno ? user.meterno.slice(0,23) + " ..." : user.meterno}</Text>
+                                        <Text style={styles.infoValue}>{user.meterno}</Text>
                                     </View>
                                     <View style={styles.info}>
                                         <Text style={styles.infoName}>Brand:</Text>
