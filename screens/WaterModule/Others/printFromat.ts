@@ -1,12 +1,15 @@
 import { UserType } from '../../WaterModule/Others/types'
 import { Asset } from 'expo-asset';
 
-const imageAsset = Asset.fromModule(require('../../../assets/printerLogo.png'));
-const imageUrl = imageAsset.uri;
+import RNFS from 'react-native-fs';
 
-const etracslogo = require('../../../assets/printerLogo.png')
+// const imageAsset = Asset.fromModule(require('../../../assets/printerLogo.png'));
+// const imageUrl = imageAsset.uri;
 
-export const printFormat = (user: UserType, headers) => {
+// const etracslogo = require('../../../assets/printerLogo.png')
+
+export const printFormat = (user: UserType, headers, imageUrl) => {
+
     const newMeterNo = user.meterno ? user.meterno.substring(0, user.meterno.indexOf(':')) : null;
     const { header1, header2, header3 } = headers;
     const newName = user.acctname.replace(/ñ/gi, (match) => {
@@ -58,12 +61,12 @@ export const printFormat = (user: UserType, headers) => {
         `[C]<b>================================</b>\n` +
         `[L]\n` +
         `[C]<b><font size='big'>BILLING NOTICE</font></b>\n` +
-        `[C]<font size='normal'>${newBillDate}</font>\n` +
         `[L]\n` +
+        `[C]<font size='normal'>${newBillDate}</font>\n` +
         `[L]\n` +
         `[L]<font size='normal'>Account no: ${user.acctno}</font>\n` +
         `[L]<font size='normal'>Name: ${newName}</font>\n` +
-        `[L]<font size='normal'>Address ${newLoc}</font>\n` +
+        `[L]<font size='normal'>Address: ${newLoc}</font>\n` +
         `[L]\n` +
         `[L]<font size='normal'>Account Grooup: ${user.acctgroup}</font>\n` +
         `[L]<font size='normal'>Classification: ${user.classification}</font>\n` +
@@ -73,6 +76,7 @@ export const printFormat = (user: UserType, headers) => {
         `[L]\n` +
         `[C]<b>================================</b>\n` +
         `[C]<b><font size='normal'>Reading</font></b>\n` +
+        `[L]\n` +
         `[C]<font size='normal'>${newFromDate} to ${newToDate}</font>\n` +
         `[L]\n` +
         `[L]<font size='normal'>Current</font>[R]<font size='normal'>${user.reading}</font>\n` +

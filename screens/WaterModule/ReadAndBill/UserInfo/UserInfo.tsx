@@ -15,12 +15,10 @@ import { useIsFocused } from '@react-navigation/native';
 import { printFormat } from '../../Others/printFromat';
 
 import { Dimensions } from 'react-native';
+import { currencyFormat } from '../../Others/formatCurrency';
 
 const { height } = Dimensions.get('window');
 const db = SQLITE.openDatabase('example.db');
-
-const imageAsset = Asset.fromModule(require('../../../../assets/printerLogo.png'));
-const imageUrl = imageAsset.uri;
 
 const UserInfo = ({ navigation, route }) => {
     const [open, setOpen] = useState(false)
@@ -67,6 +65,17 @@ const UserInfo = ({ navigation, route }) => {
 
     const isFocused = useIsFocused()
     const { userAccNo, batchname } = route.params;
+
+    const [imageUrl, setImageUrl] = useState(null)
+    const dlPicture = async () => {
+        const imageAsset = Asset.fromModule(require('../../../../assets/printerLogo.png'));
+        // await imageAsset.downloadAsync()
+        // console.log("dl?", imageAsset.downloaded)
+        const url = imageAsset.uri
+        // const url = imageAsset.uri.replace("file://", "")
+        // const url = imageAsset.localUri
+        setImageUrl(url)
+    }
 
     let styles = null
 
@@ -146,14 +155,17 @@ const UserInfo = ({ navigation, route }) => {
 
             retrieveFormula();
             retrieveData();
+            console.log(imageUrl)
         }
+
+        dlPicture();
 
     }, [open, isFocused, noteOpen]);
 
     const printReceipt = async () => {
         try {
             await ThermalPrinterModule.printBluetooth({
-                payload: printFormat(user, headers),
+                payload: printFormat(user, headers, imageUrl),
                 printerWidthMM: 48,
                 printerNbrCharactersPerLine: 32
             });
@@ -167,7 +179,7 @@ const UserInfo = ({ navigation, route }) => {
     const inputRefs = useRef([]);
 
     const handleInputChange = (text, index) => {
-        console.log("text:",text)
+        console.log("text:", text)
         if (text.length > 0 && index < numberValue.length - 1) {
             inputRefs.current[index + 1].focus();
         } else {
@@ -202,15 +214,15 @@ const UserInfo = ({ navigation, route }) => {
                 let toSubstractFrom = newRead
                 if (user.prevreading > newRead) {
                     toSubstractFrom = (user.capacity + toSubstractFrom) - 1
-                    
+
                 }
 
-                
+
                 // user.volume = Number((toSubstractFrom - user.prevreading).toFixed(4));
                 const newVol = Number((toSubstractFrom - user.prevreading).toFixed(4));
                 console.log(user.prevreading, newRead, user.volume)
                 const func = eval(formula)
-                const result = func(user)
+                const result = func({ ...user, volume: newVol })
 
                 // const newVol = (toSubstractFrom - user.prevreading) - 1;
                 // const newFormula = await formula + `(${user})`
@@ -235,7 +247,7 @@ const UserInfo = ({ navigation, route }) => {
                     }
                 );
             }
-            
+
         } catch (e) {
             console.log("error:", e)
         } finally {
@@ -344,9 +356,9 @@ const UserInfo = ({ navigation, route }) => {
                                 </View>
                                 {
                                     user.reading === null ?
-                                        <Pressable onPress={() => setOpen(true)} style={styles.print}>
+                                        <TouchableOpacity onPress={() => setOpen(true)} style={styles.print}>
                                             <Text style={{ color: 'white', fontSize: 17 }}>Read</Text>
-                                        </Pressable> :
+                                        </TouchableOpacity> :
                                         <View>
                                             {!user.note ? <View style={{ justifyContent: 'space-between', gap: 10 }}>
                                                 <TouchableOpacity onPress={() => setNoteOpen(true)} style={styles.hold}>
@@ -354,7 +366,7 @@ const UserInfo = ({ navigation, route }) => {
                                                 </TouchableOpacity>
                                                 <TouchableOpacity onPress={() => {
                                                     setOpen(true)
-                                                    }} style={styles.reRead}>
+                                                }} style={styles.reRead}>
                                                     <Text style={{ color: 'black', fontSize: 17 }}>Re-read</Text>
                                                 </TouchableOpacity>
                                                 <TouchableOpacity onPress={printReceipt} style={styles.print}>
@@ -378,6 +390,10 @@ const UserInfo = ({ navigation, route }) => {
                         <View style={{ flex: 6, alignItems: 'center', flexWrap: 'wrap' }}>
                             <View style={{ justifyContent: 'space-between', flex: 1 }}>
                                 <View style={styles.infoGap}>
+                                    <View style={styles.info}>
+                                        <Text style={styles.infoName}>Account No:</Text>
+                                        <Text style={styles.infoValue}>{user.acctno}</Text>
+                                    </View>
                                     <View style={styles.info}>
                                         <Text style={styles.infoName}>Name:</Text>
                                         <Text style={styles.infoValue}>{user.acctname}</Text>
@@ -421,7 +437,7 @@ const UserInfo = ({ navigation, route }) => {
                                     {user.rate !== null &&
                                         <View style={styles.info}>
                                             <Text style={styles.infoName}>Bill Amount:</Text>
-                                            <Text style={styles.infoValue}>{user.rate !== 0 ? user.rate.toFixed(2) : 0}</Text>
+                                            <Text style={styles.infoValue}>{user.rate !== 0 ? currencyFormat({val: user.rate, decimal: 2}) : 0}</Text>
                                         </View>
                                     }
                                 </View>

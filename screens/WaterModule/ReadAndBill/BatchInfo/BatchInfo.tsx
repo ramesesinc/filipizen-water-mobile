@@ -1,6 +1,9 @@
 import { View, Text, Pressable, FlatList, Button, TextInput, Keyboard, KeyboardAvoidingView, ActivityIndicator, TouchableOpacity } from 'react-native'
 import { useEffect, useRef, useState } from 'react'
 import { Ionicons, Feather } from '@expo/vector-icons';
+import AntDesign from '@expo/vector-icons/AntDesign';
+import Fontisto from '@expo/vector-icons/Fontisto';
+
 
 import { styles } from './styles'
 import WaterHeader from '../../../../components/Water/WaterHeader';
@@ -34,12 +37,13 @@ const BatchInfo = ({ navigation, route }) => {
 
     const inputRef = useRef(null)
 
+    const [offset, setOffSet] = useState(0);
+
     useEffect(() => {
         if (isFocused) {
             db.transaction(tx => {
-                tx.executeSql(`SELECT * FROM ${batchname} WHERE pageNum BETWEEN ? AND ?`, [currentPage, currentPage + 10],
+                tx.executeSql(`SELECT * FROM ${batchname} LIMIT ? OFFSET ?`, [11, offset],
                     (txObj, resultSet) => {
-                        console.log(resultSet.rows._array.length)
                         if (resultSet.rows._array.length === 11) {
                             const newArr = resultSet.rows._array.slice(0, -1)
                             setDataInfo(newArr)
@@ -53,7 +57,7 @@ const BatchInfo = ({ navigation, route }) => {
                 )
             })
         }
-    }, [isFocused, batchname, currentPage, nextButton])
+    }, [isFocused, batchname, currentPage, nextButton, offset])
 
     useEffect(() => {
         let timeoutId;
@@ -97,7 +101,8 @@ const BatchInfo = ({ navigation, route }) => {
     const handleNextPage = () => {
         // setCurrentPage(currentPage + 1);
         setLoading(true)
-        setCurrentPage(currentPage + 10);
+        // setCurrentPage(currentPage + 10);
+        setOffSet(offset + 10)
         setPageCount(pageCount + 1)
     };
 
@@ -106,7 +111,8 @@ const BatchInfo = ({ navigation, route }) => {
         //     setCurrentPage(currentPage - 1);
         // }
         setLoading(true)
-        setCurrentPage(currentPage - 10);
+        // setCurrentPage(currentPage - 10);
+        setOffSet(offset - 10)
         setPageCount(pageCount - 1)
     };
 
@@ -145,20 +151,26 @@ const BatchInfo = ({ navigation, route }) => {
                                             data={dataInfo}
                                             renderItem={(data) => (
                                                 <View>
-                                                    <View style={data.item.reading === null ? styles.accountContainer : { ...styles.accountContainer, backgroundColor: 'rgba(0, 0, 0, 0.15)' }}>
+                                                    <View style={styles.accountContainer}>
                                                         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', gap: 5 }}>
-                                                            {data.item.acctno === '1' ?
+                                                            {/* {data.item.acctno === '1' ?
                                                                 <Ionicons name="location-sharp" size={50} color="red" /> :
                                                                 <Ionicons name="location-outline" size={50} color="black" />
+                                                            } */}
+                                                            {/* <View style={data.item.reading === null? styles.indicationBox : {...styles.indicationBox, backgroundColor: 'green'}}></View>
+                                                            <Pressable style={{ backgroundColor: 'white', width: 35, justifyContent: 'center', borderWidth: 1 }}>
+                                                                <Text style={{textAlign: 'center'}}>{data.item.pageNum + 1}</Text>
+                                                            </Pressable> */}
+                                                            { data.item.reading !== null?
+                                                                <AntDesign name="checkcircle" size={24} color="green" /> :
+                                                                // <Fontisto name="checkbox-passive" size={20} color="black" />
+                                                                <AntDesign name="exclamationcircleo" size={24} color="rgba(0, 0, 0, 0.5)" />
                                                             }
-                                                            <Pressable style={{ backgroundColor: 'white', padding: 3, paddingHorizontal: 10, borderRadius: 5 }}>
-                                                                <Text>{data.item.pageNum + 1}</Text>
-                                                            </Pressable>
                                                         </View>
-                                                        <TouchableOpacity onPress={() => handlePress(data.item.acctno)} style={{ flex: 3, padding: 5 }}>
+                                                        <TouchableOpacity onPress={() => handlePress(data.item.acctno)} style={{ flex: 5, padding: 5, borderStartWidth: 0 }}>
                                                             <View style={styles.info}>
                                                                 <Text style={{ fontWeight: 'bold' }}>NAME: </Text>
-                                                                <Text style={{ fontSize: 12 }}>{data.item.acctname}</Text>
+                                                                <Text style={{ fontSize: 12}}>{data.item.acctname}</Text>
                                                             </View>
                                                             <View style={styles.info}>
                                                                 <Text style={{ fontWeight: 'bold' }}>ACCOUNT NUMBER: </Text>
@@ -176,7 +188,7 @@ const BatchInfo = ({ navigation, route }) => {
                                         />
                                         <View style={styles.navContainer}>
                                             {
-                                                currentPage === 0 ?
+                                                pageCount === 1 ?
                                                     <View style={{ flex: 1 }}></View> :
                                                     <TouchableOpacity onPress={handlePrevPage} style={{ flex: 1, alignItems: 'center' }}>
                                                         <Text style={styles.prevText}>Previous</Text>
@@ -200,15 +212,13 @@ const BatchInfo = ({ navigation, route }) => {
                                             data={searchRes}
                                             renderItem={(data) => (
                                                 <Pressable onPress={() => handlePress(data.item.acctno)}>
-                                                    <View style={data.item.reading === null ? styles.accountContainer : { ...styles.accountContainer, backgroundColor: 'rgba(0, 0, 0, 0.2)' }}>
+                                                    <View style={styles.accountContainer}>
                                                         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', gap: 5 }}>
-                                                            {data.item.acctno === '1' ?
-                                                                <Ionicons name="location-sharp" size={50} color="red" /> :
-                                                                <Ionicons name="location-outline" size={50} color="black" />
+                                                        { data.item.reading !== null?
+                                                                <AntDesign name="checkcircle" size={24} color="green" /> :
+                                                                // <Fontisto name="checkbox-passive" size={20} color="black" />
+                                                                <AntDesign name="exclamationcircleo" size={24} color="rgba(0, 0, 0, 0.5)" />
                                                             }
-                                                            <Pressable style={{ backgroundColor: 'white', padding: 3, paddingHorizontal: 10, borderRadius: 5 }}>
-                                                                <Text>{data.item.pageNum + 1}</Text>
-                                                            </Pressable>
                                                         </View>
                                                         <View style={{ flex: 3, padding: 5 }}>
                                                             <View style={styles.info}>

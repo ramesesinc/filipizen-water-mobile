@@ -51,7 +51,7 @@ export const styles = StyleSheet.create({
         flexDirection: 'row',
         gap: 10,
         marginVertical: 5,
-        alignItems: 'center'
+        alignItems: 'center',
     },
     infoName: {
         fontWeight: '600'
@@ -83,5 +83,11 @@ export const styles = StyleSheet.create({
         borderRadius: 10,
         backgroundColor: '#00669B',
         color: 'white'
+    },
+    indicationBox: {
+        width: 35,
+        height: 50,
+        borderWidth: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.2)'
     }
 })

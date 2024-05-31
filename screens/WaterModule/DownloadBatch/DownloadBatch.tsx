@@ -11,7 +11,6 @@ import React from 'react'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { SelectList } from 'react-native-dropdown-select-list'
 import { removeDownloaded } from '../Others/removeDownloaded';
-import { currencyFormat } from '../Others/formatCurrency';
 
 const DownloadBatch = ({ navigation }) => {
   const [downloading, setDownloading] = useState(false)
@@ -26,6 +25,8 @@ const DownloadBatch = ({ navigation }) => {
   const [formula, setFormula] = useState(null);
   const [readerBatches, setReaderbatches] = useState([])
   const [selectedBatch, setSelectedBatch] = useState("")
+  const [maxPageNum, setMaxPageNum] = useState(null);
+
 
   const db = SQLITE.openDatabase('example.db');
 
@@ -38,7 +39,7 @@ const DownloadBatch = ({ navigation }) => {
   const currentStart = useRef(0)
 
   const getBatch = async () => {
-    console.log("getBatches running")
+    // console.log("getBatches running")
     const readerInfo = await AsyncStorage.getItem('readerInfo');
     const storedObject = await JSON.parse(readerInfo);
 
@@ -120,13 +121,13 @@ const DownloadBatch = ({ navigation }) => {
       try {
         batchDownloading.current = true
         setPreDownloading(true)
-        console.log("getData function run")
+        // console.log("getData function run")
 
         // prevStart.current = currentStart.current
         const readerInfo = await AsyncStorage.getItem('readerInfo');
         const storedObject = await JSON.parse(readerInfo);
 
-        console.log(`start is : ${currentStart.current}, limit is : ${selected + 1}`)
+        // console.log(`start is : ${currentStart.current}, limit is : ${selected + 1}`)
 
         const res = await fetch("http://192.168.2.11:8040/osiris3/json/enterprise/WaterMobileReadingService.getBatchItems", {
           method: 'POST',
@@ -145,8 +146,6 @@ const DownloadBatch = ({ navigation }) => {
         });
 
         const dataRes = await res.json();
-
-        console.log(dataRes)
 
         if (dataRes.msg) {
           setError(dataRes.msg)
@@ -190,6 +189,7 @@ const DownloadBatch = ({ navigation }) => {
           }, (err) => {
             console.log(err)
           });
+
           const newData = await dataRes.map((e: any, i: any) => ({
             ...e,
             "pageNum": i + currentStart.current,
@@ -198,7 +198,7 @@ const DownloadBatch = ({ navigation }) => {
 
           let data;
 
-          newData.length === selected + 1 ? data = await newData.slice(0, newData.length - 1) : data = await newData;
+          await newData.length === selected + 1 ? data = await newData.slice(0, newData.length - 1) : data = await newData;
 
           setPreDownloading(false)
           setDownloading(true)
@@ -278,6 +278,8 @@ const DownloadBatch = ({ navigation }) => {
 
     await new Promise((res) => setTimeout(res, 100))
     await getdata();
+
+    currentStart.current = 0
   }
 
   const downloadAnotherBatch = () => {
@@ -355,7 +357,7 @@ const DownloadBatch = ({ navigation }) => {
                     defaultOption={readerBatches[0] && readerBatches[0]}
                     boxStyles={{ height: 50 }}
                     onSelect={() => {
-                      console.log(selectedBatch)
+                      // console.log(selectedBatch)
                     }}
                     maxHeight={200}
                   />
@@ -373,7 +375,7 @@ const DownloadBatch = ({ navigation }) => {
                     defaultOption={{ key: prevFetchNum, value: prevFetchNum }}
                     boxStyles={{ height: 50 }}
                     onSelect={() => {
-                      console.log(selected)
+                      // console.log(selected)
                     }}
                     maxHeight={200}
                   />
