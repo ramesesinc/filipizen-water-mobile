@@ -60,7 +60,23 @@ export const styles = StyleSheet.create({
         flexDirection: 'row',
         width: 300,
         alignSelf: 'center',
-        marginTop: 15
+        marginTop: 15,
+        height: 60,
+        backgroundColor: 'rgba(0, 0, 0, 0.1)',
+        padding: 5,
+        borderRadius: 5
+    },
+    pageInfo: {
+        flex: 3,
+        justifyContent: 'space-around',
+        alignItems: 'center'
+
+    },
+    constroller : {
+        flexDirection: 'row',
+        flex: 2,
+        justifyContent: 'space-around',
+        alignItems: 'center'
     },
     prevText: {
         textAlign: 'center',

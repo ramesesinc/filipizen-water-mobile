@@ -1,13 +1,6 @@
 import { UserType } from '../../WaterModule/Others/types'
 import { Asset } from 'expo-asset';
 
-import RNFS from 'react-native-fs';
-
-// const imageAsset = Asset.fromModule(require('../../../assets/printerLogo.png'));
-// const imageUrl = imageAsset.uri;
-
-// const etracslogo = require('../../../assets/printerLogo.png')
-
 export const printFormat = (user: UserType, headers, imageUrl) => {
 
     const newMeterNo = user.meterno ? user.meterno.substring(0, user.meterno.indexOf(':')) : null;

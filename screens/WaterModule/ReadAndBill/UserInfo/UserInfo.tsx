@@ -1,4 +1,4 @@
-import { View, Text, Pressable, Modal, ActivityIndicator, TextInput, TouchableOpacity } from 'react-native'
+import { View, Text, Pressable, Modal, ActivityIndicator, TextInput, TouchableOpacity, Image } from 'react-native'
 import React, { useEffect, useState, useRef } from 'react'
 import { styles1, styles2 } from './styles'
 import { Ionicons, FontAwesome6, Entypo } from '@expo/vector-icons';
@@ -8,6 +8,7 @@ import WaterHeader from '../../../../components/Water/WaterHeader'
 import { UserType } from '../../Others/types';
 
 import * as SQLITE from 'expo-sqlite'
+import * as FileSystem from 'expo-file-system';
 import ThermalPrinterModule from 'react-native-thermal-printer';
 
 import { Asset } from 'expo-asset';
@@ -67,15 +68,6 @@ const UserInfo = ({ navigation, route }) => {
     const { userAccNo, batchname } = route.params;
 
     const [imageUrl, setImageUrl] = useState(null)
-    const dlPicture = async () => {
-        const imageAsset = Asset.fromModule(require('../../../../assets/printerLogo.png'));
-        // await imageAsset.downloadAsync()
-        // console.log("dl?", imageAsset.downloaded)
-        const url = imageAsset.uri
-        // const url = imageAsset.uri.replace("file://", "")
-        // const url = imageAsset.localUri
-        setImageUrl(url)
-    }
 
     let styles = null
 
@@ -107,6 +99,39 @@ const UserInfo = ({ navigation, route }) => {
             console.error('Error retrieving object:', error);
         }
     };
+
+    useEffect(() => {
+        const dlPicture = async () => {
+            const imageAsset = Asset.fromModule(require('../../../../assets/printerLogo.png'));
+    
+            if (!imageAsset.localUri) {
+                await imageAsset.downloadAsync();
+            }
+            // const exampleImageUri = Image.resolveAssetSource(imageAsset).uri
+            let printLogoUri: string;
+            
+            const localUri = `${FileSystem.cacheDirectory}printerLogo.png}`;
+            await FileSystem.copyAsync({
+              from: imageAsset.localUri || imageAsset.uri,
+              to: localUri,
+            });
+        
+            // Load the copied asset
+            const copiedAsset = Asset.fromURI(localUri);
+            copiedAsset.localUri = localUri; // Need to set the localUri for loadAsync() to work
+            const [copy] = await Asset.loadAsync(
+              copiedAsset.localUri || copiedAsset.uri
+            );
+    
+            printLogoUri = copy.localUri ?? copy.uri;
+    
+            alert(printLogoUri)
+            setImageUrl(printLogoUri)
+    
+        }
+
+        dlPicture();
+    }, [])
 
     useEffect(() => {
         if (isFocused) {
@@ -155,10 +180,7 @@ const UserInfo = ({ navigation, route }) => {
 
             retrieveFormula();
             retrieveData();
-            console.log(imageUrl)
         }
-
-        dlPicture();
 
     }, [open, isFocused, noteOpen]);
 

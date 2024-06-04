@@ -21,8 +21,8 @@ const ServerSettings = ({ navigation }) => {
 
     return (
         <View style={styles.container}>
-            <KeyboardAvoidingView style={{ flex: 1 }} behavior='height' keyboardVerticalOffset={0}>
             <WaterHeader navigation={navigation} backBut='Settings Home' />
+            <KeyboardAvoidingView style={{ flex: 1 }} behavior='height' keyboardVerticalOffset={0}>
                 <View style={{ flex: 1 }}>
                     <Text style={{ padding: 10, margin: 10, textAlign: 'center', fontSize: 20, flex: 1 }}>Change Server Address</Text>
                     <View style={{ flex: 4}}>
@@ -50,7 +50,7 @@ const ServerSettings = ({ navigation }) => {
                         </View>
                     </View>
                 </View>
-            </KeyboardAvoidingView>
+                </KeyboardAvoidingView>
         </View>
     )
 }

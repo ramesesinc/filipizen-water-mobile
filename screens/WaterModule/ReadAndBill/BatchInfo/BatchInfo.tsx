@@ -1,9 +1,12 @@
 import { View, Text, Pressable, FlatList, Button, TextInput, Keyboard, KeyboardAvoidingView, ActivityIndicator, TouchableOpacity } from 'react-native'
 import { useEffect, useRef, useState } from 'react'
+import AsyncStorage from '@react-native-async-storage/async-storage'
+
+
 import { Ionicons, Feather } from '@expo/vector-icons';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import Fontisto from '@expo/vector-icons/Fontisto';
-
+import Entypo from '@expo/vector-icons/Entypo';
 
 import { styles } from './styles'
 import WaterHeader from '../../../../components/Water/WaterHeader';
@@ -19,8 +22,11 @@ const BatchInfo = ({ navigation, route }) => {
     const [pageCount, setPageCount] = useState(1)
     const [nextButton, setNextButton] = useState(false)
 
-    const [loading, setLoading] = useState(false)
+    const [records, setRecords] = useState(0)
+    const [maxRec, setMaxRec] = useState(null)
+    const [maxPage, setMaxPage] = useState(null)
 
+    const [loading, setLoading] = useState(false)
 
     const pageSize = 10;
 
@@ -48,14 +54,24 @@ const BatchInfo = ({ navigation, route }) => {
                             const newArr = resultSet.rows._array.slice(0, -1)
                             setDataInfo(newArr)
                             setNextButton(true)
+                            setRecords(newArr.length + ((pageCount - 1) * 10))
                         } else {
                             setDataInfo(resultSet.rows._array)
                             setNextButton(false)
+                            setRecords(resultSet.rows._array.length + ((pageCount - 1) * 10))
                         }
                         setLoading(false)
                     }
                 )
             })
+
+            const getMaxNum = async () => {
+                const maxNum = await AsyncStorage.getItem(`${batchname}Max`);
+                setMaxRec(maxNum)
+                setMaxPage(Math.ceil(Number(maxNum) / 10))
+            }
+
+            getMaxNum();
         }
     }, [isFocused, batchname, currentPage, nextButton, offset])
 
@@ -161,7 +177,7 @@ const BatchInfo = ({ navigation, route }) => {
                                                             <Pressable style={{ backgroundColor: 'white', width: 35, justifyContent: 'center', borderWidth: 1 }}>
                                                                 <Text style={{textAlign: 'center'}}>{data.item.pageNum + 1}</Text>
                                                             </Pressable> */}
-                                                            { data.item.reading !== null?
+                                                            {data.item.reading !== null ?
                                                                 <AntDesign name="checkcircle" size={24} color="green" /> :
                                                                 // <Fontisto name="checkbox-passive" size={20} color="black" />
                                                                 <AntDesign name="exclamationcircleo" size={24} color="rgba(0, 0, 0, 0.5)" />
@@ -170,7 +186,7 @@ const BatchInfo = ({ navigation, route }) => {
                                                         <TouchableOpacity onPress={() => handlePress(data.item.acctno)} style={{ flex: 5, padding: 5, borderStartWidth: 0 }}>
                                                             <View style={styles.info}>
                                                                 <Text style={{ fontWeight: 'bold' }}>NAME: </Text>
-                                                                <Text style={{ fontSize: 12}}>{data.item.acctname}</Text>
+                                                                <Text style={{ fontSize: 12 }}>{data.item.acctname}</Text>
                                                             </View>
                                                             <View style={styles.info}>
                                                                 <Text style={{ fontWeight: 'bold' }}>ACCOUNT NUMBER: </Text>
@@ -184,26 +200,21 @@ const BatchInfo = ({ navigation, route }) => {
                                                     </View>
                                                 </View>
                                             )}
-                                            showsVerticalScrollIndicator={false}
+                                            showsVerticalScrollIndicator={true}
                                         />
                                         <View style={styles.navContainer}>
-                                            {
-                                                pageCount === 1 ?
-                                                    <View style={{ flex: 1 }}></View> :
-                                                    <TouchableOpacity onPress={handlePrevPage} style={{ flex: 1, alignItems: 'center' }}>
-                                                        <Text style={styles.prevText}>Previous</Text>
-                                                    </TouchableOpacity>
-                                            }
-                                            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                                                <Text style={styles.pageText}>{pageCount}</Text>
+                                            <View style={styles.pageInfo}>
+                                                <Text>Page {pageCount} of {maxPage}</Text>
+                                                <Text>{records} / {maxRec} records</Text>
                                             </View>
-                                            {
-                                                !nextButton ?
-                                                    <View style={{ flex: 1 }}></View> :
-                                                    <TouchableOpacity onPress={handleNextPage} style={{ flex: 1, alignItems: 'center' }}>
-                                                        <Text style={styles.nextText}>Next</Text>
-                                                    </TouchableOpacity>
-                                            }
+                                            <View style={styles.constroller}>
+                                                <TouchableOpacity onPress={handlePrevPage} style={{ flex: 1, alignItems: 'center', borderRightWidth: 1, borderColor: 'rgba(0, 0, 0, 0.2)' }} disabled={pageCount === 1}>
+                                                    <Entypo name="arrow-with-circle-left" size={30} color={pageCount === 1 ? 'rgba(0, 0, 0, 0.1)' : "#00669B"} />
+                                                </TouchableOpacity>
+                                                <TouchableOpacity onPress={handleNextPage} style={{ flex: 1, alignItems: 'center', borderLeftWidth: 1, borderColor: 'rgba(0, 0, 0, 0.2)' }} disabled={!nextButton}>
+                                                    <Entypo name="arrow-with-circle-right" size={30} color={nextButton ? "#00669B" : 'rgba(0, 0, 0, 0.1)'} />
+                                                </TouchableOpacity>
+                                            </View>
                                         </View>
                                     </View> :
                                     <View style={{ flex: 15 }}>
@@ -214,7 +225,7 @@ const BatchInfo = ({ navigation, route }) => {
                                                 <Pressable onPress={() => handlePress(data.item.acctno)}>
                                                     <View style={styles.accountContainer}>
                                                         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', gap: 5 }}>
-                                                        { data.item.reading !== null?
+                                                            {data.item.reading !== null ?
                                                                 <AntDesign name="checkcircle" size={24} color="green" /> :
                                                                 // <Fontisto name="checkbox-passive" size={20} color="black" />
                                                                 <AntDesign name="exclamationcircleo" size={24} color="rgba(0, 0, 0, 0.5)" />
@@ -237,7 +248,7 @@ const BatchInfo = ({ navigation, route }) => {
                                                     </View>
                                                 </Pressable>
                                             )}
-                                            showsVerticalScrollIndicator={false}
+                                            showsVerticalScrollIndicator={true}
                                         />
                                     </View>
                             }

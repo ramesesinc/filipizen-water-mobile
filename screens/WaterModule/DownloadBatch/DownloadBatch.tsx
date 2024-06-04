@@ -25,8 +25,8 @@ const DownloadBatch = ({ navigation }) => {
   const [formula, setFormula] = useState(null);
   const [readerBatches, setReaderbatches] = useState([])
   const [selectedBatch, setSelectedBatch] = useState("")
-  const [maxPageNum, setMaxPageNum] = useState(null);
 
+  const maxNum = useRef(0)
 
   const db = SQLITE.openDatabase('example.db');
 
@@ -160,7 +160,7 @@ const DownloadBatch = ({ navigation }) => {
               CREATE TABLE IF NOT EXISTS ${batchTable} (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 batchid TEXT,
-                acctno TEXT,
+                acctno TEXT UNIQUE,
                 prevreading INTEGER,
                 reading INTEGER,
                 volume INTEGER,
@@ -182,7 +182,6 @@ const DownloadBatch = ({ navigation }) => {
                 location TEXT,
                 reader TEXT,
                 balance INTEGER,
-                pageNum INTEGER,
                 note TEXT
               )
             `);
@@ -192,7 +191,6 @@ const DownloadBatch = ({ navigation }) => {
 
           const newData = await dataRes.map((e: any, i: any) => ({
             ...e,
-            "pageNum": i + currentStart.current,
             "note": "",
           }))
 
@@ -218,14 +216,23 @@ const DownloadBatch = ({ navigation }) => {
               break;
             } else {
               db.transaction(tx => {
-                tx.executeSql(`INSERT INTO ${batchTable} (batchid, acctno, prevreading, reading, volume, rate, acctname, capacity, brand, meterno, billdate, duedate, discdate, amount, classification, penalty, discount, acctgroup, fromdate, todate, location, reader, balance, pageNum, note) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
-                  [data[i].batchid, data[i].acctno, data[i].prevreading, data[i].reading, data[i].volume, data[i].rate, data[i].acctname, data[i].meter.capacity, data[i].meter.brand, data[i].meter.serialno, data[i].billdate, data[i].duedate, data[i].discdate, data[i].amount, data[i].classificationid, data[i].penalty, data[i].discount, data[i].acctgroup, data[i].fromdate, data[i].todate, data[i].location.text, data[i].reader.name, data[i].balance, data[i].pageNum, data[i].note])
+                tx.executeSql(`INSERT OR IGNORE INTO ${batchTable} (batchid, acctno, prevreading, reading, volume, rate, acctname, capacity, brand, meterno, billdate, duedate, discdate, amount, classification, penalty, discount, acctgroup, fromdate, todate, location, reader, balance, note) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+                  [data[i].batchid, data[i].acctno, data[i].prevreading, data[i].reading, data[i].volume, data[i].rate, data[i].acctname, data[i].meter.capacity, data[i].meter.brand, data[i].meter.serialno, data[i].billdate, data[i].duedate, data[i].discdate, data[i].amount, data[i].classificationid, data[i].penalty, data[i].discount, data[i].acctgroup, data[i].fromdate, data[i].todate, data[i].location.text, data[i].reader.name, data[i].balance, data[i].note], (_, result) => {
+                    console.log('Insert result:', result);
+                  },
+                  (_, error) => {
+                    console.log('Insert error:', error);
+                    return false
+                  }
+                )
+
               })
-              setCurr(data[i].pageNum + 1)
+              maxNum.current += 1
+              setCurr(currentStart.current + i + 1)
               if (i === newNum - 1 && exited.current !== true) {
-                setFileNum(data[i].pageNum + 1)
+                // setFileNum(data[i].pageNum + 1)
                 batchDownloading.current = false
-                currentStart.current = data[i].pageNum + 1
+                currentStart.current += selected
               }
             }
           }
@@ -255,30 +262,34 @@ const DownloadBatch = ({ navigation }) => {
       }
     }
 
-    db.transaction(tx => {
-      tx.executeSql(
-        `SELECT name FROM sqlite_master WHERE type='table' AND name=?`,
-        [batchTable],
-        (txObj, resultSet) => {
-          if (resultSet.rows.length > 0) {
-            tx.executeSql(`DROP TABLE ${batchTable}`, null, async (txObj, resultSet) => {
-              console.log("table dropped")
-            });
-          } else {
-            console.log(`Table ${batchTable} does not exist.`);
-          }
-          currentStart.current = 0
-        },
-        (txObj, error) => {
-          console.log("Error checking for table existence:", error);
-          return false
-        }
-      );
-    });
+    // db.transaction(tx => {
+    //   tx.executeSql(
+    //     `SELECT name FROM sqlite_master WHERE type='table' AND name=?`,
+    //     [batchTable],
+    //     (txObj, resultSet) => {
+    //       if (resultSet.rows.length > 0) {
+    //         tx.executeSql(`DROP TABLE ${batchTable}`, null, async (txObj, resultSet) => {
+    //           console.log("table dropped")
+    //         });
+    //       } else {
+    //         console.log(`Table ${batchTable} does not exist.`);
+    //       }
+    //       currentStart.current = 0
+    //     },
+    //     (txObj, error) => {
+    //       console.log("Error checking for table existence:", error);
+    //       return false
+    //     }
+    //   );
+    // });
 
     await new Promise((res) => setTimeout(res, 100))
     await getdata();
 
+    console.log("Curr", maxNum.current)
+    await AsyncStorage.setItem(`${batchTable}Max`, JSON.stringify(maxNum.current));
+
+    maxNum.current = 0
     currentStart.current = 0
   }
 
@@ -305,7 +316,7 @@ const DownloadBatch = ({ navigation }) => {
               <View style={styles.infoContainer}>
                 <Text style={{ ...styles.menuText, color: 'green' }}>Download Complete !!!</Text>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
-                  <Text>{fileNum} Records Downloaded</Text>
+                  <Text>{curr} Records Downloaded</Text>
                   <TouchableOpacity style={{ flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center', gap: 5, borderRadius: 5, borderWidth: 1, paddingHorizontal: 5, borderColor: 'rgba(0, 0, 0, 0.1)' }}
                     onPress={() => {
                       if (formula) {
@@ -383,7 +394,7 @@ const DownloadBatch = ({ navigation }) => {
               </View>
             </View>
             <View style={{ flexDirection: 'row', gap: 10, width: 250 }}>
-              <TouchableOpacity style={selectedBatch ? {...styles.downloadButton, flex: 2} : { ...styles.downloadButton, backgroundColor: 'grey' }} onPress={downloadBatch} disabled={selectedBatch ? false : true}>
+              <TouchableOpacity style={selectedBatch ? { ...styles.downloadButton, flex: 2 } : { ...styles.downloadButton, backgroundColor: 'grey' }} onPress={downloadBatch} disabled={selectedBatch ? false : true}>
                 <Text style={{ color: 'white', textAlign: 'center' }}>Download</Text>
               </TouchableOpacity>
             </View>
