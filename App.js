@@ -4,8 +4,6 @@ import { StatusBar, View } from "react-native";
 
 import Login from "./screens/login/login";
 import WaterModuleTab from "./navigation/Water/WaterModuleTab";
-import WaterTerminalStack from "./navigation/Water/WaterTerminalStack";
-import Map from "./screens/WaterModule/ReadAndBill/Map/Map";
 
 const Stack = createStackNavigator();
 

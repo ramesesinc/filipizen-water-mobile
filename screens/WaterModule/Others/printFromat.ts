@@ -47,9 +47,9 @@ export const printFormat = (user: UserType, headers, imageUrl) => {
     const totalAmount = formatVal(Number((user.rate + user.balance).toFixed(2)))
 
     return (
-        (header1 !== "" ? `[C]<font size='normal'>${header1}</font>\n` : "") +
-        (header2 !== "" ? `[C]<font size='normal'>${header2}</font>\n` : "") +
-        (header3 !== "" ? `[C]<font size='normal'>${header3}</font>\n` : "") +
+        (header1 !== "" ? `[C]<b><font size='normal'>${header1}</b></font>\n` : "") +
+        (header2 !== "" ? `[C]<b><font size='normal'>${header2}</b></font>\n` : "") +
+        (header3 !== "" ? `[C]<b><font size='normal'>${header3}</b></font>\n` : "") +
         `[C]<img>${imageUrl}</img>\n` +
         `[C]<b>================================</b>\n` +
         `[L]\n` +
@@ -57,7 +57,7 @@ export const printFormat = (user: UserType, headers, imageUrl) => {
         `[L]\n` +
         `[C]<font size='normal'>${newBillDate}</font>\n` +
         `[L]\n` +
-        `[L]<font size='normal'>Account no: ${user.acctno}</font>\n` +
+        `[L]<font size='normal'>Account No: ${user.acctno}</font>\n` +
         `[L]<font size='normal'>Name: ${newName}</font>\n` +
         `[L]<font size='normal'>Address: ${newLoc}</font>\n` +
         `[L]\n` +

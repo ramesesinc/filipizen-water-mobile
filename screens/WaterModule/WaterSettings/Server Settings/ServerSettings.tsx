@@ -5,42 +5,83 @@ import WaterHeader from '../../../../components/Water/WaterHeader';
 import { styles } from './styles';
 
 import { useIsFocused } from '@react-navigation/native';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 const ServerSettings = ({ navigation }) => {
-    const [downloadApi, setDownloadApi] = useState("")
-    const [uploadApi, setUploadApi] = useState("")
-    const [formulaApi, setFormulaApi] = useState("")
+    const [etracsIP, setEtracsIP] = useState("")
+    const [etracsPort, setEtracsPort] = useState("")
+    const [waterIP, setWaterIP] = useState("")
+    const [waterPort, setWaterPort] = useState("")
 
-    const isFocused = useIsFocused()
+    useEffect(() => {
+        const getServerAdd = async () => {
+            try {
+                const serverObjectString = await AsyncStorage.getItem('serverObject');
+                const serverObjectJSON = await JSON.parse(serverObjectString);
 
-    const handeSaveAddresses = () => {
+                if (serverObjectJSON) {
+                    setEtracsIP(serverObjectJSON.etracs.ip)
+                    setEtracsPort(serverObjectJSON.etracs.port)
+                    setWaterIP(serverObjectJSON.water.ip)
+                    setWaterPort(serverObjectJSON.water.port)
+                }
 
+            } catch (e) {
+                alert(e)
+            }
+        }
+        getServerAdd();
+    }, [])
+
+    const handeSaveAddresses = async () => {
+
+        const serverObject = {
+            etracs: {
+                ip: etracsIP,
+                port: etracsPort
+            },
+            water: {
+                ip: waterIP,
+                port: waterPort
+            }
+        }
+
+        await AsyncStorage.setItem('serverObject', JSON.stringify(serverObject));
+        console.log(serverObject)
+        alert("Server Settings Saved")
+        navigation.navigate("Settings Home")
     }
 
 
     return (
+        <KeyboardAvoidingView style={{ flex: 1 }} behavior='height' keyboardVerticalOffset={0}>
         <View style={styles.container}>
             <WaterHeader navigation={navigation} backBut='Settings Home' />
-            <KeyboardAvoidingView style={{ flex: 1 }} behavior='height' keyboardVerticalOffset={0}>
-                <View style={{ flex: 1 }}>
-                    <Text style={{ padding: 10, margin: 10, textAlign: 'center', fontSize: 20, flex: 1 }}>Change Server Address</Text>
-                    <View style={{ flex: 4}}>
-                        <View style={{ justifyContent: 'space-around', marginHorizontal: 15, gap: 20 }}>
-                            <View style={{ flexDirection: 'row', justifyContent: 'center', borderBottomWidth: 1 }}>
-                                <Text style={{ flex: 3 }}>Download</Text>
+                <View style={{ flex: 1, marginTop: 20 }}>
+                    <View style={{ flex: 1 }}>
+                        <View style={{ justifyContent: 'space-around', marginHorizontal: 45, gap: 20, height: 200, marginTop: 20 }}>
+                            <Text style={{ textAlign: 'center' }}>Server Settings</Text>
+                            <Text style={{ marginTop: 20, marginBottom: 10 }}>* ETRACS</Text>
+                            <View style={{ flexDirection: 'row', justifyContent: 'center', borderBottomWidth: 1, alignItems: 'center', marginVertical: 10 }}>
+                                <Text style={{ flex: 3 }}>IP</Text>
                                 <Text style={{ flex: 1 }}>:</Text>
-                                <TextInput style={{ flex: 9 }} onChangeText={(inputText) => setDownloadApi(inputText)} value={downloadApi} />
+                                <TextInput style={{ flex: 9 }} placeholder='ex: http://192.168.2.11' onChangeText={(inputText) => setEtracsIP(inputText)} value={etracsIP} />
                             </View>
-                            <View style={{ flexDirection: 'row', justifyContent: 'center', borderBottomWidth: 1 }}>
-                                <Text style={{ flex: 3 }}>Upload</Text>
+                            <View style={{ flexDirection: 'row', justifyContent: 'center', borderBottomWidth: 1, alignItems: 'center', marginVertical: 10 }}>
+                                <Text style={{ flex: 3 }}>Port</Text>
                                 <Text style={{ flex: 1 }}>:</Text>
-                                <TextInput style={{ flex: 9 }} onChangeText={(inputText) => setUploadApi(inputText)} value={uploadApi} />
+                                <TextInput style={{ flex: 9 }} maxLength={4} keyboardType='numeric' placeholder='ex: 8040' onChangeText={(inputText) => setEtracsPort(inputText)} value={etracsPort} />
                             </View>
-                            <View style={{ flexDirection: 'row', justifyContent: 'center', borderBottomWidth: 1 }}>
-                                <Text style={{ flex: 3 }}>Formula</Text>
+                            <Text style={{ marginTop: 20, marginBottom: 10 }}>* WATER</Text>
+                            <View style={{ flexDirection: 'row', justifyContent: 'center', borderBottomWidth: 1, alignItems: 'center', marginVertical: 10 }}>
+                                <Text style={{ flex: 3 }}>IP</Text>
                                 <Text style={{ flex: 1 }}>:</Text>
-                                <TextInput style={{ flex: 9 }} onChangeText={(inputText) => setFormulaApi(inputText)} value={formulaApi} />
+                                <TextInput style={{ flex: 9 }} placeholder='ex: http://192.168.2.11' onChangeText={(inputText) => setWaterIP(inputText)} value={waterIP} />
+                            </View>
+                            <View style={{ flexDirection: 'row', justifyContent: 'center', borderBottomWidth: 1, alignItems: 'center', marginVertical: 10 }}>
+                                <Text style={{ flex: 3 }}>Port</Text>
+                                <Text style={{ flex: 1 }}>:</Text>
+                                <TextInput style={{ flex: 9 }} maxLength={4} keyboardType='numeric' placeholder='ex: 8040' onChangeText={(inputText) => setWaterPort(inputText)} value={waterPort} />
                             </View>
                         </View>
                         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', marginTop: 30 }}>
@@ -50,8 +91,8 @@ const ServerSettings = ({ navigation }) => {
                         </View>
                     </View>
                 </View>
-                </KeyboardAvoidingView>
         </View>
+        </KeyboardAvoidingView>
     )
 }
 

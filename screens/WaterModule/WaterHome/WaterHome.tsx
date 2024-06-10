@@ -1,4 +1,4 @@
-import { View, Text, FlatList, Pressable, Alert, TouchableOpacity } from 'react-native'
+import { View, Text, FlatList, Pressable, Alert, TouchableOpacity, ActivityIndicator } from 'react-native'
 import { Ionicons, FontAwesome5, MaterialIcons } from '@expo/vector-icons';
 
 import { styles } from './styles'
@@ -25,6 +25,7 @@ const WaterHome = ({ navigation }) => {
   const isFocused = useIsFocused()
 
   const [formula, setFormula] = useState(null);
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     const retrieveFormula = async () => {
@@ -40,11 +41,15 @@ const WaterHome = ({ navigation }) => {
 
 
     retrieveFormula();
-  },[isFocused, formula])
+  }, [isFocused, formula])
 
   const handleSync = async () => {
     try {
-      const res = await fetch("http://192.168.2.11:8040/osiris3/json/enterprise/WaterConsumptionFormulaService.getFormula");
+      setLoading(true)
+      const serverObjectString = await AsyncStorage.getItem('serverObject');
+      const serverObjectJSON = await JSON.parse(serverObjectString);
+
+      const res = await fetch(`${serverObjectJSON.water.ip}:${serverObjectJSON.water.port}/osiris3/json/enterprise/WaterConsumptionFormulaService.getFormula`);
       const data = await res.json();
       if (data) {
         const tobeFormula = await AsyncStorage.setItem('formula', data.formula.toString());
@@ -53,10 +58,12 @@ const WaterHome = ({ navigation }) => {
       }
     } catch (e) {
       alert(`FAILED: ${e}`)
+    } finally {
+      setLoading(false)
     }
   }
 
-  const handleNav = (name : string) => {
+  const handleNav = (name: string) => {
 
     if (name !== "Read & Bill" && name !== "Sync Formula" && name !== "Download Batch") {
       navigation.navigate(name)
@@ -64,9 +71,9 @@ const WaterHome = ({ navigation }) => {
       // alert("Please sync the bill formula in the settings first!");
       // Alert.alert("Can't open Read & Bill", "Please sync the bill formula in the settings first!",[], {cancelable: true, onDismiss: () => navigation.navigate("Settings")})
       alert("Please sync the bill formula first!")
-    } else if (name === "Download Batch" && !formula){
+    } else if (name === "Download Batch" && !formula) {
       alert("Please sync the bill formula first!")
-    } else if(name === "Sync Formula") {
+    } else if (name === "Sync Formula") {
       handleSync()
     } else {
       navigation.navigate(name)
@@ -74,23 +81,28 @@ const WaterHome = ({ navigation }) => {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: 'white'}}>
+    <View style={{ flex: 1, backgroundColor: 'white' }}>
       <WaterHeader navigation={navigation} />
-      <View style={styles.container}>
-        <FlatList
-          data={menu}
-          renderItem={(data) =>
-            <TouchableOpacity style={styles.menuItemContainer} onPress={() => handleNav(data.item.name)} disabled={data.item.name === null}>
-              <View style={styles.moduleItem}>
-                {data.item.icon}
-                <Text style={styles.menuTextStyle}>{data.item.name}</Text>
-              </View>
-            </TouchableOpacity>
-          }
-          keyExtractor={(item) => item.name}
-          numColumns={2}
-        />
-      </View>
+      {
+        loading ?
+          <View style={styles.container}>
+            <ActivityIndicator style={{ flex: 1 }} size={50} color="#00669B" />
+          </View> :
+          <View style={styles.container}>
+            <FlatList
+              data={menu}
+              renderItem={(data) =>
+                <TouchableOpacity style={styles.menuItemContainer} onPress={() => handleNav(data.item.name)} disabled={data.item.name === null}>
+                  <View style={styles.moduleItem}>
+                    {data.item.icon}
+                    <Text style={styles.menuTextStyle}>{data.item.name}</Text>
+                  </View>
+                </TouchableOpacity>
+              }
+              keyExtractor={(item) => item.name}
+              numColumns={2}
+            />
+          </View>}
     </View>
   )
 }

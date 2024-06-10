@@ -26,6 +26,9 @@ const DownloadBatch = ({ navigation }) => {
   const [readerBatches, setReaderbatches] = useState([])
   const [selectedBatch, setSelectedBatch] = useState("")
 
+  const [readerObj, setReaderObj] = useState(null)
+  const [serverObj, setServerObj] = useState(null)
+
   const maxNum = useRef(0)
 
   const db = SQLITE.openDatabase('example.db');
@@ -39,11 +42,17 @@ const DownloadBatch = ({ navigation }) => {
   const currentStart = useRef(0)
 
   const getBatch = async () => {
-    // console.log("getBatches running")
+    console.log("getBatches running")
     const readerInfo = await AsyncStorage.getItem('readerInfo');
     const storedObject = await JSON.parse(readerInfo);
 
-    const res = await fetch("http://192.168.2.11:8040/osiris3/json/enterprise/WaterMobileReadingService.getBatches", {
+    const serverObjectString = await AsyncStorage.getItem('serverObject');
+    const serverObjectJSON = await JSON.parse(serverObjectString);
+
+    setServerObj(serverObjectJSON)
+    setReaderObj(storedObject)
+
+    const res = await fetch(`${serverObjectJSON.water.ip}:${serverObjectJSON.water.port}/osiris3/json/enterprise/WaterMobileReadingService.getBatches`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -67,17 +76,21 @@ const DownloadBatch = ({ navigation }) => {
   }
 
   useEffect(() => {
+    getBatch();
+  }, [])
+
+  useEffect(() => {
     exited.current = false
     const unsubscribe = AppState.addEventListener('change', async (nextAppState) => {
       if (nextAppState === 'background' || nextAppState === 'inactive') {
         exited.current = true
         console.log("current", currentStart.current, currentBatch.current, batchDownloading.current)
-        if (currentStart.current !== null && currentBatch.current !== null && batchDownloading.current === true) {
-          removeDownloaded(currentStart.current, currentBatch.current)
+        // if (currentStart.current !== null && currentBatch.current !== null && batchDownloading.current === true) {
+        //   removeDownloaded(currentStart.current, currentBatch.current, "eventListener")
 
-          navigation.navigate("Water Home");
-          batchDownloading.current = false
-        }
+        //   navigation.navigate("Water Home");
+        //   batchDownloading.current = false
+        // }
       }
     });
 
@@ -103,7 +116,6 @@ const DownloadBatch = ({ navigation }) => {
 
     getPrevFetchSize();
     retrieveFormula();
-    getBatch();
 
     return () => {
       console.log("closing");
@@ -124,18 +136,22 @@ const DownloadBatch = ({ navigation }) => {
         // console.log("getData function run")
 
         // prevStart.current = currentStart.current
-        const readerInfo = await AsyncStorage.getItem('readerInfo');
-        const storedObject = await JSON.parse(readerInfo);
+
+        // const readerInfo = await AsyncStorage.getItem('readerInfo');
+        // const storedObject = await JSON.parse(readerInfo);
+
+        // const serverObjectString = await AsyncStorage.getItem('serverObject');
+        // const serverObjectJSON = await JSON.parse(serverObjectString);
 
         // console.log(`start is : ${currentStart.current}, limit is : ${selected + 1}`)
 
-        const res = await fetch("http://192.168.2.11:8040/osiris3/json/enterprise/WaterMobileReadingService.getBatchItems", {
+        const res = await fetch(`${serverObj.water.ip}:${serverObj.water.port}/osiris3/json/enterprise/WaterMobileReadingService.getBatchItems`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             env: {
               CLIENTTYPE: 'mobile',
-              USERID: storedObject.USERID
+              USERID: readerObj.USERID
             },
             args: {
               batchid: selectedBatch,
@@ -208,11 +224,11 @@ const DownloadBatch = ({ navigation }) => {
             if (exited.current) {
               console.log("break")
               // console.log("prevstart:", prevStart.current)
-              if (currentStart.current !== null && currentBatch.current !== null && batchDownloading.current === true) {
-                removeDownloaded(currentStart.current, currentBatch.current)
-                console.log(exited.current)
-                navigation.navigate("Water Home");
-              }
+              // if (currentStart.current !== null && currentBatch.current !== null && batchDownloading.current === true) {
+              //   removeDownloaded(currentStart.current, currentBatch.current, "function")
+              //   console.log(exited.current)
+              //   navigation.navigate("Water Home");
+              // }
               break;
             } else {
               db.transaction(tx => {

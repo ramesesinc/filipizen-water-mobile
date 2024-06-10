@@ -102,7 +102,7 @@ const UserInfo = ({ navigation, route }) => {
 
     useEffect(() => {
         const dlPicture = async () => {
-            const imageAsset = Asset.fromModule(require('../../../../assets/printerLogo.png'));
+            const imageAsset = Asset.fromModule(require('../../../../assets/printerLogoExample.jpg'));
     
             if (!imageAsset.localUri) {
                 await imageAsset.downloadAsync();
@@ -110,7 +110,7 @@ const UserInfo = ({ navigation, route }) => {
             // const exampleImageUri = Image.resolveAssetSource(imageAsset).uri
             let printLogoUri: string;
             
-            const localUri = `${FileSystem.cacheDirectory}printerLogo.png}`;
+            const localUri = `${FileSystem.cacheDirectory}printerLogoExample.png}`;
             await FileSystem.copyAsync({
               from: imageAsset.localUri || imageAsset.uri,
               to: localUri,
@@ -125,7 +125,7 @@ const UserInfo = ({ navigation, route }) => {
     
             printLogoUri = copy.localUri ?? copy.uri;
     
-            alert(printLogoUri)
+            // alert(printLogoUri)
             setImageUrl(printLogoUri)
     
         }
@@ -201,12 +201,11 @@ const UserInfo = ({ navigation, route }) => {
     const inputRefs = useRef([]);
 
     const handleInputChange = (text, index) => {
-        console.log("text:", text)
-        if (text.length > 0 && index < numberValue.length - 1) {
-            inputRefs.current[index + 1].focus();
-        } else {
-            inputRefs.current[index].blur();
-        }
+        // if (text.length > 0 && index < numberValue.length - 1) {
+        //     inputRefs.current[index + 1].focus();
+        // } else {
+        //     inputRefs.current[index].blur();
+        // }
         const newInputs = [...numberValue];
         newInputs[index] = text;
         setNumberValue(newInputs);
@@ -215,9 +214,9 @@ const UserInfo = ({ navigation, route }) => {
     const decimalRefs = useRef([])
 
     const handleDecimalChange = (text, index) => {
-        if (text.length > 0 && index < decimalValue.length - 1) {
-            decimalRefs.current[index + 1].focus();
-        }
+        // if (text.length > 0 && index < decimalValue.length - 1) {
+        //     decimalRefs.current[index + 1].focus();
+        // }
         const newInputs = [...decimalValue];
         newInputs[index] = text;
         setDecimalValue(newInputs);
