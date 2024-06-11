@@ -49,13 +49,13 @@ const InputHeaders = ({ navigation }) => {
     <View style={{ flex: 1, backgroundColor: 'white' }}>
       <WaterHeader navigation={navigation} backBut='Header Settings' />
         <View style={{ flex: 1 }}>
-        <KeyboardAvoidingView style={{ flex: 1 }} behavior='padding' keyboardVerticalOffset={100}>
+        <KeyboardAvoidingView style={{ flex: 1, justifyContent: 'space-between' }} behavior='height' keyboardVerticalOffset={100}>
           <View style={{ height: 180, justifyContent: 'space-around' }}>
             <TextInput style={{ marginHorizontal: 30, padding: 10, borderBottomWidth: 1 }} onChangeText={(inputText) => setInput1(inputText)} value={input1} placeholder={input1 === "" ? "Input Header 1" : ""} maxLength={30}/>
             <TextInput style={{ marginHorizontal: 30, padding: 10, borderBottomWidth: 1 }} onChangeText={(inputText) => setInput2(inputText)} value={input2} placeholder={input2 === "" ? "Input Header 2" : ""} maxLength={30}/>
             <TextInput style={{ marginHorizontal: 30, padding: 10, borderBottomWidth: 1 }} onChangeText={(inputText) => setInput3(inputText)} value={input3} placeholder={input3 === "" ? "Input Header 3" : ""} maxLength={30}/>
           </View>
-          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <View style={{ height: 200, justifyContent: 'center', alignItems: 'center' }}>
             <Pressable style={{ padding: 10, borderWidth: 1, borderRadius: 10, backgroundColor: '#00669B' }} onPress={handleSave}>
               <Text style={{ color: 'white' }}>Save Headers</Text>
             </Pressable>

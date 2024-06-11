@@ -1,5 +1,8 @@
-import { View, Text, TextInput, Button, Pressable, KeyboardAvoidingView } from 'react-native'
+import { View, Text, TextInput, Button, Pressable, KeyboardAvoidingView, TouchableOpacity } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
+
+import * as Clipboard from 'expo-clipboard';
 
 import WaterHeader from '../../../../components/Water/WaterHeader';
 import { styles } from './styles';
@@ -55,8 +58,8 @@ const ServerSettings = ({ navigation }) => {
 
     return (
         <KeyboardAvoidingView style={{ flex: 1 }} behavior='height' keyboardVerticalOffset={0}>
-        <View style={styles.container}>
-            <WaterHeader navigation={navigation} backBut='Settings Home' />
+            <View style={styles.container}>
+                <WaterHeader navigation={navigation} backBut='Settings Home' />
                 <View style={{ flex: 1, marginTop: 20 }}>
                     <View style={{ flex: 1 }}>
                         <View style={{ justifyContent: 'space-around', marginHorizontal: 45, gap: 20, height: 200, marginTop: 20 }}>
@@ -66,6 +69,15 @@ const ServerSettings = ({ navigation }) => {
                                 <Text style={{ flex: 3 }}>IP</Text>
                                 <Text style={{ flex: 1 }}>:</Text>
                                 <TextInput style={{ flex: 9 }} placeholder='ex: http://192.168.2.11' onChangeText={(inputText) => setEtracsIP(inputText)} value={etracsIP} />
+                                {
+                                    etracsIP !== "" &&
+                                    <TouchableOpacity style={{marginLeft: 5}} onPress={ async () => {
+                                        await Clipboard.setStringAsync(etracsIP)
+                                        alert("Copied to Clipboard")
+                                        }}>
+                                        <FontAwesome5 name="copy" size={15} color="black" />
+                                    </TouchableOpacity>
+                                }
                             </View>
                             <View style={{ flexDirection: 'row', justifyContent: 'center', borderBottomWidth: 1, alignItems: 'center', marginVertical: 10 }}>
                                 <Text style={{ flex: 3 }}>Port</Text>
@@ -77,6 +89,15 @@ const ServerSettings = ({ navigation }) => {
                                 <Text style={{ flex: 3 }}>IP</Text>
                                 <Text style={{ flex: 1 }}>:</Text>
                                 <TextInput style={{ flex: 9 }} placeholder='ex: http://192.168.2.11' onChangeText={(inputText) => setWaterIP(inputText)} value={waterIP} />
+                                {
+                                    waterIP !== "" &&
+                                    <TouchableOpacity style={{marginLeft: 5}} onPress={ async () => {
+                                        await Clipboard.setStringAsync(waterIP)
+                                        alert("Copied to Clipboard")
+                                        }}>
+                                        <FontAwesome5 name="copy" size={15} color="black" />
+                                    </TouchableOpacity>
+                                }
                             </View>
                             <View style={{ flexDirection: 'row', justifyContent: 'center', borderBottomWidth: 1, alignItems: 'center', marginVertical: 10 }}>
                                 <Text style={{ flex: 3 }}>Port</Text>
@@ -84,14 +105,14 @@ const ServerSettings = ({ navigation }) => {
                                 <TextInput style={{ flex: 9 }} maxLength={4} keyboardType='numeric' placeholder='ex: 8040' onChangeText={(inputText) => setWaterPort(inputText)} value={waterPort} />
                             </View>
                         </View>
-                        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', marginTop: 30 }}>
+                        <View style={{ height: 200, justifyContent: 'center', alignItems: 'center', marginTop: 30 }}>
                             <Pressable style={{ padding: 10, borderWidth: 1, borderRadius: 10, backgroundColor: '#00669B' }} onPress={handeSaveAddresses}>
                                 <Text style={{ color: 'white' }}>Save Addresses</Text>
                             </Pressable>
                         </View>
                     </View>
                 </View>
-        </View>
+            </View>
         </KeyboardAvoidingView>
     )
 }

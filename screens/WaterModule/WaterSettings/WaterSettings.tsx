@@ -72,7 +72,7 @@ const WaterSettings = ({ navigation }) => {
         </TouchableOpacity>
         <TouchableOpacity style={styles.options} onPress={() => navigation.navigate("Server Settings")}>
           <FontAwesome name="server" size={20} color="#00669B" />
-          <Text style={styles.optionsText}>Server Address</Text>
+          <Text style={styles.optionsText}>Server Settings</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.options} onPress={() => setOpen(true)}>
           <MaterialCommunityIcons name="archive-remove" size={20} color="#00669B" />
