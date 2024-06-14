@@ -5,10 +5,17 @@ export const printFormat = (user: UserType, headers, imageUrl) => {
 
     const newMeterNo = user.meterno ? user.meterno.substring(0, user.meterno.indexOf(':')) : null;
     const { header1, header2, header3 } = headers;
-    const newName = user.acctname.replace(/ñ/gi, (match) => {
+    let newName = user.acctname.replace(/ñ/gi, (match) => {
         return match === 'ñ' ? 'n' : 'N';
     });
     const newLoc = user.location.replace(/\n/g, '').replace(/  +/g, ' ');
+
+    let extraName = "";
+
+    // if (newName.length > 23) {
+    //     extraName = newName.substring(23)
+    //     newName = newName.substring(0, 23)
+    // }
 
     function formatDate(inputDate) {
         // Parse the input date string
@@ -58,7 +65,11 @@ export const printFormat = (user: UserType, headers, imageUrl) => {
         `[C]<font size='normal'>${newBillDate}</font>\n` +
         `[L]\n` +
         `[L]<font size='normal'>Account No: ${user.acctno}</font>\n` +
-        `[L]<font size='normal'>Name: ${newName}</font>\n` +
+        (
+            newName.length > 20 ?
+            `[L]<font size='normal'>Name:</font>\n[L]<font size='normal'>${newName}</font>\n` :
+            `[L]<font size='normal'>Name: ${newName}</font>\n`
+        ) +
         `[L]<font size='normal'>Address: ${newLoc}</font>\n` +
         `[L]\n` +
         `[L]<font size='normal'>Account Grooup: ${user.acctgroup}</font>\n` +

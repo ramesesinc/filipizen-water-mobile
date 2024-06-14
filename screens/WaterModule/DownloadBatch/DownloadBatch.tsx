@@ -271,6 +271,7 @@ const DownloadBatch = ({ navigation }) => {
         setPreDownloading(false)
         setDownloading(false)
         setError(`Error: ${error}`)
+        batchDownloading.current = false;
       } finally {
         setPreDownloading(false)
         setSelectedBatch('')
