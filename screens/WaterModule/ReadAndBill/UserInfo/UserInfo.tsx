@@ -103,31 +103,35 @@ const UserInfo = ({ navigation, route }) => {
     useEffect(() => {
         const dlPicture = async () => {
             const imageAsset = Asset.fromModule(require('../../../../assets/printerLogoExample.jpg'));
-    
+
             if (!imageAsset.localUri) {
                 await imageAsset.downloadAsync();
             }
             // const exampleImageUri = Image.resolveAssetSource(imageAsset).uri
             let printLogoUri: string;
-            
-            const localUri = `${FileSystem.cacheDirectory}printerLogoExample.png}`;
-            await FileSystem.copyAsync({
-              from: imageAsset.localUri || imageAsset.uri,
-              to: localUri,
-            });
-        
+
+            const localUri = `${FileSystem.cacheDirectory}printerLogoExample.jpg`;
+
+            const fileInfo = await FileSystem.getInfoAsync(localUri);
+            console.log(`file Exist? ${fileInfo.exists}`)
+            if (!fileInfo.exists) {
+                await FileSystem.copyAsync({
+                    from: imageAsset.localUri || imageAsset.uri,
+                    to: localUri,
+                });
+            }
             // Load the copied asset
             const copiedAsset = Asset.fromURI(localUri);
             copiedAsset.localUri = localUri; // Need to set the localUri for loadAsync() to work
             const [copy] = await Asset.loadAsync(
-              copiedAsset.localUri || copiedAsset.uri
+                copiedAsset.localUri || copiedAsset.uri
             );
-    
+
             printLogoUri = copy.localUri ?? copy.uri;
-    
+
             // alert(printLogoUri)
             setImageUrl(printLogoUri)
-    
+
         }
 
         dlPicture();
@@ -458,7 +462,7 @@ const UserInfo = ({ navigation, route }) => {
                                     {user.rate !== null &&
                                         <View style={styles1.info}>
                                             <Text style={styles1.infoName}>Bill Amount:</Text>
-                                            <Text style={styles1.infoValue}>{user.rate !== 0 ? currencyFormat({val: user.rate, decimal: 2}) : 0}</Text>
+                                            <Text style={styles1.infoValue}>{user.rate !== 0 ? currencyFormat({ val: user.rate, decimal: 2 }) : 0}</Text>
                                         </View>
                                     }
                                 </View>
