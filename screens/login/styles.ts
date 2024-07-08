@@ -4,8 +4,7 @@ export const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: 'center'
   },
   etracsLogo: {
     width: 180,
@@ -13,7 +12,9 @@ export const styles = StyleSheet.create({
   },
   errorMsg: {
     color: 'red',
-    marginBottom: 5
+    marginBottom: 5,
+    width: 250,
+    textAlign: 'center'
   },
   credentials: {
     flexDirection: 'row',

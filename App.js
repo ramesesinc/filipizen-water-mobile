@@ -4,6 +4,7 @@ import { StatusBar, View } from "react-native";
 
 import Login from "./screens/login/login";
 import WaterModuleTab from "./navigation/Water/WaterModuleTab";
+import LoginStack from "./navigation/Water/loginStack";
 
 const Stack = createStackNavigator();
 
@@ -14,7 +15,7 @@ export default function App() {
       <StatusBar backgroundColor="black" barStyle="light-content" />
       <NavigationContainer>
         <Stack.Navigator>
-          <Stack.Screen options={{ headerShown: false }} name="Login" component={Login} />
+          <Stack.Screen options={{ headerShown: false }} name="Login" component={LoginStack} />
           <Stack.Screen options={{
             headerShown: false,
             title: 'Water Module',

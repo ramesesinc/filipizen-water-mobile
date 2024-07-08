@@ -44,12 +44,19 @@ const WaterHome = ({ navigation }) => {
   }, [isFocused, formula])
 
   const handleSync = async () => {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => {
+      controller.abort()
+    }, 10000);
     try {
       setLoading(true)
       const serverObjectString = await AsyncStorage.getItem('serverObject');
       const serverObjectJSON = await JSON.parse(serverObjectString);
 
-      const res = await fetch(`${serverObjectJSON.water.ip}:${serverObjectJSON.water.port}/osiris3/json/enterprise/WaterConsumptionFormulaService.getFormula`);
+      const res = await fetch(`http://${serverObjectJSON.water.ip}:${serverObjectJSON.water.port}/osiris3/json/enterprise/WaterConsumptionFormulaService.getFormula`, {signal: controller.signal});
+
+      clearTimeout(timeoutId);
+
       const data = await res.json();
       if (data) {
         const tobeFormula = await AsyncStorage.setItem('formula', data.formula.toString());
@@ -57,7 +64,7 @@ const WaterHome = ({ navigation }) => {
         alert("Bill formula has been synced")
       }
     } catch (e) {
-      alert(`FAILED: ${e}`)
+      alert(`Something went wrong, please make sure that the Water Ip address and Port is correct.`)
     } finally {
       setLoading(false)
     }

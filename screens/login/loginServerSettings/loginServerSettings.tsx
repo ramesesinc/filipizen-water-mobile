@@ -1,20 +1,18 @@
-import { View, Text, TextInput, Button, Pressable, KeyboardAvoidingView, TouchableOpacity } from 'react-native'
+import { View, Text, TextInput, TouchableOpacity, Pressable, KeyboardAvoidingView, Modal } from 'react-native'
+import React, { useEffect, useState } from 'react'
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
-
 import * as Clipboard from 'expo-clipboard';
-
-import WaterHeader from '../../../../components/Water/WaterHeader';
+import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import { styles } from './styles';
+import WaterHeader from '../../../components/Water/WaterHeader';
 
-import { useIsFocused } from '@react-navigation/native';
-import { useEffect, useState } from 'react';
-
-const ServerSettings = ({ navigation }) => {
+export default function LoginServerSettings({ navigation }) {
     const [etracsIP, setEtracsIP] = useState("")
     const [etracsPort, setEtracsPort] = useState("")
     const [waterIP, setWaterIP] = useState("")
     const [waterPort, setWaterPort] = useState("")
+
+    const [open, setOpen] = useState(false)
 
     useEffect(() => {
         const getServerAdd = async () => {
@@ -27,6 +25,11 @@ const ServerSettings = ({ navigation }) => {
                     setEtracsPort(serverObjectJSON.etracs.port)
                     setWaterIP(serverObjectJSON.water.ip)
                     setWaterPort(serverObjectJSON.water.port)
+                } else {
+                    setEtracsIP("localhost")
+                    setEtracsPort("8070")
+                    setWaterIP("localhost")
+                    setWaterPort("8040")
                 }
 
             } catch (e) {
@@ -35,6 +38,10 @@ const ServerSettings = ({ navigation }) => {
         }
         getServerAdd();
     }, [])
+
+    const handleOpen = () => {
+        setOpen(true)
+    }
 
     const handeSaveAddresses = async () => {
         try {
@@ -48,22 +55,39 @@ const ServerSettings = ({ navigation }) => {
                     port: waterPort
                 }
             }
-    
+
             await AsyncStorage.setItem('serverObject', JSON.stringify(serverObject));
             console.log(serverObject)
             alert("Server Settings Saved")
-            navigation.navigate("Settings Home")
+            navigation.navigate("Login Home")
         } catch (e) {
             alert(e)
         }
 
     }
-
-
     return (
         <KeyboardAvoidingView style={{ flex: 1 }} behavior='height' keyboardVerticalOffset={0}>
             <View style={styles.container}>
-                <WaterHeader navigation={navigation} backBut='Settings Home' />
+                <WaterHeader navigation={navigation} backBut='Login Home' />
+                {open &&
+                    <Modal transparent={true} onRequestClose={() => setOpen(false)}>
+                        <View style={styles.modalContainer}>
+                            <View style={styles.modal}>
+                                <Text>Are you sure you want to save the addresses ?</Text>
+                                <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center', justifyContent: 'space-around' }}>
+                                    <Pressable style={{ ...styles.save, backgroundColor: 'white' }} onPress={() => {
+                                        setOpen(false)
+                                    }}>
+                                        <Text style={{ textAlign: 'center' }}>No</Text>
+                                    </Pressable>
+                                    <Pressable style={styles.save} onPress={() => handeSaveAddresses()}>
+                                        <Text style={{ textAlign: 'center', color: 'white' }}>Yes</Text>
+                                    </Pressable>
+                                </View>
+                            </View>
+                        </View>
+                    </Modal>
+                }
                 <View style={{ flex: 1, marginTop: 20 }}>
                     <View style={{ flex: 1 }}>
                         <View style={{ justifyContent: 'space-around', marginHorizontal: 45, gap: 20, height: 200, marginTop: 20 }}>
@@ -75,10 +99,10 @@ const ServerSettings = ({ navigation }) => {
                                 <TextInput style={{ flex: 9 }} keyboardType='numeric' placeholder='ex: 192.168.2.11' onChangeText={(inputText) => setEtracsIP(inputText)} value={etracsIP} />
                                 {
                                     etracsIP !== "" &&
-                                    <TouchableOpacity style={{marginLeft: 5}} onPress={ async () => {
+                                    <TouchableOpacity style={{ marginLeft: 5 }} onPress={async () => {
                                         await Clipboard.setStringAsync(etracsIP)
                                         alert("Copied to Clipboard")
-                                        }}>
+                                    }}>
                                         <FontAwesome5 name="copy" size={15} color="black" />
                                     </TouchableOpacity>
                                 }
@@ -95,10 +119,10 @@ const ServerSettings = ({ navigation }) => {
                                 <TextInput style={{ flex: 9 }} keyboardType='numeric' placeholder='ex: 192.168.2.11' onChangeText={(inputText) => setWaterIP(inputText)} value={waterIP} />
                                 {
                                     waterIP !== "" &&
-                                    <TouchableOpacity style={{marginLeft: 5}} onPress={ async () => {
+                                    <TouchableOpacity style={{ marginLeft: 5 }} onPress={async () => {
                                         await Clipboard.setStringAsync(waterIP)
                                         alert("Copied to Clipboard")
-                                        }}>
+                                    }}>
                                         <FontAwesome5 name="copy" size={15} color="black" />
                                     </TouchableOpacity>
                                 }
@@ -110,8 +134,8 @@ const ServerSettings = ({ navigation }) => {
                             </View>
                         </View>
                         <View style={{ height: 200, justifyContent: 'center', alignItems: 'center', marginTop: 30 }}>
-                            <Pressable style={{ padding: 10, borderWidth: 1, borderRadius: 10, backgroundColor: '#00669B' }} onPress={handeSaveAddresses}>
-                                <Text style={{ color: 'white' }}>Save Addresses</Text>
+                            <Pressable style={{ padding: 10, borderWidth: 1, borderRadius: 10, backgroundColor: '#00669B' }} onPress={handleOpen}>
+                                <Text style={{ color: 'white' }}>Save</Text>
                             </Pressable>
                         </View>
                     </View>
@@ -120,5 +144,3 @@ const ServerSettings = ({ navigation }) => {
         </KeyboardAvoidingView>
     )
 }
-
-export default ServerSettings;

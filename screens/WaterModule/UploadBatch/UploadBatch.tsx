@@ -16,10 +16,23 @@ const UploadBatch = ({ navigation }) => {
   const [err, setErr] = useState(null);
   const [toUpload, setToUpload] = useState("")
 
+  const [serverObj, setServerObj] = useState(null)
+
   const db = SQLITE.openDatabase('example.db');
   useEffect(() => {
     navigation.setParams({ tabBarVisible: !uploading });
   }, [uploading]);
+
+  useEffect(() => {
+    const getIp = async () => {
+      const serverObjectString = await AsyncStorage.getItem('serverObject');
+      const serverObjectJSON = await JSON.parse(serverObjectString);
+
+      setServerObj(serverObjectJSON)
+    }
+
+    getIp();
+  }, [])
 
   const upLoadBatchNow = (batch, index) => {
     setUploading(true);
@@ -47,7 +60,7 @@ const UploadBatch = ({ navigation }) => {
             const storedString = await AsyncStorage.getItem('readerInfo');
             if (storedString !== null) {
               const readerObj = JSON.parse(storedString);
-              const res = await fetch("http://192.168.2.11:8040/osiris3/json/enterprise/WaterMobileReadingService.uploadReadings", {
+              const res = await fetch(`http://${serverObj.water.ip}:${serverObj.water.port}/osiris3/json/enterprise/WaterMobileReadingService.uploadReadings`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({

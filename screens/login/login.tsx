@@ -1,12 +1,14 @@
-import { View, Text, Image, TextInput, Pressable, ActivityIndicator } from 'react-native'
+import { View, Text, Image, TextInput, Pressable, ActivityIndicator, TouchableOpacity } from 'react-native'
 import { styles } from './styles'
 import { AntDesign } from '@expo/vector-icons';
 import { Feather } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useState, useEffect } from 'react';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import CryptoJS from 'crypto-js';
+import { useIsFocused } from '@react-navigation/native';
 
 const etracslogo = require('../../assets/etracsLogo.png')
 
@@ -18,6 +20,9 @@ export default function Login({ navigation }) {
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false)
 
+    const [etracsIP, setEtracsIP] = useState("")
+    const [etracsPort, setEtracsPort] = useState("")
+
     const handleUserChange = (inputText) => {
         setUserName(inputText)
     }
@@ -25,11 +30,30 @@ export default function Login({ navigation }) {
         setPassword(inputText)
     }
 
-    // const handleLogin = () => {
-    //     navigation.navigate('Water')
-    //     setUserName('');
-    //     setPassword('');
-    // }
+    const isFocused = useIsFocused()
+
+    useEffect(() => {
+        const getServerAdd = async () => {
+            try {
+                const serverObjectString = await AsyncStorage.getItem('serverObject');
+                const serverObjectJSON = await JSON.parse(serverObjectString);
+
+                if (serverObjectJSON) {
+                    setEtracsIP(serverObjectJSON.etracs.ip)
+                    setEtracsPort(serverObjectJSON.etracs.port)
+                } else {
+                    setEtracsIP("localhost")
+                    setEtracsPort("8070")
+                }
+
+            } catch (e) {
+                alert(e)
+            }
+        }
+        if (isFocused) {
+            getServerAdd();
+        }
+    }, [isFocused])
 
     function generateHmacMD5(seed: string, v: string) {
         const hmac = CryptoJS.HmacMD5(v, seed);
@@ -47,8 +71,13 @@ export default function Login({ navigation }) {
         const lowercasedUsername = username.toLowerCase().toString()
         const hash = await generateHmacMD5(lowercasedUsername, password);
 
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => {
+            controller.abort()
+        }, 30000);
+
         try {
-            const res = await fetch('http://192.168.2.11:8070/osiris3/json/etracs25/LoginService.login', {
+            const res = await fetch(`http://${etracsIP}:${etracsPort}/osiris3/json/etracs25/LoginService.login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -56,11 +85,15 @@ export default function Login({ navigation }) {
                         CLIENTTYPE: 'mobile',
                     },
                     args: {
-                        username : username,
+                        username: username,
                         password: hash,
                     },
                 }),
+                signal: controller.signal,
             });
+
+            clearTimeout(timeoutId);
+            console.log(res)
 
             if (!res.ok) {
                 throw new Error('Network response was not ok');
@@ -79,12 +112,16 @@ export default function Login({ navigation }) {
                 navigation.navigate('Water');
             }
         } catch (error) {
-            setError('An error occurred. Please try again later.');
+            setError(`${error}`);
             console.error('Error during login:', error);
         } finally {
             setLoading(false);
         }
     };
+
+    const handleServerSettings = () => {
+        navigation.navigate("Login Server Settings")
+    }
 
     if (loading) {
         return (
@@ -96,23 +133,35 @@ export default function Login({ navigation }) {
 
     return (
         <View style={styles.container}>
-            <Image
-                source={etracslogo}
-                style={styles.etracsLogo}
-            />
-            {error !== "" ? <Text style={styles.errorMsg}>{error}</Text> : null}
-            <View style={styles.credentials}>
-                <AntDesign name="mail" size={17} color="grey" />
-                <TextInput placeholder='Username' value={username} onChangeText={handleUserChange} style={{ flex: 1 }} />
+            <View style={{ flex: 1, alignSelf: 'flex-end', justifyContent: 'center', marginRight: 20 }}>
+                <TouchableOpacity onPress={handleServerSettings}>
+                    <Ionicons name="settings-sharp" size={25} color={'#00669B'} />
+                </TouchableOpacity>
             </View>
-            <View style={styles.credentials}>
-                <Feather name="lock" size={17} color="grey" />
-                <TextInput placeholder='Password' secureTextEntry={true} value={password} onChangeText={handlePasswordChange} style={{ flex: 1 }} />
+            <View style={{
+                flex: 9,
+                alignItems: 'center',
+                justifyContent: 'center'
+            }}>
+                <Image
+                    source={etracslogo}
+                    style={styles.etracsLogo}
+                />
+                {error !== "" ? <Text style={styles.errorMsg}>{error}</Text> : null}
+                <View style={styles.credentials}>
+                    <AntDesign name="mail" size={17} color="grey" />
+                    <TextInput placeholder='Username' value={username} onChangeText={handleUserChange} style={{ flex: 1 }} />
+                </View>
+                <View style={styles.credentials}>
+                    <Feather name="lock" size={17} color="grey" />
+                    <TextInput placeholder='Password' secureTextEntry={true} value={password} onChangeText={handlePasswordChange} style={{ flex: 1 }} />
+                </View>
+                <Pressable style={styles.loginButton} onPress={handleLogin}>
+                    <Text style={styles.loginText}>Login</Text>
+                </Pressable>
+                <Text></Text>
             </View>
-            <Pressable style={styles.loginButton} onPress={handleLogin}>
-                <Text style={styles.loginText}>Login</Text>
-            </Pressable>
-            <Text></Text>
+
         </View>
     )
 }

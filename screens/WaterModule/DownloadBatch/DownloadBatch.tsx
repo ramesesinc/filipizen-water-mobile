@@ -52,7 +52,7 @@ const DownloadBatch = ({ navigation }) => {
     setServerObj(serverObjectJSON)
     setReaderObj(storedObject)
 
-    const res = await fetch(`${serverObjectJSON.water.ip}:${serverObjectJSON.water.port}/osiris3/json/enterprise/WaterMobileReadingService.getBatches`, {
+    const res = await fetch(`http://${serverObjectJSON.water.ip}:${serverObjectJSON.water.port}/osiris3/json/enterprise/WaterMobileReadingService.getBatches`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -64,7 +64,10 @@ const DownloadBatch = ({ navigation }) => {
       }),
     });
 
+    console.log(res)
     const data = await res.json()
+
+    console.log(data)
 
     if (data.length > 0) {
       setReaderbatches(data.map((i) => {
@@ -121,6 +124,7 @@ const DownloadBatch = ({ navigation }) => {
       console.log("closing");
       unsubscribe.remove();
       exited.current = true;
+      currentStart.current = 0;
     };
   }, [downloaded, batchDownloading]);
 
@@ -145,7 +149,7 @@ const DownloadBatch = ({ navigation }) => {
 
         // console.log(`start is : ${currentStart.current}, limit is : ${selected + 1}`)
 
-        const res = await fetch(`${serverObj.water.ip}:${serverObj.water.port}/osiris3/json/enterprise/WaterMobileReadingService.getBatchItems`, {
+        const res = await fetch(`http://${serverObj.water.ip}:${serverObj.water.port}/osiris3/json/enterprise/WaterMobileReadingService.getBatchItems`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -162,6 +166,8 @@ const DownloadBatch = ({ navigation }) => {
         });
 
         const dataRes = await res.json();
+
+        console.log(dataRes)
 
         if (dataRes.msg) {
           setError(dataRes.msg)
