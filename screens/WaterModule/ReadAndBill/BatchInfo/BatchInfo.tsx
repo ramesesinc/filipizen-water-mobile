@@ -185,15 +185,15 @@ const BatchInfo = ({ navigation, route }) => {
                                                         </View>
                                                         <TouchableOpacity onPress={() => handlePress(data.item.acctno)} style={{ flex: 5, padding: 5, borderStartWidth: 0 }}>
                                                             <View style={styles.info}>
-                                                                <Text style={{ fontWeight: 'bold' }}>NAME: </Text>
+                                                                <Text style={{ fontWeight: 'bold', fontSize: 12 }}>NAME: </Text>
                                                                 <Text style={{ fontSize: 12 }}>{data.item.acctname}</Text>
                                                             </View>
                                                             <View style={styles.info}>
-                                                                <Text style={{ fontWeight: 'bold' }}>ACCOUNT NUMBER: </Text>
+                                                                <Text style={{ fontWeight: 'bold', fontSize: 12  }}>ACCOUNT NUMBER: </Text>
                                                                 <Text>{data.item.acctno}</Text>
                                                             </View>
                                                             <View style={styles.info}>
-                                                                <Text style={{ fontWeight: 'bold' }}>CURRENT READING: </Text>
+                                                                <Text style={{ fontWeight: 'bold', fontSize: 12  }}>CURRENT READING: </Text>
                                                                 <Text>{data.item.reading}</Text>
                                                             </View>
                                                         </TouchableOpacity>
@@ -231,7 +231,7 @@ const BatchInfo = ({ navigation, route }) => {
                                                                 <AntDesign name="exclamationcircleo" size={24} color="rgba(0, 0, 0, 0.5)" />
                                                             }
                                                         </View>
-                                                        <View style={{ flex: 3, padding: 5 }}>
+                                                        <View style={{ flex: 3, padding: 5, backgroundColor: 'red' }}>
                                                             <View style={styles.info}>
                                                                 <Text style={{ fontWeight: 'bold' }}>NAME: </Text>
                                                                 <Text style={{ fontSize: 12 }}>{data.item.acctname}</Text>

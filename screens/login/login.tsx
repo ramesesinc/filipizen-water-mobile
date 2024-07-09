@@ -37,7 +37,7 @@ export default function Login({ navigation }) {
             try {
                 const serverObjectString = await AsyncStorage.getItem('serverObject');
                 const serverObjectJSON = await JSON.parse(serverObjectString);
-
+ 
                 if (serverObjectJSON) {
                     setEtracsIP(serverObjectJSON.etracs.ip)
                     setEtracsPort(serverObjectJSON.etracs.port)

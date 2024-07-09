@@ -18,6 +18,8 @@ import { printFormat } from '../../Others/printFromat';
 import { Dimensions } from 'react-native';
 import { currencyFormat } from '../../Others/formatCurrency';
 
+import ensureFourDecimalPlaces from '../../Others/ensureFourDecimalPlaces';
+
 const { height } = Dimensions.get('window');
 const db = SQLITE.openDatabase('example.db');
 
@@ -445,18 +447,18 @@ const UserInfo = ({ navigation, route }) => {
                                 <View style={styles1.infoGap}>
                                     <View style={styles1.info}>
                                         <Text style={styles1.infoName}>Previous Reading:</Text>
-                                        <Text style={styles1.infoValue}>{user.prevreading}</Text>
+                                        <Text style={styles1.infoValue}>{user.prevreading && ensureFourDecimalPlaces(user.prevreading)}</Text>
                                     </View>
                                     <View style={styles1.info}>
                                         <Text style={styles1.infoName}>Current Reading:</Text>
                                         {user.reading === 0 ? <Text style={styles1.infoValue}>None</Text> :
-                                            <Text style={styles1.infoValue}>{user.reading}</Text>
+                                            <Text style={styles1.infoValue}>{user.reading && ensureFourDecimalPlaces(user.reading)}</Text>
                                         }
                                     </View>
                                     {user.reading !== null &&
                                         <View style={styles1.info}>
                                             <Text style={styles1.infoName}>Volume:</Text>
-                                            <Text style={styles1.infoValue}>{user.volume}</Text>
+                                            <Text style={styles1.infoValue}>{user.volume && ensureFourDecimalPlaces(user.volume)}</Text>
                                         </View>
                                     }
                                     {user.rate !== null &&
