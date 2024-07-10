@@ -79,6 +79,15 @@ export const styles1 = StyleSheet.create({
         justifyContent: 'space-around',
         gap: 20
     },
+    signModal: {
+        backgroundColor: 'white',
+        height: 350,
+        width: 350,
+        padding: 20,
+        borderRadius: 20,
+        justifyContent: 'space-around',
+        gap: 20
+    },
     save: {
         backgroundColor: "green",
         padding: 10,

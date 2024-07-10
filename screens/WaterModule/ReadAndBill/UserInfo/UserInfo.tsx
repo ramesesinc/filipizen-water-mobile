@@ -1,8 +1,10 @@
-import { View, Text, Pressable, Modal, ActivityIndicator, TextInput, TouchableOpacity, Image } from 'react-native'
+import { View, Text, Pressable, Modal, ActivityIndicator, TextInput, TouchableOpacity, Image, Button } from 'react-native'
 import React, { useEffect, useState, useRef } from 'react'
 import { styles1, styles2 } from './styles'
-import { Ionicons, FontAwesome6, Entypo } from '@expo/vector-icons';
+import { Ionicons, FontAwesome6, FontAwesome } from '@expo/vector-icons';
+
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Signature from 'react-native-signature-canvas';
 
 import WaterHeader from '../../../../components/Water/WaterHeader'
 import { UserType } from '../../Others/types';
@@ -26,6 +28,11 @@ const db = SQLITE.openDatabase('example.db');
 const UserInfo = ({ navigation, route }) => {
     const [open, setOpen] = useState(false)
     const [noteOpen, setNoteOpen] = useState(false)
+
+    const [signatureData, setSignatureData] = useState("")
+    const [sigOpen, setSigOpen] = useState(false)
+    const signatureRef = useRef<any>(null);
+
     const [edit, setEdit] = useState(false)
     const [user, setUser] = useState<UserType>({
         batchid: null,
@@ -78,6 +85,17 @@ const UserInfo = ({ navigation, route }) => {
     } else if (height > 600 && height < 1000) {
         styles = styles2
     }
+
+    const webStyle = `.m-signature-pad--footer .save { display: none; } .clear { display: none; }`;
+
+    const handleEndDrawing = () => {
+        signatureRef.current?.readSignature();
+    };
+    const handleOK = (signature: any) => {
+        // const base64code = signature.replace('data:image/png;base64,', 'data:image/png;base64,');
+        setSignatureData(signature)
+        console.log(typeof (signature))
+    };
 
     const retrieveData = async () => {
         try {
@@ -193,7 +211,7 @@ const UserInfo = ({ navigation, route }) => {
     const printReceipt = async () => {
         try {
             await ThermalPrinterModule.printBluetooth({
-                payload: printFormat(user, headers, imageUrl),
+                payload: printFormat(user, headers, imageUrl, signatureData),
                 printerWidthMM: 48,
                 printerNbrCharactersPerLine: 32
             });
@@ -363,6 +381,23 @@ const UserInfo = ({ navigation, route }) => {
         setNoteOpen(true)
     }
 
+    const handleConfirm = () => {
+        if (signatureData !== "") {
+            setSigOpen(false)
+            printReceipt()
+            signatureRef.current.clearSignature();
+            setSignatureData("")
+        } else {
+            alert("Cant confirm without a sign")
+        }
+    }
+
+    const handleCancel = () => {
+        setSigOpen(false)
+        setSignatureData("")
+        signatureRef.current.clearSignature();
+    }
+
     return (
         <View style={{ flex: 1, backgroundColor: 'white' }}>
             <WaterHeader navigation={navigation} backBut="Batch Info" data={{ batchname }} />
@@ -396,7 +431,7 @@ const UserInfo = ({ navigation, route }) => {
                                                 }} style={styles1.reRead}>
                                                     <Text style={{ color: 'black', fontSize: 17 }}>Re-read</Text>
                                                 </TouchableOpacity>
-                                                <TouchableOpacity onPress={printReceipt} style={styles1.print}>
+                                                <TouchableOpacity onPress={() => setSigOpen(true)} style={styles1.print}>
                                                     <Text style={{ color: 'white', fontSize: 17 }}>Print</Text>
                                                 </TouchableOpacity>
                                             </View> :
@@ -517,6 +552,41 @@ const UserInfo = ({ navigation, route }) => {
                                         <TouchableOpacity onPress={handleSave} style={styles1.save}>
                                             <Text style={{ color: 'white' }}>Save</Text>
                                         </TouchableOpacity>
+                                    </View>
+                                </View>
+                            </View>
+                        </Modal>
+                    }
+                    {sigOpen &&
+                        <Modal transparent={true} onRequestClose={() => setSigOpen(false)}>
+                            <View style={styles1.modalContainer}>
+                                <View style={styles1.signModal}>
+                                    <Text>Please sign to confirm reciept</Text>
+                                    <Signature
+                                        ref={signatureRef}
+                                        onOK={handleOK}
+                                        onEnd={handleEndDrawing}
+                                        backgroundColor='#fff'
+                                        imageType="image/jpeg"
+                                        style={{ borderWidth: 1 }}
+                                    />
+                                    <View style={{ flexDirection: 'row', gap: 10, justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <View style={{ flex: 1, flexDirection: 'row', gap: 15 }}>
+                                            <TouchableOpacity style={{ borderWidth: 1, padding: 5, borderRadius: 5, alignItems: 'center' }} onPress={handleCancel}>
+                                                <Text style={{ fontSize: 12, textAlign: 'center' }}>Cancel</Text>
+                                            </TouchableOpacity>
+                                            <TouchableOpacity style={{ borderRadius: 5, padding: 5, alignItems: 'center', backgroundColor: 'white' }} onPress={() => {
+                                                signatureRef.current.clearSignature()
+                                                setSignatureData("")
+                                            }}>
+                                                <FontAwesome name="repeat" size={20} color="black" />
+                                            </TouchableOpacity>
+                                        </View>
+                                        <View style={{ flex: 1 }}>
+                                            <TouchableOpacity style={{ alignSelf: 'flex-end', padding: 5, backgroundColor: 'green', borderRadius: 5 }} onPress={handleConfirm}>
+                                                <Text style={{ color: 'white' }}>Confirm</Text>
+                                            </TouchableOpacity>
+                                        </View>
                                     </View>
                                 </View>
                             </View>
