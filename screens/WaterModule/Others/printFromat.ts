@@ -50,6 +50,7 @@ export const printFormat = (user: UserType, headers, imageUrl, signatureData) =>
         }).format(num);
     }
 
+    const prevBal = formatVal(user.balance.toFixed(2))
     const amountDue = formatVal(user.rate.toFixed(2))
     const totalAmount = formatVal(Number((user.rate + user.balance).toFixed(2)))
 
@@ -89,7 +90,7 @@ export const printFormat = (user: UserType, headers, imageUrl, signatureData) =>
         `[L]<font size='normal'>Consumption</font>[R]<font size='normal'>${user.volume}</font>\n` +
         `[L]\n` +
         `[L]<font size='normal'>Amount Due</font>[R]<font size='normal'>${user.rate ? amountDue : 0}</font>\n` +
-        `[L]<font size='normal'>Prev Balance</font>[R]<font size='normal'>${user.balance ? user.balance : ""}</font>\n` +
+        `[L]<font size='normal'>Prev Balance</font>[R]<font size='normal'>${user.balance ? prevBal : ""}</font>\n` +
         `[L]<font size='normal'>Other Charges</font>[R]<font size='normal'></font>\n` +
         `[L]\n` +
         `[L]\n` +

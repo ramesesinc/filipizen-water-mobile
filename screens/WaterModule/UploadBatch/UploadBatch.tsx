@@ -51,11 +51,14 @@ const UploadBatch = ({ navigation }) => {
                 "reading": user.reading,
                 "volume": user.reading - user.prevreading,
                 "rate": user.rate,
+                "hold": {
+                  message: user.note
+                }
               }
             })
 
-            const finalList = initList.filter((user) => user.reading !== null && user.reading > 0)
-            console.log("toUPload", toUpload)
+            const finalList = initList.filter((user) => (user.reading !== null && user.reading > 0) || (user.hold.message !== null && user.hold.message !== ''))
+            console.log("FinalList", finalList)
 
             const storedString = await AsyncStorage.getItem('readerInfo');
             if (storedString !== null) {

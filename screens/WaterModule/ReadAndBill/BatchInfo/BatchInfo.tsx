@@ -231,7 +231,7 @@ const BatchInfo = ({ navigation, route }) => {
                                                                 <AntDesign name="exclamationcircleo" size={24} color="rgba(0, 0, 0, 0.5)" />
                                                             }
                                                         </View>
-                                                        <View style={{ flex: 3, padding: 5, backgroundColor: 'red' }}>
+                                                        <View style={{ flex: 3, padding: 5 }}>
                                                             <View style={styles.info}>
                                                                 <Text style={{ fontWeight: 'bold' }}>NAME: </Text>
                                                                 <Text style={{ fontSize: 12 }}>{data.item.acctname}</Text>

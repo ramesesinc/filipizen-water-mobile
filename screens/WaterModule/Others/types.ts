@@ -24,7 +24,8 @@ export type UserType = {
     reader: string,
     balance: number,
     pageNum: number,
-    note: string
+    note: string,
+    printed: number
 }
 
 export type DataUserType = {

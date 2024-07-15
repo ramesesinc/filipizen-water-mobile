@@ -59,7 +59,8 @@ const UserInfo = ({ navigation, route }) => {
         reader: null,
         balance: null,
         pageNum: null,
-        note: null
+        note: null,
+        printed: null
     })
     const [headers, setHeaders] = useState({
         header1: "",
@@ -206,7 +207,7 @@ const UserInfo = ({ navigation, route }) => {
             retrieveData();
         }
 
-    }, [open, isFocused, noteOpen]);
+    }, [open, isFocused, noteOpen, sigOpen]);
 
     const printReceipt = async () => {
         try {
@@ -387,6 +388,21 @@ const UserInfo = ({ navigation, route }) => {
             printReceipt()
             signatureRef.current.clearSignature();
             setSignatureData("")
+            db.transaction(
+                tx => {
+                    tx.executeSql(
+                        `UPDATE ${batchname} SET printed = ? WHERE acctno = ?`,
+                        [1, user.acctno],
+                        (txObj, resultSet) => {
+                            console.log('Updated printed');
+                        },
+                        (txObj, error) => {
+                            console.error('Error updating printed:', error);
+                            return false
+                        }
+                    );
+                }
+            );
         } else {
             alert("Cant confirm without a sign")
         }
@@ -418,9 +434,15 @@ const UserInfo = ({ navigation, route }) => {
                                 </View>
                                 {
                                     user.reading === null ?
-                                        <TouchableOpacity onPress={() => setOpen(true)} style={styles1.print}>
-                                            <Text style={{ color: 'white', fontSize: 17 }}>Read</Text>
-                                        </TouchableOpacity> :
+                                        <View style={{ justifyContent: 'space-between', gap: 10 }}>
+                                            <TouchableOpacity onPress={() => setNoteOpen(true)} style={styles1.hold}>
+                                                <Text style={{ color: 'black', fontSize: 17 }}>Hold</Text>
+                                            </TouchableOpacity>
+                                            <TouchableOpacity onPress={() => setOpen(true)} style={styles1.print}>
+                                                <Text style={{ color: 'white', fontSize: 17 }}>Read</Text>
+                                            </TouchableOpacity>
+                                        </View>
+                                        :
                                         <View>
                                             {!user.note ? <View style={{ justifyContent: 'space-between', gap: 10 }}>
                                                 <TouchableOpacity onPress={() => setNoteOpen(true)} style={styles1.hold}>
@@ -431,9 +453,12 @@ const UserInfo = ({ navigation, route }) => {
                                                 }} style={styles1.reRead}>
                                                     <Text style={{ color: 'black', fontSize: 17 }}>Re-read</Text>
                                                 </TouchableOpacity>
-                                                <TouchableOpacity onPress={() => setSigOpen(true)} style={styles1.print}>
-                                                    <Text style={{ color: 'white', fontSize: 17 }}>Print</Text>
-                                                </TouchableOpacity>
+                                                {
+                                                    !user.printed &&
+                                                    <TouchableOpacity onPress={() => setSigOpen(true)} style={styles1.print}>
+                                                        <Text style={{ color: 'white', fontSize: 17 }}>Print</Text>
+                                                    </TouchableOpacity>
+                                                }
                                             </View> :
                                                 <View style={{ justifyContent: 'space-between', gap: 10 }}>
                                                     <TouchableOpacity onPress={unHold} style={styles1.hold}>
