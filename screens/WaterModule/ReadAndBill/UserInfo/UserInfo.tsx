@@ -421,7 +421,7 @@ const UserInfo = ({ navigation, route }) => {
             <View style={styles1.container}>
                 <View style={{ flex: 1, marginBottom: 0, marginTop: 10 }}>
                     <View style={{ flex: 1, flexDirection: 'row', marginBottom: 10 }}>
-                        <View style={{ flex: 3, alignItems: 'flex-start' }}>
+                        <View style={{ flex: 3, alignItems: 'center'}}>
                             <View style={{ flex: 1, justifyContent: 'space-between' }}>
                                 <View style={{ alignItems: 'center', alignSelf: 'center' }}>
                                     <Pressable >
@@ -445,7 +445,10 @@ const UserInfo = ({ navigation, route }) => {
                                         </View>
                                         :
                                         <View>
-                                            {!user.note ? <View style={{ justifyContent: 'space-between', gap: 10 }}>
+                                            {
+                                                !user.printed &&
+                                                <View style={{justifyContent: 'flex-end'}}>
+                                                    {!user.note ? <View style={{ justifyContent: 'space-between', gap: 10 }}>
                                                 <TouchableOpacity onPress={() => setNoteOpen(true)} style={styles1.hold}>
                                                     <Text style={{ color: 'black', fontSize: 17 }}>Hold</Text>
                                                 </TouchableOpacity>
@@ -469,6 +472,9 @@ const UserInfo = ({ navigation, route }) => {
                                                         <Text style={{ color: 'black', fontSize: 17 }}>Re-read</Text>
                                                     </TouchableOpacity>
                                                 </View>
+                                            }
+                                                </View>
+                                                
                                             }
                                         </View>
                                 }
@@ -588,7 +594,7 @@ const UserInfo = ({ navigation, route }) => {
                             <View style={styles1.modalContainer}>
                                 <View style={styles1.signModal}>
                                     <Text>Please enter name and sign to confirm reciept.</Text>
-                                    <TextInput placeholder='Name of Receiver' value={receiver} onChangeText={(text) => setReceiver(text)} style={{borderWidth: 1, padding: 5}}/>
+                                    <TextInput placeholder='Name of Receiver' value={receiver} onChangeText={(text) => setReceiver(text)} style={{ borderWidth: 1, padding: 5 }} />
                                     <Signature
                                         ref={signatureRef}
                                         onOK={handleOK}
