@@ -1,7 +1,7 @@
 import { UserType } from '../../WaterModule/Others/types'
 import { Asset } from 'expo-asset';
 
-export const printFormat = (user: UserType, headers, imageUrl, signatureData) => {
+export const printFormat = (user: UserType, headers, imageUrl, signatureData, receiver) => {
 
     const newMeterNo = user.meterno ? user.meterno.substring(0, user.meterno.indexOf(':')) : null;
     const { header1, header2, header3 } = headers;
@@ -107,6 +107,12 @@ export const printFormat = (user: UserType, headers, imageUrl, signatureData) =>
         `[C]<font size='normal'>Pay your bills on time to avoid</font>\n` +
         `[C]<font size='normal'>disconnection of your water</font>\n` +
         `[C]<font size='normal'>service</font>\n` +
+        `[L]\n` +
+        (
+            receiver.length > 15 ?
+            `[L]<font size='normal'>Recevied by:</font>\n[L]<font size='normal'>${receiver}</font>\n` :
+            `[L]<font size='normal'>Recevied by: ${receiver}</font>\n`
+        ) +
         `[L]\n` +
         `[C]<img>${signatureData}</img>\n`
     )

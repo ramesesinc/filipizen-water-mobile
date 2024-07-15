@@ -31,6 +31,7 @@ const UserInfo = ({ navigation, route }) => {
 
     const [signatureData, setSignatureData] = useState("")
     const [sigOpen, setSigOpen] = useState(false)
+    const [receiver, setReceiver] = useState("")
     const signatureRef = useRef<any>(null);
 
     const [edit, setEdit] = useState(false)
@@ -212,7 +213,7 @@ const UserInfo = ({ navigation, route }) => {
     const printReceipt = async () => {
         try {
             await ThermalPrinterModule.printBluetooth({
-                payload: printFormat(user, headers, imageUrl, signatureData),
+                payload: printFormat(user, headers, imageUrl, signatureData, receiver),
                 printerWidthMM: 48,
                 printerNbrCharactersPerLine: 32
             });
@@ -586,11 +587,13 @@ const UserInfo = ({ navigation, route }) => {
                         <Modal transparent={true} onRequestClose={() => setSigOpen(false)}>
                             <View style={styles1.modalContainer}>
                                 <View style={styles1.signModal}>
-                                    <Text>Please sign to confirm reciept</Text>
+                                    <Text>Please enter name and sign to confirm reciept.</Text>
+                                    <TextInput placeholder='Name of Receiver' value={receiver} onChangeText={(text) => setReceiver(text)} style={{borderWidth: 1, padding: 5}}/>
                                     <Signature
                                         ref={signatureRef}
                                         onOK={handleOK}
                                         onEnd={handleEndDrawing}
+                                        webStyle={webStyle}
                                         backgroundColor='#fff'
                                         imageType="image/jpeg"
                                         style={{ borderWidth: 1 }}
