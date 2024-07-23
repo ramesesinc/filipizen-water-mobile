@@ -205,7 +205,8 @@ const DownloadBatch = ({ navigation }) => {
                 reader TEXT,
                 balance INTEGER,
                 note TEXT,
-                printed INTEGER
+                printed INTEGER,
+                sigData TEXT
               )
             `);
           }, (err) => {
@@ -239,8 +240,8 @@ const DownloadBatch = ({ navigation }) => {
               break;
             } else {
               db.transaction(tx => {
-                tx.executeSql(`INSERT OR IGNORE INTO ${batchTable} (batchid, acctno, prevreading, reading, volume, rate, acctname, capacity, brand, meterno, billdate, duedate, discdate, amount, classification, penalty, discount, acctgroup, fromdate, todate, location, reader, balance, note, printed) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
-                  [data[i].batchid, data[i].acctno, data[i].prevreading, data[i].reading, data[i].volume, data[i].rate, data[i].acctname, data[i].meter.capacity, data[i].meter.brand, data[i].meter.serialno, data[i].billdate, data[i].duedate, data[i].discdate, data[i].amount, data[i].classificationid, data[i].penalty, data[i].discount, data[i].acctgroup, data[i].fromdate, data[i].todate, data[i].location.text, data[i].reader.name, data[i].balance, data[i].note, 0], (_, result) => {
+                tx.executeSql(`INSERT OR IGNORE INTO ${batchTable} (batchid, acctno, prevreading, reading, volume, rate, acctname, capacity, brand, meterno, billdate, duedate, discdate, amount, classification, penalty, discount, acctgroup, fromdate, todate, location, reader, balance, note, printed, sigData) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+                  [data[i].batchid, data[i].acctno, data[i].prevreading, data[i].reading, data[i].volume, data[i].rate, data[i].acctname, data[i].meter.capacity, data[i].meter.brand, data[i].meter.serialno, data[i].billdate, data[i].duedate, data[i].discdate, data[i].amount, data[i].classificationid, data[i].penalty, data[i].discount, data[i].acctgroup, data[i].fromdate, data[i].todate, data[i].location.text, data[i].reader.name, data[i].balance, data[i].note, 0, ""], (_, result) => {
                     console.log('Insert result:', result);
                   },
                   (_, error) => {

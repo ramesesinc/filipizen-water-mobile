@@ -61,7 +61,8 @@ const UserInfo = ({ navigation, route }) => {
         balance: null,
         pageNum: null,
         note: null,
-        printed: null
+        printed: null,
+        sigData: null
     })
     const [headers, setHeaders] = useState({
         header1: "",
@@ -384,7 +385,7 @@ const UserInfo = ({ navigation, route }) => {
     }
 
     const handleConfirm = () => {
-        if (signatureData !== "") {
+        if (signatureData !== "" && receiver !== "") {
             setSigOpen(false)
             printReceipt()
             signatureRef.current.clearSignature();
@@ -392,8 +393,8 @@ const UserInfo = ({ navigation, route }) => {
             db.transaction(
                 tx => {
                     tx.executeSql(
-                        `UPDATE ${batchname} SET printed = ? WHERE acctno = ?`,
-                        [1, user.acctno],
+                        `UPDATE ${batchname} SET printed = ?, sigData = ? WHERE acctno = ?`,
+                        [1, signatureData, user.acctno],
                         (txObj, resultSet) => {
                             console.log('Updated printed');
                         },
@@ -405,7 +406,7 @@ const UserInfo = ({ navigation, route }) => {
                 }
             );
         } else {
-            alert("Cant confirm without a sign")
+            alert("Cant confirm without a receiver's name and sign")
         }
     }
 
@@ -421,7 +422,7 @@ const UserInfo = ({ navigation, route }) => {
             <View style={styles1.container}>
                 <View style={{ flex: 1, marginBottom: 0, marginTop: 10 }}>
                     <View style={{ flex: 1, flexDirection: 'row', marginBottom: 10 }}>
-                        <View style={{ flex: 3, alignItems: 'center'}}>
+                        <View style={{ flex: 3, alignItems: 'center' }}>
                             <View style={{ flex: 1, justifyContent: 'space-between' }}>
                                 <View style={{ alignItems: 'center', alignSelf: 'center' }}>
                                     <Pressable >
@@ -435,46 +436,52 @@ const UserInfo = ({ navigation, route }) => {
                                 </View>
                                 {
                                     user.reading === null ?
-                                        <View style={{ justifyContent: 'space-between', gap: 10 }}>
-                                            <TouchableOpacity onPress={() => setNoteOpen(true)} style={styles1.hold}>
-                                                <Text style={{ color: 'black', fontSize: 17 }}>Hold</Text>
-                                            </TouchableOpacity>
-                                            <TouchableOpacity onPress={() => setOpen(true)} style={styles1.print}>
-                                                <Text style={{ color: 'white', fontSize: 17 }}>Read</Text>
-                                            </TouchableOpacity>
+                                        <View>
+                                            {
+                                                !user.note ?
+                                                    <View style={{ justifyContent: 'space-between', gap: 10 }}>
+                                                        <TouchableOpacity onPress={() => setNoteOpen(true)} style={styles1.hold}>
+                                                            <Text style={{ color: 'black', fontSize: 17 }}>Hold</Text>
+                                                        </TouchableOpacity>
+                                                        <TouchableOpacity onPress={() => setOpen(true)} style={styles1.print}>
+                                                            <Text style={{ color: 'white', fontSize: 17 }}>Read</Text>
+                                                        </TouchableOpacity>
+                                                    </View>
+                                                    :
+                                                    <TouchableOpacity onPress={unHold} style={styles1.hold}>
+                                                        <Text style={{ color: 'black', fontSize: 17 }}>Un-hold</Text>
+                                                    </TouchableOpacity>
+                                            }
                                         </View>
                                         :
                                         <View>
                                             {
                                                 !user.printed &&
-                                                <View style={{justifyContent: 'flex-end'}}>
+                                                <View style={{ justifyContent: 'flex-end' }}>
                                                     {!user.note ? <View style={{ justifyContent: 'space-between', gap: 10 }}>
-                                                <TouchableOpacity onPress={() => setNoteOpen(true)} style={styles1.hold}>
-                                                    <Text style={{ color: 'black', fontSize: 17 }}>Hold</Text>
-                                                </TouchableOpacity>
-                                                <TouchableOpacity onPress={() => {
-                                                    setOpen(true)
-                                                }} style={styles1.reRead}>
-                                                    <Text style={{ color: 'black', fontSize: 17 }}>Re-read</Text>
-                                                </TouchableOpacity>
-                                                {
-                                                    !user.printed &&
-                                                    <TouchableOpacity onPress={() => setSigOpen(true)} style={styles1.print}>
-                                                        <Text style={{ color: 'white', fontSize: 17 }}>Print</Text>
-                                                    </TouchableOpacity>
-                                                }
-                                            </View> :
-                                                <View style={{ justifyContent: 'space-between', gap: 10 }}>
-                                                    <TouchableOpacity onPress={unHold} style={styles1.hold}>
-                                                        <Text style={{ color: 'black', fontSize: 17 }}>Un-hold</Text>
-                                                    </TouchableOpacity>
-                                                    <TouchableOpacity onPress={() => setOpen(true)} style={styles1.reRead}>
-                                                        <Text style={{ color: 'black', fontSize: 17 }}>Re-read</Text>
-                                                    </TouchableOpacity>
+                                                        <TouchableOpacity onPress={() => setNoteOpen(true)} style={styles1.hold}>
+                                                            <Text style={{ color: 'black', fontSize: 17 }}>Hold</Text>
+                                                        </TouchableOpacity>
+                                                        <TouchableOpacity onPress={() => {
+                                                            setOpen(true)
+                                                        }} style={styles1.reRead}>
+                                                            <Text style={{ color: 'black', fontSize: 17 }}>Re-read</Text>
+                                                        </TouchableOpacity>
+                                                        <TouchableOpacity onPress={() => setSigOpen(true)} style={styles1.print}>
+                                                            <Text style={{ color: 'white', fontSize: 17 }}>Print</Text>
+                                                        </TouchableOpacity>
+                                                    </View> :
+                                                        <View style={{ justifyContent: 'space-between', gap: 10 }}>
+                                                            <TouchableOpacity onPress={unHold} style={styles1.hold}>
+                                                                <Text style={{ color: 'black', fontSize: 17 }}>Un-hold</Text>
+                                                            </TouchableOpacity>
+                                                            <TouchableOpacity onPress={() => setOpen(true)} style={styles1.reRead}>
+                                                                <Text style={{ color: 'black', fontSize: 17 }}>Re-read</Text>
+                                                            </TouchableOpacity>
+                                                        </View>
+                                                    }
                                                 </View>
-                                            }
-                                                </View>
-                                                
+
                                             }
                                         </View>
                                 }
