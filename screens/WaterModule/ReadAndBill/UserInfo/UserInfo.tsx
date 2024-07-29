@@ -125,7 +125,7 @@ const UserInfo = ({ navigation, route }) => {
 
     useEffect(() => {
         const dlPicture = async () => {
-            const imageAsset = Asset.fromModule(require('../../../../assets/printerLogoExample.jpg'));
+            const imageAsset = Asset.fromModule(require('../../../../assets/printerLogoExample2.jpg'));
 
             if (!imageAsset.localUri) {
                 await imageAsset.downloadAsync();
@@ -133,7 +133,7 @@ const UserInfo = ({ navigation, route }) => {
             // const exampleImageUri = Image.resolveAssetSource(imageAsset).uri
             let printLogoUri: string;
 
-            const localUri = `${FileSystem.cacheDirectory}printerLogoExample.jpg`;
+            const localUri = `${FileSystem.cacheDirectory}printerLogoExample2.jpg`;
 
             const fileInfo = await FileSystem.getInfoAsync(localUri);
             console.log(`file Exist? ${fileInfo.exists}`)
@@ -167,6 +167,7 @@ const UserInfo = ({ navigation, route }) => {
                     tx.executeSql(`SELECT * FROM ${batchname} WHERE acctno = ?`, [userAccNo],
                         (txObj, resultSet) => {
                             setUser(resultSet.rows._array[0]);
+                            console.log(resultSet.rows._array[0].sigData)
                             const numberString = resultSet.rows._array[0].capacity.toString().match(/0/g) || [];
                             const newArr = []
                             numberString.map(() => {
@@ -501,7 +502,7 @@ const UserInfo = ({ navigation, route }) => {
                                     </View>
                                     <View style={styles1.info}>
                                         <Text style={styles1.infoName}>Address:</Text>
-                                        <Text style={styles1.infoValue}>{user.location}</Text>
+                                        <Text style={styles1.infoValue}>{user.location && user.location.replace(/\n/g, '').replace(/  +/g, ' ')}</Text>
                                     </View>
                                 </View>
                                 <View style={styles1.infoGap}>
