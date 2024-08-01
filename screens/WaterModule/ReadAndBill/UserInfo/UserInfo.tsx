@@ -89,7 +89,11 @@ const UserInfo = ({ navigation, route }) => {
         styles = styles2
     }
 
-    const webStyle = `.m-signature-pad--footer .save { display: none; } .clear { display: none; }`;
+    const webStyle = `.m-signature-pad {box-shadow: none; border: none; } 
+              .m-signature-pad--body {border: none;}
+              .m-signature-pad--footer {display: none; margin: 0px;}
+              body,html {
+              width: ${300}px; height: ${200}px;}`;;
 
     const handleEndDrawing = () => {
         signatureRef.current?.readSignature();
@@ -608,9 +612,10 @@ const UserInfo = ({ navigation, route }) => {
                                         onOK={handleOK}
                                         onEnd={handleEndDrawing}
                                         webStyle={webStyle}
+                                        trimWhitespace={true}
                                         backgroundColor='#fff'
                                         imageType="image/jpeg"
-                                        style={{ borderWidth: 1 }}
+                                        style={{ borderWidth: 1, height: 50 }}
                                     />
                                     <View style={{ flexDirection: 'row', gap: 10, justifyContent: 'space-between', alignItems: 'center' }}>
                                         <View style={{ flex: 1, flexDirection: 'row', gap: 15 }}>

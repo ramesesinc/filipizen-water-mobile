@@ -1,6 +1,5 @@
 import { UserType } from '../../WaterModule/Others/types'
 import ensureFourDecimalPlaces from './ensureFourDecimalPlaces';
-import { Asset } from 'expo-asset';
 
 const replaceñ = (name) => {
     return name.replace(/ñ/gi, (match) => {
@@ -9,7 +8,6 @@ const replaceñ = (name) => {
 }
 
 export const printFormat = (user: UserType, headers, imageUrl, signatureData, receiver) => {
-
     const newMeterNo = user.meterno ? user.meterno.substring(0, user.meterno.indexOf(':')) : null;
     const { header1, header2, header3 } = headers;
     const newName = replaceñ(user.acctname)
@@ -74,8 +72,8 @@ export const printFormat = (user: UserType, headers, imageUrl, signatureData, re
         `[L]<font size='normal'>Account No: ${user.acctno}</font>\n` +
         (
             newName.length > 20 ?
-            `[L]<font size='normal'>Name:</font>\n[L]<font size='normal'>${newName}</font>\n` :
-            `[L]<font size='normal'>Name: ${newName}</font>\n`
+                `[L]<font size='normal'>Name:</font>\n[L]<font size='normal'>${newName}</font>\n` :
+                `[L]<font size='normal'>Name: ${newName}</font>\n`
         ) +
         `[L]<font size='normal'>Address:</font>\n` +
         `[L]<font size='normal'>${newLoc}</font>\n` +
@@ -87,24 +85,26 @@ export const printFormat = (user: UserType, headers, imageUrl, signatureData, re
         `[L]<font size='normal'>Capacity: ${user.capacity}</font>\n` +
         (
             newReader.length > 20 ?
-            `[L]<font size='normal'>Reader:</font>\n[L]<font size='normal'>${newReader}</font>\n` :
-            `[L]<font size='normal'>Reader: ${newReader}</font>\n`
+                `[L]<font size='normal'>Reader:</font>\n[L]<font size='normal'>${newReader}</font>\n` :
+                `[L]<font size='normal'>Reader: ${newReader}</font>\n`
         ) +
         `[L]\n` +
         `[C]<b>================================</b>\n` +
-        `[C]<b><font size='normal'>Reading Coverage</font></b>\n` +
+        `[C]<b><font size='normal'>Reading Information</font></b>\n` +
         `[L]\n` +
-        `[C]<font size='normal'>${newFromDate} to ${newToDate}</font>\n` +
+        `[L]<font size='normal'>Coverage:</font>\n` +
+        `[L]<font size='normal'>${newFromDate} to ${newToDate}</font>\n` +
         `[L]\n` +
         `[L]<font size='normal'>Current</font>[R]<font size='normal'>${ensureFourDecimalPlaces(user.reading)}</font>\n` +
         `[L]<font size='normal'>Previous</font>[R]<font size='normal'>${ensureFourDecimalPlaces(user.prevreading)}</font>\n` +
         `[C]<b>--------------------------------</b>\n` +
         `[L]<font size='normal'>Consumption</font>[R]<font size='normal'>${ensureFourDecimalPlaces(user.volume)}</font>\n` +
         `[L]\n` +
+        `[C]<b><font size='normal'>Billing</font></b>\n` +
+        `[L]\n` +
         `[L]<font size='normal'>Amount Due</font>[R]<font size='normal'>${user.rate ? amountDue : 0}</font>\n` +
         `[L]<font size='normal'>Prev Balance</font>[R]<font size='normal'>${user.balance ? prevBal : 0}</font>\n` +
         `[L]<font size='normal'>Other Charges</font>[R]<font size='normal'>${0}</font>\n` +
-        `[L]\n` +
         `[L]\n` +
         `[L]<font size='normal'>Total Amount Due</font>[R]<font size='normal'>PHP ${totalAmount}</font>\n` +
         `[C]<b>================================</b>\n` +
@@ -120,12 +120,13 @@ export const printFormat = (user: UserType, headers, imageUrl, signatureData, re
         `[C]<font size='normal'>disconnection of your water</font>\n` +
         `[C]<font size='normal'>service</font>\n` +
         `[L]\n` +
+        `[L]\n` +
+        `[C]<img>${signatureData}</img>\n` +
+        `[L]\n` +
         (
             receiver.length > 15 ?
-            `[L]<font size='normal'>Recevied by:</font>\n[L]<font size='normal'>${receiver}</font>\n` :
-            `[L]<font size='normal'>Recevied by: ${receiver}</font>\n`
-        ) +
-        `[L]\n` +
-        `[C]<img>${signatureData}</img>\n`
+                `[L]<font size='normal'>Recevied by:</font>\n[L]<font size='normal'>${receiver}</font>\n` :
+                `[L]<font size='normal'>Recevied by: ${receiver}</font>\n`
+        ) 
     )
 }
