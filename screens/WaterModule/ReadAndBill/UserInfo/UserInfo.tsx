@@ -28,6 +28,7 @@ const db = SQLITE.openDatabase('example.db');
 const UserInfo = ({ navigation, route }) => {
     const [open, setOpen] = useState(false)
     const [noteOpen, setNoteOpen] = useState(false)
+    const [rateOpen, setRateOpen] = useState(false)
 
     const [signatureData, setSignatureData] = useState("")
     const [sigOpen, setSigOpen] = useState(false)
@@ -69,6 +70,10 @@ const UserInfo = ({ navigation, route }) => {
         header2: "",
         header3: ""
     })
+
+    const [readerObj, setReaderObj] = useState(null)
+    const [serverObj, setServerObj] = useState(null)
+
     const [numberValue, setNumberValue] = useState([])
     const [decimalValue, setDecimalValue] = useState(["0", "0", "0", "0"]);
     const [noteInput, setNoteInput] = useState("")
@@ -78,31 +83,6 @@ const UserInfo = ({ navigation, route }) => {
 
     const isFocused = useIsFocused()
     const { userAccNo, batchname } = route.params;
-
-    const [imageUrl, setImageUrl] = useState(null)
-
-    let styles = null
-
-    if (height < 600) {
-        styles = styles1
-    } else if (height > 600 && height < 1000) {
-        styles = styles2
-    }
-
-    const webStyle = `.m-signature-pad {box-shadow: none; border: none; } 
-              .m-signature-pad--body {border: none;}
-              .m-signature-pad--footer {display: none; margin: 0px;}
-              body,html {
-              width: ${300}px; height: ${200}px;}`;;
-
-    const handleEndDrawing = () => {
-        signatureRef.current?.readSignature();
-    };
-    const handleOK = (signature: any) => {
-        // const base64code = signature.replace('data:image/png;base64,', 'data:image/png;base64,');
-        setSignatureData(signature)
-        console.log(typeof (signature))
-    };
 
     const retrieveData = async () => {
         try {
@@ -161,7 +141,19 @@ const UserInfo = ({ navigation, route }) => {
 
         }
 
+        const getReaderInfo = async () => {
+            const readerInfo = await AsyncStorage.getItem('readerInfo');
+            const storedObject = await JSON.parse(readerInfo);
+
+            const serverObjectString = await AsyncStorage.getItem('serverObject');
+            const serverObjectJSON = await JSON.parse(serverObjectString);
+
+            setServerObj(serverObjectJSON)
+            setReaderObj(storedObject)
+        }
+
         dlPicture();
+        getReaderInfo();
     }, [])
 
     useEffect(() => {
@@ -216,10 +208,85 @@ const UserInfo = ({ navigation, route }) => {
 
     }, [open, isFocused, noteOpen, sigOpen]);
 
+    const [imageUrl, setImageUrl] = useState(null)
+
+    let styles = null
+
+    if (height < 600) {
+        styles = styles1
+    } else if (height > 600 && height < 1000) {
+        styles = styles2
+    }
+
+    const webStyle = `.m-signature-pad {box-shadow: none; border: none; } 
+              .m-signature-pad--body {border: none;}
+              .m-signature-pad--footer {display: none; margin: 0px;}
+              body,html {
+              width: ${300}px; height: ${200}px;}`;;
+
+    const handleEndDrawing = () => {
+        signatureRef.current?.readSignature();
+    };
+    const handleOK = (signature: any) => {
+        // const base64code = signature.replace('data:image/png;base64,', 'data:image/png;base64,');
+        setSignatureData(signature)
+        console.log(typeof (signature))
+    };
+
+    const getRate = async () => {
+        try {
+            if (user.sigData) {
+                printReceipt();
+            } else {
+                // const res = await fetch(`http://${serverObj.water.ip}:${serverObj.water.port}/osiris3/json/enterprise/WaterMobileReadingService.getBatchItems`, {
+                //     method: 'POST',
+                //     headers: { 'Content-Type': 'application/json' },
+                //     body: JSON.stringify({
+                //         env: {
+                //             CLIENTTYPE: 'mobile',
+                //             USERID: readerObj.USERID
+                //         }
+                //     }),
+                // });
+            }
+
+        } catch (e) {
+            alert(e)
+        }
+    }
+
+    const handleFirstStep = () => {
+        if(user.sigData) {
+            printReceipt()
+        } else {
+            setRateOpen(true)
+        }
+    }
+
+    const handleContinue = () => {
+        db.transaction(
+            tx => {
+                tx.executeSql(
+                    `UPDATE ${batchname} SET rate = ? WHERE acctno = ?`,
+                    [100, user.acctno],
+                    (txObj, resultSet) => {
+                        console.log('Updated rate');
+                    },
+                    (txObj, error) => {
+                        console.error('Error updating reading, volume:', error);
+                        return false
+                    }
+                );
+            }
+        );
+        setRateOpen(false)
+        setSigOpen(true)
+    }
+
     const printReceipt = async () => {
         try {
             await ThermalPrinterModule.printBluetooth({
-                payload: printFormat(user, headers, imageUrl, signatureData, receiver),
+                payload: printFormat(user, headers, imageUrl, user.sigData ? user.sigData : signatureData, receiver),
                 printerWidthMM: 48,
                 printerNbrCharactersPerLine: 32
             });
@@ -233,11 +300,11 @@ const UserInfo = ({ navigation, route }) => {
     const inputRefs = useRef([]);
 
     const handleInputChange = (text, index) => {
-        // if (text.length > 0 && index < numberValue.length - 1) {
-        //     inputRefs.current[index + 1].focus();
-        // } else {
-        //     inputRefs.current[index].blur();
-        // }
+        if (text.length > 0 && index < numberValue.length - 1) {
+            inputRefs.current[index + 1].focus();
+        } else {
+            inputRefs.current[index].blur();
+        }
         const newInputs = [...numberValue];
         newInputs[index] = text;
         setNumberValue(newInputs);
@@ -246,9 +313,9 @@ const UserInfo = ({ navigation, route }) => {
     const decimalRefs = useRef([])
 
     const handleDecimalChange = (text, index) => {
-        // if (text.length > 0 && index < decimalValue.length - 1) {
-        //     decimalRefs.current[index + 1].focus();
-        // }
+        if (text.length > 0 && index < decimalValue.length - 1) {
+            decimalRefs.current[index + 1].focus();
+        }
         const newInputs = [...decimalValue];
         newInputs[index] = text;
         setDecimalValue(newInputs);
@@ -270,30 +337,21 @@ const UserInfo = ({ navigation, route }) => {
 
                 }
 
-
-                // user.volume = Number((toSubstractFrom - user.prevreading).toFixed(4));
                 const newVol = Number((toSubstractFrom - user.prevreading).toFixed(4));
                 console.log(user.prevreading, newRead, user.volume)
-                const func = eval(formula)
-                const result = func({ ...user, volume: newVol })
-
-                // const newVol = (toSubstractFrom - user.prevreading) - 1;
-                // const newFormula = await formula + `(${user})`
-                // const result = await eval(formula.replace(/vol/g, newVol.toString()));
-                // console.log(user)
-                // const result = await eval(newFormula)
-                // const finalRes = result ? result : null
+                // const func = eval(formula)
+                // const result = func({ ...user, volume: newVol })
 
                 db.transaction(
                     tx => {
                         tx.executeSql(
-                            `UPDATE ${batchname} SET reading = ?, volume = ?, rate = ? WHERE acctno = ?`,
-                            [newRead, newVol, result, user.acctno],
+                            `UPDATE ${batchname} SET reading = ?, volume = ? WHERE acctno = ?`,
+                            [newRead, newVol, user.acctno],
                             (txObj, resultSet) => {
-                                console.log('Updated reading, volume, and rate');
+                                console.log('Updated reading, volume');
                             },
                             (txObj, error) => {
-                                console.error('Error updating reading, volume, and rate:', error);
+                                console.error('Error updating reading, volume:', error);
                                 return false
                             }
                         );
@@ -392,7 +450,6 @@ const UserInfo = ({ navigation, route }) => {
     const handleConfirm = () => {
         if (signatureData !== "" && receiver !== "") {
             setSigOpen(false)
-            printReceipt()
             signatureRef.current.clearSignature();
             setSignatureData("")
             db.transaction(
@@ -410,6 +467,7 @@ const UserInfo = ({ navigation, route }) => {
                     );
                 }
             );
+            printReceipt()
         } else {
             alert("Cant confirm without a receiver's name and sign")
         }
@@ -461,31 +519,36 @@ const UserInfo = ({ navigation, route }) => {
                                         :
                                         <View>
                                             {
-                                                !user.printed &&
-                                                <View style={{ justifyContent: 'flex-end' }}>
-                                                    {!user.note ? <View style={{ justifyContent: 'space-between', gap: 10 }}>
-                                                        <TouchableOpacity onPress={() => setNoteOpen(true)} style={styles1.hold}>
-                                                            <Text style={{ color: 'black', fontSize: 17 }}>Hold</Text>
-                                                        </TouchableOpacity>
-                                                        <TouchableOpacity onPress={() => {
-                                                            setOpen(true)
-                                                        }} style={styles1.reRead}>
-                                                            <Text style={{ color: 'black', fontSize: 17 }}>Re-read</Text>
-                                                        </TouchableOpacity>
-                                                        <TouchableOpacity onPress={() => setSigOpen(true)} style={styles1.print}>
-                                                            <Text style={{ color: 'white', fontSize: 17 }}>Print</Text>
-                                                        </TouchableOpacity>
-                                                    </View> :
-                                                        <View style={{ justifyContent: 'space-between', gap: 10 }}>
-                                                            <TouchableOpacity onPress={unHold} style={styles1.hold}>
-                                                                <Text style={{ color: 'black', fontSize: 17 }}>Un-hold</Text>
+                                                !user.sigData ?
+                                                    <View style={{ justifyContent: 'flex-end' }}>
+                                                        {!user.note ? <View style={{ justifyContent: 'space-between', gap: 10 }}>
+                                                            <TouchableOpacity onPress={() => setNoteOpen(true)} style={styles1.hold}>
+                                                                <Text style={{ color: 'black', fontSize: 17 }}>Hold</Text>
                                                             </TouchableOpacity>
-                                                            <TouchableOpacity onPress={() => setOpen(true)} style={styles1.reRead}>
+                                                            <TouchableOpacity onPress={() => {
+                                                                setOpen(true)
+                                                            }} style={styles1.reRead}>
                                                                 <Text style={{ color: 'black', fontSize: 17 }}>Re-read</Text>
                                                             </TouchableOpacity>
-                                                        </View>
-                                                    }
-                                                </View>
+                                                            <TouchableOpacity onPress={handleFirstStep} style={styles1.print}>
+                                                                <Text style={{ color: 'white', fontSize: 17 }}>Print</Text>
+                                                            </TouchableOpacity>
+                                                        </View> :
+                                                            <View style={{ justifyContent: 'space-between', gap: 10 }}>
+                                                                <TouchableOpacity onPress={unHold} style={styles1.hold}>
+                                                                    <Text style={{ color: 'black', fontSize: 17 }}>Un-hold</Text>
+                                                                </TouchableOpacity>
+                                                                <TouchableOpacity onPress={() => setOpen(true)} style={styles1.reRead}>
+                                                                    <Text style={{ color: 'black', fontSize: 17 }}>Re-read</Text>
+                                                                </TouchableOpacity>
+                                                            </View>
+                                                        }
+                                                    </View> :
+                                                    <View style={{ justifyContent: 'flex-end' }}>
+                                                        <TouchableOpacity onPress={handleFirstStep} style={styles1.print}>
+                                                            <Text style={{ color: 'white', fontSize: 17 }}>Print</Text>
+                                                        </TouchableOpacity>
+                                                    </View>
 
                                             }
                                         </View>
@@ -543,7 +606,7 @@ const UserInfo = ({ navigation, route }) => {
                                     {user.rate !== null &&
                                         <View style={styles1.info}>
                                             <Text style={styles1.infoName}>Bill Amount:</Text>
-                                            <Text style={styles1.infoValue}>{user.rate !== 0 ? currencyFormat({ val: user.rate, decimal: 2 }) : 0}</Text>
+                                            <Text style={styles1.infoValue}>{user.rate ? currencyFormat({ val: user.rate, decimal: 2 }) : ""}</Text>
                                         </View>
                                     }
                                 </View>
@@ -634,6 +697,38 @@ const UserInfo = ({ navigation, route }) => {
                                                 <Text style={{ color: 'white' }}>Confirm</Text>
                                             </TouchableOpacity>
                                         </View>
+                                    </View>
+                                </View>
+                            </View>
+                        </Modal>
+                    }
+                    {rateOpen &&
+                        <Modal transparent={true} onRequestClose={() => setSigOpen(false)}>
+                            <View style={styles1.modalContainer}>
+                                <View style={styles1.rateModal}>
+                                    <View style={{ justifyContent: 'space-between', flexDirection: 'row' }}>
+                                        <Text>Current Reading</Text>
+                                        <Text>{user.reading}</Text>
+                                    </View>
+                                    <View style={{ justifyContent: 'space-between', flexDirection: 'row' }}>
+                                        <Text>Previous Reading</Text>
+                                        <Text>{user.prevreading}</Text>
+                                    </View>
+                                    <View style={{ justifyContent: 'space-between', flexDirection: 'row' }}>
+                                        <Text>Volume</Text>
+                                        <Text>{user.volume}</Text>
+                                    </View>
+                                    <View style={{ justifyContent: 'space-between', flexDirection: 'row' }}>
+                                        <Text>Bill Amount</Text>
+                                        <Text>{100}</Text>
+                                    </View>
+                                    <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginTop: 10 }}>
+                                        <TouchableOpacity onPress={() => setRateOpen(false)} style={{ borderWidth: 1, padding: 5, borderRadius: 5 }}>
+                                            <Text>Cancel</Text>
+                                        </TouchableOpacity>
+                                        <TouchableOpacity onPress={handleContinue} style={{ backgroundColor: 'green', padding: 5, borderRadius: 5 }}>
+                                            <Text style={{ color: 'white' }}>Continue</Text>
+                                        </TouchableOpacity>
                                     </View>
                                 </View>
                             </View>

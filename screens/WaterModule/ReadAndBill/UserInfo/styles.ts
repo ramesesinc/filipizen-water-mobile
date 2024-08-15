@@ -79,6 +79,14 @@ export const styles1 = StyleSheet.create({
         justifyContent: 'space-around',
         gap: 20
     },
+    rateModal: {
+        backgroundColor: 'white',
+        height: 250,
+        width: 250,
+        padding: 20,
+        borderRadius: 20,
+        gap: 20
+    },
     signModal: {
         backgroundColor: 'white',
         height: 350,

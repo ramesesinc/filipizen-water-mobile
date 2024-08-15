@@ -81,7 +81,7 @@ export const printFormat = (user: UserType, headers, imageUrl, signatureData, re
         `[L]<font size='normal'>Account Grooup:</font>\n` +
         `[L]<font size='normal'>${user.acctgroup}</font>\n` +
         `[L]<font size='normal'>Classification: ${user.classification}</font>\n` +
-        `[L]<font size='normal'>Meter No: ${user.brand} / ${newMeterNo}</font>\n` +
+        `[L]<font size='normal'>Meter No: ${user.brand} / ${user.meterno}</font>\n` +
         `[L]<font size='normal'>Capacity: ${user.capacity}</font>\n` +
         (
             newReader.length > 20 ?
