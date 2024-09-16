@@ -81,7 +81,7 @@ export const styles1 = StyleSheet.create({
     },
     rateModal: {
         backgroundColor: 'white',
-        height: 250,
+        height: 200,
         width: 250,
         padding: 20,
         borderRadius: 20,

@@ -256,7 +256,7 @@ const UserInfo = ({ navigation, route }) => {
     }
 
     const handleFirstStep = () => {
-        if(user.sigData) {
+        if (user.sigData) {
             printReceipt()
         } else {
             setRateOpen(true)
@@ -706,21 +706,24 @@ const UserInfo = ({ navigation, route }) => {
                         <Modal transparent={true} onRequestClose={() => setSigOpen(false)}>
                             <View style={styles1.modalContainer}>
                                 <View style={styles1.rateModal}>
-                                    <View style={{ justifyContent: 'space-between', flexDirection: 'row' }}>
-                                        <Text>Current Reading</Text>
-                                        <Text>{user.reading}</Text>
-                                    </View>
-                                    <View style={{ justifyContent: 'space-between', flexDirection: 'row' }}>
-                                        <Text>Previous Reading</Text>
-                                        <Text>{user.prevreading}</Text>
-                                    </View>
-                                    <View style={{ justifyContent: 'space-between', flexDirection: 'row' }}>
-                                        <Text>Volume</Text>
-                                        <Text>{user.volume}</Text>
-                                    </View>
-                                    <View style={{ justifyContent: 'space-between', flexDirection: 'row' }}>
-                                        <Text>Bill Amount</Text>
-                                        <Text>{100}</Text>
+                                    <View style={{ flex: 1 }}>
+                                        <View style={{ justifyContent: 'space-between', flexDirection: 'row' }}>
+                                            <Text>Current Reading</Text>
+                                            <Text>{user.volume && ensureFourDecimalPlaces(user.reading)}</Text>
+                                        </View>
+                                        <View style={{ justifyContent: 'space-between', flexDirection: 'row' }}>
+                                            <Text>Previous Reading</Text>
+                                            <Text>{user.volume && ensureFourDecimalPlaces(user.prevreading)}</Text>
+                                        </View>
+                                        <View style={{ justifyContent: 'space-between', flexDirection: 'row' }}>
+                                            <Text>Volume</Text>
+                                            <Text>{user.volume && ensureFourDecimalPlaces(user.volume)}</Text>
+                                        </View>
+                                        <View style={{flex: 1}}></View>
+                                        <View style={{ justifyContent: 'space-between', flexDirection: 'row' }}>
+                                            <Text>Bill Amount</Text>
+                                            <Text>{100}</Text>
+                                        </View>
                                     </View>
                                     <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginTop: 10 }}>
                                         <TouchableOpacity onPress={() => setRateOpen(false)} style={{ borderWidth: 1, padding: 5, borderRadius: 5 }}>
@@ -730,6 +733,18 @@ const UserInfo = ({ navigation, route }) => {
                                             <Text style={{ color: 'white' }}>Continue</Text>
                                         </TouchableOpacity>
                                     </View>
+
+                                    {/* <View style={{flex: 1}}>
+                                        <Text style={{flex: 1, textAlign: 'center', textAlignVertical: 'center'}}>Could not connect to Server</Text>
+                                    </View>
+                                    <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginTop: 10 }}>
+                                        <TouchableOpacity onPress={() => setRateOpen(false)} style={{ borderWidth: 1, padding: 5, borderRadius: 5 }}>
+                                            <Text>Cancel</Text>
+                                        </TouchableOpacity>
+                                        <TouchableOpacity style={{ backgroundColor: 'green', padding: 5, borderRadius: 5 }}>
+                                            <Text style={{ color: 'white' }}>Retry</Text>
+                                        </TouchableOpacity>
+                                    </View> */}
                                 </View>
                             </View>
                         </Modal>
