@@ -25,8 +25,11 @@ export type UserType = {
     balance: number,
     pageNum: number,
     note: string,
-    printed: number,
-    sigData: string
+    uploaded: number,
+    sigData: string,
+    receiver: string,
+    receiveDate: string,
+    noteDate: string,
 }
 
 export type DataUserType = {

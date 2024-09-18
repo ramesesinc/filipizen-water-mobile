@@ -5,6 +5,7 @@ import { Ionicons, FontAwesome6, FontAwesome } from '@expo/vector-icons';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Signature from 'react-native-signature-canvas';
+import OtpTextInput from 'react-native-text-input-otp'
 
 import WaterHeader from '../../../../components/Water/WaterHeader'
 import { UserType } from '../../Others/types';
@@ -28,7 +29,8 @@ const db = SQLITE.openDatabase('example.db');
 const UserInfo = ({ navigation, route }) => {
     const [open, setOpen] = useState(false)
     const [noteOpen, setNoteOpen] = useState(false)
-    const [rateOpen, setRateOpen] = useState(false)
+    const [rateOpenOk, setRateOpenOk] = useState(false)
+    const [rateOpenNotOk, setRateOpenNotOk] = useState(false)
 
     const [signatureData, setSignatureData] = useState("")
     const [sigOpen, setSigOpen] = useState(false)
@@ -62,8 +64,11 @@ const UserInfo = ({ navigation, route }) => {
         balance: null,
         pageNum: null,
         note: null,
-        printed: null,
-        sigData: null
+        uploaded: null,
+        sigData: null,
+        receiver: null,
+        receiveDate: null,
+        noteDate: null
     })
     const [headers, setHeaders] = useState({
         header1: "",
@@ -79,8 +84,13 @@ const UserInfo = ({ navigation, route }) => {
     const [noteInput, setNoteInput] = useState("")
     const [formula, setFormula] = useState(null)
 
+    const [otp, setOtp] = React.useState('');
+    const computedRef = useRef(null)
+
     // const hdb = SQLITE.openDatabase('headers.db');
 
+    const date = new Date();
+    const currentDate = `${date.getFullYear()}-${date.getDate()}-${date.getMonth()}`
     const isFocused = useIsFocused()
     const { userAccNo, batchname } = route.params;
 
@@ -154,6 +164,9 @@ const UserInfo = ({ navigation, route }) => {
 
         dlPicture();
         getReaderInfo();
+
+        const date = new Date();
+        console.log(`${date.getFullYear()}-${date.getDate()}-${date.getMonth()}`)
     }, [])
 
     useEffect(() => {
@@ -163,7 +176,7 @@ const UserInfo = ({ navigation, route }) => {
                     tx.executeSql(`SELECT * FROM ${batchname} WHERE acctno = ?`, [userAccNo],
                         (txObj, resultSet) => {
                             setUser(resultSet.rows._array[0]);
-                            console.log(resultSet.rows._array[0].sigData)
+                            // console.log(resultSet.rows._array[0].sigData)
                             const numberString = resultSet.rows._array[0].capacity.toString().match(/0/g) || [];
                             const newArr = []
                             numberString.map(() => {
@@ -204,9 +217,9 @@ const UserInfo = ({ navigation, route }) => {
 
             retrieveFormula();
             retrieveData();
+            console.log("useEffect ran")
         }
-
-    }, [open, isFocused, noteOpen, sigOpen]);
+    }, [open, isFocused, noteOpen, sigOpen, rateOpenOk]);
 
     const [imageUrl, setImageUrl] = useState(null)
 
@@ -235,23 +248,35 @@ const UserInfo = ({ navigation, route }) => {
 
     const getRate = async () => {
         try {
-            if (user.sigData) {
+            if (user.uploaded) {
                 printReceipt();
             } else {
-                // const res = await fetch(`http://${serverObj.water.ip}:${serverObj.water.port}/osiris3/json/enterprise/WaterMobileReadingService.getBatchItems`, {
-                //     method: 'POST',
-                //     headers: { 'Content-Type': 'application/json' },
-                //     body: JSON.stringify({
-                //         env: {
-                //             CLIENTTYPE: 'mobile',
-                //             USERID: readerObj.USERID
-                //         }
-                //     }),
-                // });
+                const res = await fetch(`http://${serverObj.water.ip}:${serverObj.water.port}/osiris3/json/enterprise/WaterMobileReadingService.compute`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        env: {
+                            CLIENTTYPE: 'mobile',
+                            USERID: readerObj.USERID
+                        },
+                        args: {
+                            batchid: user.batchid,
+                            acctno: user.acctno,
+                            prevreading: user.prevreading,
+                            reading: user.reading,
+                            volume: user.volume
+                        }
+                    }),
+                });
+                if (res.ok) {
+                    const computed = await res.json()
+                    computedRef.current = computed
+                    setRateOpenOk(true)
+                }
             }
 
         } catch (e) {
-            alert(e)
+            alert("Could not connect to server!")
         }
     }
 
@@ -259,43 +284,9 @@ const UserInfo = ({ navigation, route }) => {
         if (user.sigData) {
             printReceipt()
         } else {
-            setRateOpen(true)
+            setRateOpenOk(true)
         }
     }
-
-    const handleContinue = () => {
-        db.transaction(
-            tx => {
-                tx.executeSql(
-                    `UPDATE ${batchname} SET rate = ? WHERE acctno = ?`,
-                    [100, user.acctno],
-                    (txObj, resultSet) => {
-                        console.log('Updated rate');
-                    },
-                    (txObj, error) => {
-                        console.error('Error updating reading, volume:', error);
-                        return false
-                    }
-                );
-            }
-        );
-        setRateOpen(false)
-        setSigOpen(true)
-    }
-
-    const printReceipt = async () => {
-        try {
-            await ThermalPrinterModule.printBluetooth({
-                payload: printFormat(user, headers, imageUrl, user.sigData ? user.sigData : signatureData, receiver),
-                printerWidthMM: 48,
-                printerNbrCharactersPerLine: 32
-            });
-        } catch (err) {
-            //error handling
-            alert(err)
-            console.log(err.message);
-        }
-    };
 
     const inputRefs = useRef([]);
 
@@ -370,8 +361,8 @@ const UserInfo = ({ navigation, route }) => {
         db.transaction(
             tx => {
                 tx.executeSql(
-                    `UPDATE ${batchname} SET note = ? WHERE acctno = ?`,
-                    [noteInput, user.acctno],
+                    `UPDATE ${batchname} SET note = ?, noteDate = ? WHERE acctno = ?`,
+                    [noteInput, currentDate, user.acctno],
                     (txObj, resultSet) => {
                         console.log('Updated note');
                     },
@@ -447,31 +438,82 @@ const UserInfo = ({ navigation, route }) => {
         setNoteOpen(true)
     }
 
-    const handleConfirm = () => {
+    const handleContinue = () => {
+        setRateOpenOk(false)
+        setSigOpen(true)
+    }
+
+    const handleConfirm = async () => {
         if (signatureData !== "" && receiver !== "") {
-            setSigOpen(false)
-            signatureRef.current.clearSignature();
-            setSignatureData("")
-            db.transaction(
-                tx => {
-                    tx.executeSql(
-                        `UPDATE ${batchname} SET printed = ?, sigData = ? WHERE acctno = ?`,
-                        [1, signatureData, user.acctno],
-                        (txObj, resultSet) => {
-                            console.log('Updated printed');
+            const res = await fetch(`http://${serverObj.water.ip}:${serverObj.water.port}/osiris3/json/enterprise/WaterMobileReadingService.uploadReading`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    env: {
+                        CLIENTTYPE: 'mobile',
+                        USERID: readerObj.USERID
+                    },
+                    args: {
+                        batchid: user.batchid,
+                        acctno: user.acctno,
+                        prevreading: user.prevreading,
+                        reading: user.reading,
+                        volume: user.volume,
+                        rate: computedRef.current.rate,
+                        duedate: computedRef.current.duedate,
+                        receivedby: {
+                            name: receiver,
+                            date: "...",
+                            signature: signatureData
                         },
-                        (txObj, error) => {
-                            console.error('Error updating printed:', error);
-                            return false
+                        hold: {
+                            message: user.note,
+                            date: "..."
                         }
-                    );
-                }
-            );
-            printReceipt()
+                    }
+                }),
+            });
+
+            if (res.ok) {
+                db.transaction(
+                    tx => {
+                        tx.executeSql(
+                            `UPDATE ${batchname} SET uploaded = ?, sigData = ?, receiver = ?, rate = ?, duedate = ?, receiveDate = ? WHERE acctno = ?`,
+                            [1, signatureData, receiver, computedRef.current.rate, computedRef.current.duedate, currentDate, user.acctno,],
+                            (txObj, resultSet) => {
+                                console.log('Updated uploaded');
+                            },
+                            (txObj, error) => {
+                                console.error('Error updating uploaded:', error);
+                                return false
+                            }
+                        );
+                    }
+                );
+                setSigOpen(false)
+                signatureRef.current && signatureRef.current.clearSignature();
+                setSignatureData("")
+                printReceipt();
+            }
         } else {
             alert("Cant confirm without a receiver's name and sign")
         }
     }
+
+    const printReceipt = async () => {
+        try {
+            await ThermalPrinterModule.printBluetooth({
+                payload: printFormat(user, headers, imageUrl, user.sigData ? user.sigData : signatureData, user.receiver ? user.receiver : receiver),
+                printerWidthMM: 48,
+                printerNbrCharactersPerLine: 32
+            })
+
+        } catch (err) {
+            //error handling
+            alert(err)
+            console.log(err.message);
+        }
+    };
 
     const handleCancel = () => {
         setSigOpen(false)
@@ -519,7 +561,7 @@ const UserInfo = ({ navigation, route }) => {
                                         :
                                         <View>
                                             {
-                                                !user.sigData ?
+                                                !user.uploaded ?
                                                     <View style={{ justifyContent: 'flex-end' }}>
                                                         {!user.note ? <View style={{ justifyContent: 'space-between', gap: 10 }}>
                                                             <TouchableOpacity onPress={() => setNoteOpen(true)} style={styles1.hold}>
@@ -530,8 +572,8 @@ const UserInfo = ({ navigation, route }) => {
                                                             }} style={styles1.reRead}>
                                                                 <Text style={{ color: 'black', fontSize: 17 }}>Re-read</Text>
                                                             </TouchableOpacity>
-                                                            <TouchableOpacity onPress={handleFirstStep} style={styles1.print}>
-                                                                <Text style={{ color: 'white', fontSize: 17 }}>Print</Text>
+                                                            <TouchableOpacity onPress={getRate} style={styles1.print}>
+                                                                <Text style={{ color: 'white', fontSize: 17 }}>Get Rate</Text>
                                                             </TouchableOpacity>
                                                         </View> :
                                                             <View style={{ justifyContent: 'space-between', gap: 10 }}>
@@ -545,7 +587,7 @@ const UserInfo = ({ navigation, route }) => {
                                                         }
                                                     </View> :
                                                     <View style={{ justifyContent: 'flex-end' }}>
-                                                        <TouchableOpacity onPress={handleFirstStep} style={styles1.print}>
+                                                        <TouchableOpacity onPress={getRate} style={styles1.print}>
                                                             <Text style={{ color: 'white', fontSize: 17 }}>Print</Text>
                                                         </TouchableOpacity>
                                                     </View>
@@ -620,6 +662,16 @@ const UserInfo = ({ navigation, route }) => {
                         <Modal transparent={true} onRequestClose={() => setOpen(false)}>
                             <View style={styles1.modalContainer}>
                                 <View style={styles1.modal}>
+                                    {/* <View style={styles1.inputContainer}>
+                                        <OtpTextInput
+                                            otp={otp}
+                                            setOtp={setOtp}
+                                            digits={5}
+                                            style={{ height: 20 }}
+                                            fontStyle={{ fontSize: 10, fontWeight: 'bold' }}
+                                            focusedStyle={{ borderColor: 'black', borderBottomWidth: 2 }}
+                                        />
+                                    </View> */}
                                     <View style={styles1.inputContainer}>
                                         {numberValue.map((value, index) => (
                                             <TextInput
@@ -702,7 +754,7 @@ const UserInfo = ({ navigation, route }) => {
                             </View>
                         </Modal>
                     }
-                    {rateOpen &&
+                    {rateOpenOk &&
                         <Modal transparent={true} onRequestClose={() => setSigOpen(false)}>
                             <View style={styles1.modalContainer}>
                                 <View style={styles1.rateModal}>
@@ -719,32 +771,43 @@ const UserInfo = ({ navigation, route }) => {
                                             <Text>Volume</Text>
                                             <Text>{user.volume && ensureFourDecimalPlaces(user.volume)}</Text>
                                         </View>
-                                        <View style={{flex: 1}}></View>
+                                        <View style={{ justifyContent: 'space-between', flexDirection: 'row' }}>
+                                            <Text>Due Date</Text>
+                                            <Text>{computedRef.current.duedate}</Text>
+                                        </View>
+                                        <View style={{ flex: 1 }}></View>
                                         <View style={{ justifyContent: 'space-between', flexDirection: 'row' }}>
                                             <Text>Bill Amount</Text>
-                                            <Text>{100}</Text>
+                                            <Text>{computedRef.current.rate}</Text>
                                         </View>
                                     </View>
                                     <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginTop: 10 }}>
-                                        <TouchableOpacity onPress={() => setRateOpen(false)} style={{ borderWidth: 1, padding: 5, borderRadius: 5 }}>
+                                        <TouchableOpacity onPress={() => setRateOpenOk(false)} style={{ borderWidth: 1, padding: 5, borderRadius: 5 }}>
                                             <Text>Cancel</Text>
                                         </TouchableOpacity>
                                         <TouchableOpacity onPress={handleContinue} style={{ backgroundColor: 'green', padding: 5, borderRadius: 5 }}>
                                             <Text style={{ color: 'white' }}>Continue</Text>
                                         </TouchableOpacity>
                                     </View>
-
-                                    {/* <View style={{flex: 1}}>
-                                        <Text style={{flex: 1, textAlign: 'center', textAlignVertical: 'center'}}>Could not connect to Server</Text>
+                                </View>
+                            </View>
+                        </Modal>
+                    }
+                    {rateOpenNotOk &&
+                        <Modal transparent={true} onRequestClose={() => setSigOpen(false)}>
+                            <View style={styles1.modalContainer}>
+                                <View style={styles1.rateModal}>
+                                    <View style={{ flex: 1 }}>
+                                        <Text style={{ flex: 1, textAlign: 'center', textAlignVertical: 'center' }}>Could not connect to Server</Text>
                                     </View>
                                     <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginTop: 10 }}>
-                                        <TouchableOpacity onPress={() => setRateOpen(false)} style={{ borderWidth: 1, padding: 5, borderRadius: 5 }}>
+                                        <TouchableOpacity onPress={() => setRateOpenNotOk(false)} style={{ borderWidth: 1, padding: 5, borderRadius: 5 }}>
                                             <Text>Cancel</Text>
                                         </TouchableOpacity>
                                         <TouchableOpacity style={{ backgroundColor: 'green', padding: 5, borderRadius: 5 }}>
                                             <Text style={{ color: 'white' }}>Retry</Text>
                                         </TouchableOpacity>
-                                    </View> */}
+                                    </View>
                                 </View>
                             </View>
                         </Modal>
