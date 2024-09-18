@@ -30,7 +30,6 @@ const UserInfo = ({ navigation, route }) => {
     const [open, setOpen] = useState(false)
     const [noteOpen, setNoteOpen] = useState(false)
     const [rateOpenOk, setRateOpenOk] = useState(false)
-    const [rateOpenNotOk, setRateOpenNotOk] = useState(false)
 
     const [signatureData, setSignatureData] = useState("")
     const [sigOpen, setSigOpen] = useState(false)
@@ -291,26 +290,30 @@ const UserInfo = ({ navigation, route }) => {
     const inputRefs = useRef([]);
 
     const handleInputChange = (text, index) => {
-        if (text.length > 0 && index < numberValue.length - 1) {
-            inputRefs.current[index + 1].focus();
-        } else {
-            inputRefs.current[index].blur();
-        }
         const newInputs = [...numberValue];
         newInputs[index] = text;
         setNumberValue(newInputs);
     };
 
+    const handleOnKeyPressNumber = (index) => {
+        if (index < numberValue.length - 1) {
+            inputRefs.current[index + 1].focus();
+        }
+    }
+
     const decimalRefs = useRef([])
 
     const handleDecimalChange = (text, index) => {
-        if (text.length > 0 && index < decimalValue.length - 1) {
-            decimalRefs.current[index + 1].focus();
-        }
         const newInputs = [...decimalValue];
         newInputs[index] = text;
         setDecimalValue(newInputs);
     };
+
+    const handleOnKeyPressDecimal= (index) => {
+        if (index < decimalValue.length - 1) {
+            decimalRefs.current[index + 1].focus();
+        }
+    }
 
     const handleSave = async () => {
         try {
@@ -463,13 +466,13 @@ const UserInfo = ({ navigation, route }) => {
                         duedate: computedRef.current.duedate,
                         receivedby: {
                             name: receiver,
-                            date: "...",
+                            date: user.receiveDate,
                             signature: signatureData
                         },
-                        hold: {
+                        hold: user.note ? {
                             message: user.note,
-                            date: "..."
-                        }
+                            date: user.noteDate
+                        } : null
                     }
                 }),
             });
@@ -668,7 +671,7 @@ const UserInfo = ({ navigation, route }) => {
                                             setOtp={setOtp}
                                             digits={5}
                                             style={{ height: 20 }}
-                                            fontStyle={{ fontSize: 10, fontWeight: 'bold' }}
+                                            fontStyle={{ fontSize: 20, fontWeight: 'bold' }}
                                             focusedStyle={{ borderColor: 'black', borderBottomWidth: 2 }}
                                         />
                                     </View> */}
@@ -685,6 +688,12 @@ const UserInfo = ({ navigation, route }) => {
                                                 cursorColor={'black'}
                                                 selectTextOnFocus
                                                 textAlign='center'
+                                                onKeyPress={(e) => handleOnKeyPressNumber(index)}
+                                                onFocus={() => {
+                                                    if (numberValue[index - 1].length <= 0) {
+                                                        inputRefs.current[index - 1].focus();
+                                                    }
+                                                }}
                                             />
                                         ))}
                                     </View>
@@ -701,6 +710,12 @@ const UserInfo = ({ navigation, route }) => {
                                                 cursorColor={'black'}
                                                 selectTextOnFocus
                                                 textAlign='center'
+                                                onKeyPress={() => handleOnKeyPressDecimal(index)}
+                                                onFocus={() => {
+                                                    if (decimalValue[index - 1].length <= 0) {
+                                                        decimalRefs.current[index - 1].focus();
+                                                    }
+                                                }}
                                             />
                                         ))}
                                     </View>
@@ -787,25 +802,6 @@ const UserInfo = ({ navigation, route }) => {
                                         </TouchableOpacity>
                                         <TouchableOpacity onPress={handleContinue} style={{ backgroundColor: 'green', padding: 5, borderRadius: 5 }}>
                                             <Text style={{ color: 'white' }}>Continue</Text>
-                                        </TouchableOpacity>
-                                    </View>
-                                </View>
-                            </View>
-                        </Modal>
-                    }
-                    {rateOpenNotOk &&
-                        <Modal transparent={true} onRequestClose={() => setSigOpen(false)}>
-                            <View style={styles1.modalContainer}>
-                                <View style={styles1.rateModal}>
-                                    <View style={{ flex: 1 }}>
-                                        <Text style={{ flex: 1, textAlign: 'center', textAlignVertical: 'center' }}>Could not connect to Server</Text>
-                                    </View>
-                                    <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginTop: 10 }}>
-                                        <TouchableOpacity onPress={() => setRateOpenNotOk(false)} style={{ borderWidth: 1, padding: 5, borderRadius: 5 }}>
-                                            <Text>Cancel</Text>
-                                        </TouchableOpacity>
-                                        <TouchableOpacity style={{ backgroundColor: 'green', padding: 5, borderRadius: 5 }}>
-                                            <Text style={{ color: 'white' }}>Retry</Text>
                                         </TouchableOpacity>
                                     </View>
                                 </View>

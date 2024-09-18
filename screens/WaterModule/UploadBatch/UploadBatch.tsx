@@ -43,21 +43,22 @@ const UploadBatch = ({ navigation }) => {
           const data = resultSet.rows._array;
 
           try {
-            const initList = data.map((user) => {
+            const initList = data.filter((user) => !user.uploaded).map((user) => {
               return {
                 "batchid": user.batchid,
                 "acctno": user.acctno,
                 "prevreading": user.prevreading,
                 "reading": user.reading,
-                "volume": user.reading - user.prevreading,
+                "volume": user.volume,
                 "rate": user.rate,
-                "hold": {
-                  message: user.note
-                }
+                "hold": user.note ? {
+                  message: user.note,
+                  date: user.noteDate
+                } : null
               }
             })
 
-            const finalList = initList.filter((user) => (user.reading !== null && user.reading > 0) || (user.hold.message !== null && user.hold.message !== ''))
+            const finalList = initList.filter((user) => (user.reading !== null && user.reading > 0) || (user.hold !== null))
             console.log("FinalList", finalList)
 
             const storedString = await AsyncStorage.getItem('readerInfo');
