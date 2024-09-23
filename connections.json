@@ -1,0 +1,6 @@
+{
+  "gdx": {
+    "app.host": "${NEXT_PUBLIC_CLOUD_GDX_NODE_HOST}",
+    "readTimeout": 60000
+  }
+}
