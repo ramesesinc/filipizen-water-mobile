@@ -7,7 +7,7 @@ const replaceñ = (name) => {
     });
 }
 
-export const printFormat = (user: UserType, headers, imageUrl, signatureData, receiver) => {
+export const printFormat = (user: UserType, headers, imageUrl, signatureData, receiver, computedRate) => {
     const newMeterNo = user.meterno ? user.meterno.substring(0, user.meterno.indexOf(':')) : null;
     const { header1, header2, header3 } = headers;
     const newName = replaceñ(user.acctname)
@@ -55,7 +55,7 @@ export const printFormat = (user: UserType, headers, imageUrl, signatureData, re
     }
 
     const prevBal = formatVal(user.balance.toFixed(2))
-    const amountDue = formatVal(user.rate.toFixed(2))
+    const amountDue = formatVal(user.rate ? user.rate.toFixed(2): computedRate.toFixed(2))
     const totalAmount = formatVal(Number((user.rate + user.balance).toFixed(2)))
 
     return (
@@ -102,7 +102,7 @@ export const printFormat = (user: UserType, headers, imageUrl, signatureData, re
         `[L]\n` +
         `[C]<b><font size='normal'>Billing</font></b>\n` +
         `[L]\n` +
-        `[L]<font size='normal'>Amount Due</font>[R]<font size='normal'>${user.rate ? amountDue : 0}</font>\n` +
+        `[L]<font size='normal'>Amount Due</font>[R]<font size='normal'>${amountDue ? amountDue : 0}</font>\n` +
         `[L]<font size='normal'>Prev Balance</font>[R]<font size='normal'>${user.balance ? prevBal : 0}</font>\n` +
         `[L]<font size='normal'>Other Charges</font>[R]<font size='normal'>${0}</font>\n` +
         `[L]\n` +

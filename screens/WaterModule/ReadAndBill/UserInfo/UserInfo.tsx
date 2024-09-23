@@ -309,7 +309,7 @@ const UserInfo = ({ navigation, route }) => {
         setDecimalValue(newInputs);
     };
 
-    const handleOnKeyPressDecimal= (index) => {
+    const handleOnKeyPressDecimal = (index) => {
         if (index < decimalValue.length - 1) {
             decimalRefs.current[index + 1].focus();
         }
@@ -485,6 +485,10 @@ const UserInfo = ({ navigation, route }) => {
                             [1, signatureData, receiver, computedRef.current.rate, computedRef.current.duedate, currentDate, user.acctno,],
                             (txObj, resultSet) => {
                                 console.log('Updated uploaded');
+                                setSigOpen(false)
+                                signatureRef.current && signatureRef.current.clearSignature();
+                                setSignatureData("")
+                                printReceipt();
                             },
                             (txObj, error) => {
                                 console.error('Error updating uploaded:', error);
@@ -493,10 +497,6 @@ const UserInfo = ({ navigation, route }) => {
                         );
                     }
                 );
-                setSigOpen(false)
-                signatureRef.current && signatureRef.current.clearSignature();
-                setSignatureData("")
-                printReceipt();
             }
         } else {
             alert("Cant confirm without a receiver's name and sign")
@@ -506,7 +506,7 @@ const UserInfo = ({ navigation, route }) => {
     const printReceipt = async () => {
         try {
             await ThermalPrinterModule.printBluetooth({
-                payload: printFormat(user, headers, imageUrl, user.sigData ? user.sigData : signatureData, user.receiver ? user.receiver : receiver),
+                payload: printFormat(user, headers, imageUrl, user.sigData ? user.sigData : signatureData, user.receiver ? user.receiver : receiver, user.rate ? user.rate : computedRef.current.rate),
                 printerWidthMM: 48,
                 printerNbrCharactersPerLine: 32
             })
@@ -576,7 +576,7 @@ const UserInfo = ({ navigation, route }) => {
                                                                 <Text style={{ color: 'black', fontSize: 17 }}>Re-read</Text>
                                                             </TouchableOpacity>
                                                             <TouchableOpacity onPress={getRate} style={styles1.print}>
-                                                                <Text style={{ color: 'white', fontSize: 17 }}>Get Rate</Text>
+                                                                <Text style={{ color: 'white', fontSize: 17 }}>Print</Text>
                                                             </TouchableOpacity>
                                                         </View> :
                                                             <View style={{ justifyContent: 'space-between', gap: 10 }}>
@@ -690,8 +690,12 @@ const UserInfo = ({ navigation, route }) => {
                                                 textAlign='center'
                                                 onKeyPress={(e) => handleOnKeyPressNumber(index)}
                                                 onFocus={() => {
-                                                    if (numberValue[index - 1].length <= 0) {
-                                                        inputRefs.current[index - 1].focus();
+                                                    if (index > 0 && !numberValue[index - 1]) {
+                                                        const prevInput = inputRefs.current[index - 1];
+                                                        
+                                                        if (prevInput) {
+                                                            prevInput.focus();
+                                                        }
                                                     }
                                                 }}
                                             />
@@ -712,8 +716,12 @@ const UserInfo = ({ navigation, route }) => {
                                                 textAlign='center'
                                                 onKeyPress={() => handleOnKeyPressDecimal(index)}
                                                 onFocus={() => {
-                                                    if (decimalValue[index - 1].length <= 0) {
-                                                        decimalRefs.current[index - 1].focus();
+                                                    if (index > 0 && !decimalValue[index - 1]) {
+                                                        const prevInput = decimalRefs.current[index - 1];
+                                                        
+                                                        if (prevInput) {
+                                                            prevInput.focus();
+                                                        }
                                                     }
                                                 }}
                                             />
