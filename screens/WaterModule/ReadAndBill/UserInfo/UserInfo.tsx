@@ -22,6 +22,7 @@ import { Dimensions } from 'react-native';
 import { currencyFormat } from '../../Others/formatCurrency';
 
 import ensureFourDecimalPlaces from '../../Others/ensureFourDecimalPlaces';
+import Service from "../../../../common/lib/server/remote-service.js";
 
 const { height } = Dimensions.get('window');
 const db = SQLITE.openDatabase('example.db');
@@ -446,6 +447,29 @@ const UserInfo = ({ navigation, route }) => {
         setSigOpen(true)
     }
 
+    const sampleFunc = async () => {
+        try {
+            console.log("cloud server ip:", process.env.cloud_server_ip)
+            const orgid = readerObj.env.ORGID
+            const svc = await Service.lookup(`${orgid}:OnlineWaterMobileReadingService`, "water");
+
+            const compute_param = {
+                batchid: user.batchid,
+                acctno: user.acctno,
+                prevreading: user.prevreading,
+                reading: 1521,
+                volume: 10
+            }
+
+            const data = await svc.invoke("compute", compute_param);
+
+            console.log("data", data)
+        } catch (e) {
+            console.log("error", e)
+        }
+
+    }
+
     const handleConfirm = async () => {
         if (signatureData !== "" && receiver !== "") {
             const res = await fetch(`http://${serverObj.water.ip}:${serverObj.water.port}/osiris3/json/enterprise/WaterMobileReadingService.uploadReading`, {
@@ -551,7 +575,7 @@ const UserInfo = ({ navigation, route }) => {
                                                         <TouchableOpacity onPress={() => setNoteOpen(true)} style={styles1.hold}>
                                                             <Text style={{ color: 'black', fontSize: 17 }}>Hold</Text>
                                                         </TouchableOpacity>
-                                                        <TouchableOpacity onPress={() => setOpen(true)} style={styles1.print}>
+                                                        <TouchableOpacity onPress={sampleFunc} style={styles1.print}>
                                                             <Text style={{ color: 'white', fontSize: 17 }}>Read</Text>
                                                         </TouchableOpacity>
                                                     </View>
@@ -692,7 +716,7 @@ const UserInfo = ({ navigation, route }) => {
                                                 onFocus={() => {
                                                     if (index > 0 && !numberValue[index - 1]) {
                                                         const prevInput = inputRefs.current[index - 1];
-                                                        
+
                                                         if (prevInput) {
                                                             prevInput.focus();
                                                         }
@@ -718,7 +742,7 @@ const UserInfo = ({ navigation, route }) => {
                                                 onFocus={() => {
                                                     if (index > 0 && !decimalValue[index - 1]) {
                                                         const prevInput = decimalRefs.current[index - 1];
-                                                        
+
                                                         if (prevInput) {
                                                             prevInput.focus();
                                                         }

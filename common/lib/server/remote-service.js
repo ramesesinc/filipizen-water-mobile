@@ -1,9 +1,15 @@
 import { Manager } from "socket.io-client";
-import connections from "./connections";
+// import connections from "../../../connections.json";
+// import { NEXT_PUBLIC_CLOUD_GDX_NODE_HOST } from '@env';
 
 const CHANNEL = "/gdx";
 
-const gdxConnection = connections["gdx"];
+// const gdxConnection = connections["gdx"];
+const gdxConnection = {
+  "app.host": process.env.NEXT_PUBLIC_CLOUD_GDX_NODE_HOST,
+  "readTimeout": 60000
+}
+
 
 console.log("gdxConnection", gdxConnection);
 
@@ -52,14 +58,16 @@ const RemoteProxy = (name, channel, connection, module) => {
       console.log(
         `RemoteProxy [status] invoking ${params.service}.${params.method} channel: ${params.channel} connection: ${connection}`
       );
-
+      
       socket.emit("invoke", params, (res) => {
+        console.log("invoking")
         if (res.status === "OK") {
           resolve(res.data);
         } else {
           reject(res.msg);
         }
       });
+
     });
     return await promise;
   };

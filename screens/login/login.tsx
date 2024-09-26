@@ -93,13 +93,14 @@ export default function Login({ navigation }) {
             });
 
             clearTimeout(timeoutId);
-            console.log(res)
 
             if (!res.ok) {
                 throw new Error('Network response was not ok');
             }
 
             const data = await res.json();
+
+            console.log("data",data)
 
             if (data.status === 'ERROR') {
                 setError('Incorrect username or password');
