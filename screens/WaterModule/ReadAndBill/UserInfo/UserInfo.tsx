@@ -251,32 +251,38 @@ const UserInfo = ({ navigation, route }) => {
             if (user.uploaded) {
                 printReceipt();
             } else {
-                const res = await fetch(`http://${serverObj.water.ip}:${serverObj.water.port}/osiris3/json/enterprise/WaterMobileReadingService.compute`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        env: {
-                            CLIENTTYPE: 'mobile',
-                            USERID: readerObj.USERID
-                        },
-                        args: {
-                            batchid: user.batchid,
-                            acctno: user.acctno,
-                            prevreading: user.prevreading,
-                            reading: user.reading,
-                            volume: user.volume
-                        }
-                    }),
-                });
-                if (res.ok) {
-                    const computed = await res.json()
+                const orgid = readerObj.env.ORGID
+                const svc = await Service.lookup(`${orgid}:OnlineWaterMobileReadingService`, "water");
+
+                const compute_param = {
+                    batchid: user.batchid,
+                    acctno: user.acctno,
+                    prevreading: user.prevreading,
+                    reading: user.reading,
+                    volume: user.volume
+                }
+
+                async function invokeWithTimeout(promise, timeout) {
+                    return Promise.race([
+                        promise,
+                        new Promise((_, reject) =>
+                            setTimeout(() => reject(new Error("Operation timed out")), timeout)
+                        ),
+                    ]);
+                }
+
+                const data = await invokeWithTimeout(svc.invoke("compute", compute_param), 3000);
+
+                console.log("data", data)
+                if (data) {
+                    const computed = await data
                     computedRef.current = computed
                     setRateOpenOk(true)
                 }
             }
 
         } catch (e) {
-            alert("Could not connect to server!")
+            alert(`Error: ${e}`)
         }
     }
 
@@ -471,59 +477,63 @@ const UserInfo = ({ navigation, route }) => {
     }
 
     const handleConfirm = async () => {
-        if (signatureData !== "" && receiver !== "") {
-            const res = await fetch(`http://${serverObj.water.ip}:${serverObj.water.port}/osiris3/json/enterprise/WaterMobileReadingService.uploadReading`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    env: {
-                        CLIENTTYPE: 'mobile',
-                        USERID: readerObj.USERID
-                    },
-                    args: {
-                        batchid: user.batchid,
-                        acctno: user.acctno,
-                        prevreading: user.prevreading,
-                        reading: user.reading,
-                        volume: user.volume,
-                        rate: computedRef.current.rate,
-                        duedate: computedRef.current.duedate,
-                        receivedby: {
-                            name: receiver,
-                            date: user.receiveDate,
-                            signature: signatureData
-                        },
-                        hold: user.note ? {
-                            message: user.note,
-                            date: user.noteDate
-                        } : null
-                    }
-                }),
-            });
+        try {
+            if (signatureData !== "" && receiver !== "") {
+                const orgid = readerObj.env.ORGID
+                const svc = await Service.lookup(`${orgid}:OnlineWaterMobileReadingService`, "water");
 
-            if (res.ok) {
-                db.transaction(
-                    tx => {
-                        tx.executeSql(
-                            `UPDATE ${batchname} SET uploaded = ?, sigData = ?, receiver = ?, rate = ?, duedate = ?, receiveDate = ? WHERE acctno = ?`,
-                            [1, signatureData, receiver, computedRef.current.rate, computedRef.current.duedate, currentDate, user.acctno,],
-                            (txObj, resultSet) => {
-                                console.log('Updated uploaded');
-                                setSigOpen(false)
-                                signatureRef.current && signatureRef.current.clearSignature();
-                                setSignatureData("")
-                                printReceipt();
-                            },
-                            (txObj, error) => {
-                                console.error('Error updating uploaded:', error);
-                                return false
-                            }
-                        );
-                    }
-                );
+                const upload_param = {
+                    batchid: user.batchid,
+                    acctno: user.acctno,
+                    prevreading: user.prevreading,
+                    reading: user.reading,
+                    volume: user.volume,
+                    rate: computedRef.current.rate,
+                    duedate: computedRef.current.duedate,
+                    receivedby: {
+                        name: receiver,
+                        date: user.receiveDate,
+                        signature: signatureData
+                    },
+                    hold: user.note ? {
+                        message: user.note,
+                        date: user.noteDate
+                    } : null
+                }
+                const data = await svc.invoke("uploadReading", upload_param);
+
+                console.log("data in uploadReading", data)
+
+                if (data) {
+                    db.transaction(
+                        tx => {
+                            tx.executeSql(
+                                `UPDATE ${batchname} SET uploaded = ?, sigData = ?, receiver = ?, rate = ?, duedate = ?, receiveDate = ? WHERE acctno = ?`,
+                                [1, signatureData, receiver, computedRef.current.rate, computedRef.current.duedate, currentDate, user.acctno,],
+                                (txObj, resultSet) => {
+                                    console.log('Updated uploaded');
+                                    setSigOpen(false)
+                                    signatureRef.current && signatureRef.current.clearSignature();
+                                    setSignatureData("")
+                                    printReceipt();
+                                },
+                                (txObj, error) => {
+                                    console.error('Error updating uploaded:', error);
+                                    return false
+                                }
+                            );
+                        }
+                    );
+                }
+            } else {
+                alert("Cant confirm without a receiver's name and sign")
             }
-        } else {
-            alert("Cant confirm without a receiver's name and sign")
+
+        } catch (e) {
+            setSigOpen(false)
+            signatureRef.current && signatureRef.current.clearSignature();
+            setSignatureData("")
+            alert(`Error uploading: ${e}`)
         }
     }
 
@@ -575,7 +585,7 @@ const UserInfo = ({ navigation, route }) => {
                                                         <TouchableOpacity onPress={() => setNoteOpen(true)} style={styles1.hold}>
                                                             <Text style={{ color: 'black', fontSize: 17 }}>Hold</Text>
                                                         </TouchableOpacity>
-                                                        <TouchableOpacity onPress={sampleFunc} style={styles1.print}>
+                                                        <TouchableOpacity onPress={() => setOpen(true)} style={styles1.print}>
                                                             <Text style={{ color: 'white', fontSize: 17 }}>Read</Text>
                                                         </TouchableOpacity>
                                                     </View>
