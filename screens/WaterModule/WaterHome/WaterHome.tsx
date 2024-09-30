@@ -11,9 +11,10 @@ const WaterHome = ({ navigation }) => {
   const menu = [
     { name: 'Download Batch', icon: <Ionicons style={styles.iconStyle} name="download-sharp" size={60} color="#00669B" /> },
     { name: 'Upload Batch', icon: <Ionicons style={styles.iconStyle} name="cloud-upload-sharp" size={60} color="#00669B" /> },
-    { name: 'Read & Bill', icon: <Ionicons style={styles.iconStyle} name="reader" size={60} color="#00669B" /> },
-    { name: 'Sync Formula', icon: <MaterialIcons style={styles.iconStyle} name="cloud-sync" size={60} color="#00669B" /> },
+    { name: 'Read & Bill', icon: <Ionicons style={styles.iconStyle} name="reader" size={60} color="#00669B" /> }
   ]
+
+  // { name: 'Sync Formula', icon: <MaterialIcons style={styles.iconStyle} name="cloud-sync" size={60} color="#00669B" /> }
 
   if (menu.length % 2 !== 0) {
     menu.push({
@@ -99,7 +100,7 @@ const WaterHome = ({ navigation }) => {
             <FlatList
               data={menu}
               renderItem={(data) =>
-                <TouchableOpacity style={styles.menuItemContainer} onPress={() => handleNav(data.item.name)} disabled={data.item.name === null}>
+                <TouchableOpacity style={styles.menuItemContainer} onPress={() => navigation.navigate(data.item.name)} disabled={data.item.name === null}>
                   <View style={styles.moduleItem}>
                     {data.item.icon}
                     <Text style={styles.menuTextStyle}>{data.item.name}</Text>

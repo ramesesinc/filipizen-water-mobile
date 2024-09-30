@@ -353,16 +353,12 @@ const DownloadBatch = ({ navigation }) => {
                   <Text>{curr} Records Downloaded</Text>
                   <TouchableOpacity style={{ flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center', gap: 5, borderRadius: 5, borderWidth: 1, paddingHorizontal: 5, borderColor: 'rgba(0, 0, 0, 0.1)' }}
                     onPress={() => {
-                      if (formula) {
                         setPreDownloading(false)
                         setSelectedBatch('')
                         setError('')
                         setDownloaded(false);
                         setDownloading(false)
                         navigation.navigate('Batch Info', { batchname: currentBatch.current })
-                      } else {
-                        alert("Cannot View Batch items ,Please sync the bill formula first!")
-                      }
                     }}>
                     <Text>View</Text>
                     <MaterialIcons name="pageview" size={24} color="#00669B" />
