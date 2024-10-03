@@ -880,16 +880,16 @@ const UserInfo = ({ navigation, route }) => {
                         </Modal>
                     }
                 </View>
-                <View style={{ gap: 10, height: 80, paddingHorizontal: 20, alignItems: 'center' }}>
+                <View style={{ gap: 10, height: 80, paddingHorizontal: 20}}>
                     {user.note &&
                         <View>
-                            <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center' }}>
-                                <Text style={{ fontWeight: 'bold', alignSelf: 'center' }}>Note</Text>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, justifyContent: 'center' }}>
+                                <Text style={{ fontWeight: 'bold', alignSelf: 'center', textAlign: 'center' }}>Note</Text>
                                 <Pressable onPress={editNote}>
                                     <FontAwesome6 name="edit" size={15} color="black" />
                                 </Pressable>
                             </View>
-                            <Text style={{ flex: 1, marginTop: 10 }}>{user.note}</Text>
+                            <Text style={{marginTop: 5 }}>{user.note}</Text>
                         </View>
                     }
                 </View>

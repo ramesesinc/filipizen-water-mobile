@@ -18,7 +18,7 @@ export default function Login({ navigation }) {
     const [username, setUserName] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
-    const [loading, setLoading] = useState(false)
+    const [loading, setLoading] = useState(true)
 
     const [etracsIP, setEtracsIP] = useState("")
     const [etracsPort, setEtracsPort] = useState("")
@@ -31,6 +31,18 @@ export default function Login({ navigation }) {
     }
 
     const isFocused = useIsFocused()
+
+    useEffect(() => {
+        const getReaderInfo = async () => {
+            const readerInfo = await AsyncStorage.getItem('readerInfo');
+            if (readerInfo) {
+                navigation.navigate("Water")
+            }
+            setLoading(false)
+        }
+
+        getReaderInfo();
+    }, [])
 
     useEffect(() => {
         const getServerAdd = async () => {

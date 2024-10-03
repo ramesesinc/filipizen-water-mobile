@@ -43,6 +43,12 @@ const WaterSettings = ({ navigation }) => {
     setOpen(false)
   }
 
+  const handleLogout = async () => {
+    await handleClearData();
+    await AsyncStorage.removeItem('readerInfo')
+    navigation.navigate("Login")
+  }
+
   return (
     <View style={{ flex: 1, backgroundColor: 'white' }}>
       <WaterHeader navigation={navigation} />
@@ -78,7 +84,7 @@ const WaterSettings = ({ navigation }) => {
           <MaterialCommunityIcons name="archive-remove" size={20} color="#00669B" />
           <Text style={styles.optionsText}>Clear Data</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.options} onPress={() => navigation.navigate("Login")}>
+        <TouchableOpacity style={styles.options} onPress={handleLogout}>
           <MaterialCommunityIcons name="logout" size={20} color="#00669B" />
           <Text style={styles.optionsText}>Logout</Text>
         </TouchableOpacity>

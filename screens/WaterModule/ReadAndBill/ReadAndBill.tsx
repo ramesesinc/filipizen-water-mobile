@@ -1,4 +1,4 @@
-import { View, Text, Pressable, TouchableOpacity, Modal } from 'react-native'
+import { View, Text, Pressable, TouchableOpacity, Modal, ActivityIndicator } from 'react-native'
 import { useEffect, useState } from 'react'
 import AntDesign from '@expo/vector-icons/AntDesign';
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
@@ -20,9 +20,10 @@ const ReadAndBill = ({ navigation }) => {
   const [list, setList] = useState([])
   const [open, setOpen] = useState(false)
   const [bacthToDelete, setBatchToDelete] = useState("")
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if(isFocused) {
+    if (isFocused) {
       db.transaction(tx => {
         tx.executeSql(`SELECT * FROM sqlite_master WHERE type='table'`, null!,
           (txObj, resultSet) => {
@@ -30,6 +31,9 @@ const ReadAndBill = ({ navigation }) => {
           }
         )
       })
+      setTimeout(() => {
+        setLoading(false)
+      }, 500)
     }
   }, [open, isFocused])
 
@@ -53,6 +57,15 @@ const ReadAndBill = ({ navigation }) => {
   const confirm = (name) => {
     setBatchToDelete(name)
     setOpen(true)
+  }
+
+  if (loading) {
+    return (
+      <View style={{flex: 1, backgroundColor: 'white'}}>
+        <WaterHeader navigation={navigation} />
+        <ActivityIndicator style={{ flex: 1 }} size={50} color="#00669B" />
+      </View>
+    )
   }
 
   return (
@@ -105,14 +118,14 @@ const ReadAndBill = ({ navigation }) => {
             <View style={styles.modal}>
               <Text>Are you sure you want to delete batch {bacthToDelete} ?</Text>
               <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center', justifyContent: 'space-around' }}>
-                <TouchableOpacity style={{...styles.save, backgroundColor: 'white'}} onPress={() => {
+                <TouchableOpacity style={{ ...styles.save, backgroundColor: 'white' }} onPress={() => {
                   setBatchToDelete("")
                   setOpen(false)
                 }}>
-                  <Text style={{textAlign: 'center'}}>No</Text>
+                  <Text style={{ textAlign: 'center' }}>No</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.save} onPress={() => deleteBatch(bacthToDelete)}>
-                  <Text style={{textAlign: 'center', color: 'white'}}>Yes</Text>
+                  <Text style={{ textAlign: 'center', color: 'white' }}>Yes</Text>
                 </TouchableOpacity>
               </View>
             </View>
