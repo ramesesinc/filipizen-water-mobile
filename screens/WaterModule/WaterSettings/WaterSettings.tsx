@@ -13,6 +13,7 @@ const WaterSettings = ({ navigation }) => {
   const db = SQLITE.openDatabase('example.db');
 
   const [open, setOpen] = useState(false)
+  const [logoutOpen, setLogoutOpen] = useState(false)
 
   const handleClearData = async () => {
     db.transaction(tx => {
@@ -52,6 +53,25 @@ const WaterSettings = ({ navigation }) => {
   return (
     <View style={{ flex: 1, backgroundColor: 'white' }}>
       <WaterHeader navigation={navigation} />
+      {logoutOpen &&
+        <Modal transparent={true} onRequestClose={() => setOpen(false)}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modal}>
+              <Text>Please be advised that all data will be cleared once logged out. Do you want to continue ?</Text>
+              <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center', justifyContent: 'space-around' }}>
+                <Pressable style={{ ...styles.save, backgroundColor: 'white' }} onPress={() => {
+                  setLogoutOpen(false)
+                }}>
+                  <Text style={{ textAlign: 'center' }}>No</Text>
+                </Pressable>
+                <Pressable style={styles.save} onPress={handleLogout}>
+                  <Text style={{ textAlign: 'center', color: 'white' }}>Yes</Text>
+                </Pressable>
+              </View>
+            </View>
+          </View>
+        </Modal>
+      }
       {open &&
         <Modal transparent={true} onRequestClose={() => setOpen(false)}>
           <View style={styles.modalContainer}>
@@ -84,7 +104,7 @@ const WaterSettings = ({ navigation }) => {
           <MaterialCommunityIcons name="archive-remove" size={20} color="#00669B" />
           <Text style={styles.optionsText}>Clear Data</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.options} onPress={handleLogout}>
+        <TouchableOpacity style={styles.options} onPress={() => setLogoutOpen(true)}>
           <MaterialCommunityIcons name="logout" size={20} color="#00669B" />
           <Text style={styles.optionsText}>Logout</Text>
         </TouchableOpacity>

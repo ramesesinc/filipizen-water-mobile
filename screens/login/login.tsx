@@ -5,6 +5,8 @@ import { Feather } from '@expo/vector-icons';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useState, useEffect } from 'react';
+import Fontisto from '@expo/vector-icons/Fontisto';
+
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import CryptoJS from 'crypto-js';
@@ -19,6 +21,9 @@ export default function Login({ navigation }) {
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(true)
+    const [checkbox, setCheckBox] = useState(false)
+
+    const [readerInfo, setReaderInfo] = useState(null)
 
     const [etracsIP, setEtracsIP] = useState("")
     const [etracsPort, setEtracsPort] = useState("")
@@ -34,9 +39,13 @@ export default function Login({ navigation }) {
 
     useEffect(() => {
         const getReaderInfo = async () => {
-            const readerInfo = await AsyncStorage.getItem('readerInfo');
-            if (readerInfo) {
-                navigation.navigate("Water")
+            const readerInformation = await AsyncStorage.getItem('readerInfo');
+            if (readerInformation) {
+                // navigation.navigate("Water")
+                const parsedReaderInformation = await JSON.parse(readerInformation);
+                setReaderInfo(parsedReaderInformation)
+                console.log("reader")
+                setError("Previous user has not logged out properly. Please use Offline Login.")
             }
             setLoading(false)
         }
@@ -49,7 +58,7 @@ export default function Login({ navigation }) {
             try {
                 const serverObjectString = await AsyncStorage.getItem('serverObject');
                 const serverObjectJSON = await JSON.parse(serverObjectString);
- 
+
                 if (serverObjectJSON) {
                     setEtracsIP(serverObjectJSON.etracs.ip)
                     setEtracsPort(serverObjectJSON.etracs.port)
@@ -73,6 +82,10 @@ export default function Login({ navigation }) {
     }
 
     const handleLogin = async () => {
+        if (readerInfo) {
+            return alert("Previous user has not logged out properly. Please use Offline Login.")
+        }
+
         if (!username || !password) {
             setError('Please provide both username and password');
             return;
@@ -111,14 +124,15 @@ export default function Login({ navigation }) {
             }
 
             const data = await res.json();
+            const dataCopy = { ...data, userPassword: password }
 
-            console.log("data",data)
+            console.log("dataCopy", dataCopy)
 
             if (data.status === 'ERROR') {
                 setError('Incorrect username or password');
             } else {
-                delete data.env.ROLES;
-                await AsyncStorage.setItem('readerInfo', JSON.stringify(data));
+                delete dataCopy.env.ROLES;
+                await AsyncStorage.setItem('readerInfo', JSON.stringify(dataCopy));
                 setError('');
                 setUserName('');
                 setPassword('');
@@ -131,6 +145,30 @@ export default function Login({ navigation }) {
             setLoading(false);
         }
     };
+
+    const offlineLogin = () => {
+        if (!readerInfo) {
+            return alert("No user is currently logged in.");
+        }
+
+        const isUsernameValid = username.toLowerCase() === readerInfo.username.toLowerCase();
+        const isPasswordValid = password === readerInfo.userPassword;
+
+        if (isUsernameValid && isPasswordValid) {
+            setLoading(true);
+            setError("")
+            setUserName('');
+            setPassword('');
+            setReaderInfo(null);
+            setCheckBox(false)
+            navigation.navigate("Water");
+            setTimeout(() => {
+                setLoading(false);
+            }, 500);
+        } else {
+            setError("Username or Password is incorrect.");
+        }
+    }
 
     const handleServerSettings = () => {
         navigation.navigate("Login Server Settings")
@@ -169,9 +207,19 @@ export default function Login({ navigation }) {
                     <Feather name="lock" size={17} color="grey" />
                     <TextInput placeholder='Password' secureTextEntry={true} value={password} onChangeText={handlePasswordChange} style={{ flex: 1 }} />
                 </View>
-                <Pressable style={styles.loginButton} onPress={handleLogin}>
+                <TouchableOpacity onPress={() => {
+                    setCheckBox(!checkbox)
+                    }} style={{ width: 250, flexDirection: 'row', gap: 5, alignItems: 'center', marginTop: 10, marginLeft: 3 }}>
+                    {!checkbox ?
+                        <Fontisto name="checkbox-passive" size={15} color="grey" />
+                        :
+                        <Fontisto name="checkbox-active" size={15} color="grey" />
+                    }
+                    <Text style={{ color: "gray", fontSize: 12 }}>Offline Login</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.loginButton} onPress={!checkbox ? handleLogin : offlineLogin}>
                     <Text style={styles.loginText}>Login</Text>
-                </Pressable>
+                </TouchableOpacity>
                 <Text></Text>
             </View>
 

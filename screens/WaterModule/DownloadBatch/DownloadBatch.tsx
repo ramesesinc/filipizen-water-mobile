@@ -395,7 +395,7 @@ const DownloadBatch = ({ navigation }) => {
                     setSelected={setSelectedBatch}
                     search={false}
                     placeholder='Select Batch ID'
-                    defaultOption={readerBatches[0] && readerBatches[0]}
+                    defaultOption={selectedBatch ? readerBatches.find(obj => obj.value === selectedBatch) : readerBatches[0]}
                     boxStyles={{ height: 50 }}
                     onSelect={() => {
                       // console.log(selectedBatch)
