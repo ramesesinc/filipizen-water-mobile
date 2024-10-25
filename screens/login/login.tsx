@@ -148,7 +148,7 @@ export default function Login({ navigation }) {
 
     const offlineLogin = () => {
         if (!readerInfo) {
-            return alert("No user is currently logged in.");
+            return alert("No previous user data.");
         }
 
         const isUsernameValid = username.toLowerCase() === readerInfo.username.toLowerCase();
