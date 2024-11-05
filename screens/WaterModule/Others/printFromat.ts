@@ -7,7 +7,7 @@ const replaceñ = (name) => {
     });
 }
 
-export const printFormat = (user: UserType, headers, imageUrl, signatureData, receiver, computedRate) => {
+export const printFormat = (user: UserType, headers, imageUrl, signatureData, receiver, computedRate, qrcode) => {
     const newMeterNo = user.meterno ? user.meterno.substring(0, user.meterno.indexOf(':')) : null;
     const { header1, header2, header3 } = headers;
     const newName = replaceñ(user.acctname)
@@ -114,7 +114,7 @@ export const printFormat = (user: UserType, headers, imageUrl, signatureData, re
         `[L]\n` +
         `[C]<b>================================</b>\n` +
         `[L]\n` +
-        `[C]<qrcode size='25'>${user.acctname}</qrcode>\n` +
+        `[C]<qrcode size='32'>${qrcode}</qrcode>\n` +
         `[L]\n` +
         `[C]<font size='normal'>Pay your bills on time to avoid</font>\n` +
         `[C]<font size='normal'>disconnection of your water</font>\n` +

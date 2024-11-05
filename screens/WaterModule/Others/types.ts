@@ -30,6 +30,7 @@ export type UserType = {
     receiver: string,
     receiveDate: string,
     noteDate: string,
+    qrcode: string
 }
 
 export type DataUserType = {

@@ -68,7 +68,8 @@ const UserInfo = ({ navigation, route }) => {
         sigData: null,
         receiver: null,
         receiveDate: null,
-        noteDate: null
+        noteDate: null,
+        qrcode: null
     })
     const [headers, setHeaders] = useState({
         header1: "",
@@ -270,13 +271,14 @@ const UserInfo = ({ navigation, route }) => {
                         ),
                     ]);
                 }
+                console.log("1")
 
                 const data = await invokeWithTimeout(svc.invoke("compute", compute_param), 3000);
 
                 console.log("data", data)
                 if (data) {
                     const computed = await data
-                    computedRef.current = computed
+                    computedRef.current = {...computed, qrcode: computed.qrcode.replace(/^qrcode:/, '')}
                     setRateOpenOk(true)
                 }
             }
@@ -508,8 +510,8 @@ const UserInfo = ({ navigation, route }) => {
                     db.transaction(
                         tx => {
                             tx.executeSql(
-                                `UPDATE ${batchname} SET uploaded = ?, sigData = ?, receiver = ?, rate = ?, duedate = ?, receiveDate = ? WHERE acctno = ?`,
-                                [1, signatureData, receiver, computedRef.current.rate, computedRef.current.duedate, currentDate, user.acctno,],
+                                `UPDATE ${batchname} SET uploaded = ?, sigData = ?, receiver = ?, rate = ?, duedate = ?, receiveDate = ?, qrcode = ? WHERE acctno = ?`,
+                                [1, signatureData, receiver, computedRef.current.rate, computedRef.current.duedate, currentDate, computedRef.current.qrcode, user.acctno,],
                                 (txObj, resultSet) => {
                                     console.log('Updated uploaded');
                                     setSigOpen(false)
@@ -540,7 +542,7 @@ const UserInfo = ({ navigation, route }) => {
     const printReceipt = async () => {
         try {
             await ThermalPrinterModule.printBluetooth({
-                payload: printFormat(user, headers, imageUrl, user.sigData ? user.sigData : signatureData, user.receiver ? user.receiver : receiver, user.rate ? user.rate : computedRef.current.rate),
+                payload: printFormat(user, headers, imageUrl, user.sigData ? user.sigData : signatureData, user.receiver ? user.receiver : receiver, user.rate ? user.rate : computedRef.current.rate, user.qrcode ? user.qrcode : computedRef.current.qrcode),
                 printerWidthMM: 48,
                 printerNbrCharactersPerLine: 32
             })
@@ -787,7 +789,7 @@ const UserInfo = ({ navigation, route }) => {
                                         trimWhitespace={true}
                                         backgroundColor='#fff'
                                         imageType="image/jpeg"
-                                        style={{ borderWidth: 1, height: 50 }}
+                                        style={{ borderWidth: 1, height: 20 }}
                                     />
                                     <View style={{ flexDirection: 'row', gap: 10, justifyContent: 'space-between', alignItems: 'center' }}>
                                         <View style={{ flex: 1, flexDirection: 'row', gap: 15 }}>
