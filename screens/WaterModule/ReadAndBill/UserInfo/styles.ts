@@ -89,8 +89,8 @@ export const styles1 = StyleSheet.create({
     },
     signModal: {
         backgroundColor: 'white',
-        height: 350,
-        width: 350,
+        height: 200,
+        width: 250,
         padding: 20,
         borderRadius: 20,
         justifyContent: 'space-around',

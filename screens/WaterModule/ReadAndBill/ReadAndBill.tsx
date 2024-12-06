@@ -1,4 +1,4 @@
-import { View, Text, Pressable, TouchableOpacity, Modal, ActivityIndicator } from 'react-native'
+import { View, Text, Pressable, TouchableOpacity, Modal, ActivityIndicator, TextInput } from 'react-native'
 import { useEffect, useState } from 'react'
 import AntDesign from '@expo/vector-icons/AntDesign';
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
@@ -12,6 +12,8 @@ import * as SQLITE from 'expo-sqlite'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useIsFocused } from '@react-navigation/native';
 
+import CryptoJS from 'crypto-js';
+
 const db = SQLITE.openDatabase('example.db');
 
 const ReadAndBill = ({ navigation }) => {
@@ -21,6 +23,36 @@ const ReadAndBill = ({ navigation }) => {
   const [open, setOpen] = useState(false)
   const [bacthToDelete, setBatchToDelete] = useState("")
   const [loading, setLoading] = useState(true)
+
+  const [adminPassword, setAdminPassword] = useState("")
+
+  const [etracsIP, setEtracsIP] = useState("")
+  const [etracsPort, setEtracsPort] = useState("")
+
+  const controller = new AbortController();
+
+  useEffect(() => {
+    const getServerAdd = async () => {
+      try {
+        const serverObjectString = await AsyncStorage.getItem('serverObject');
+        const serverObjectJSON = await JSON.parse(serverObjectString);
+
+        if (serverObjectJSON) {
+          setEtracsIP(serverObjectJSON.etracs.ip)
+          setEtracsPort(serverObjectJSON.etracs.port)
+        } else {
+          setEtracsIP("localhost")
+          setEtracsPort("8070")
+        }
+
+      } catch (e) {
+        alert(e)
+      }
+    }
+    if (isFocused) {
+      getServerAdd();
+    }
+  }, [isFocused])
 
   useEffect(() => {
     if (isFocused) {
@@ -37,21 +69,65 @@ const ReadAndBill = ({ navigation }) => {
     }
   }, [open, isFocused])
 
-  const deleteBatch = (batchName) => {
-    db.transaction(tx => {
-      tx.executeSql(`DROP TABLE ${batchName}`, null, (txObj, resultSet) => {
-        console.log(`${batchName} has been deleted`)
+  const deleteBatch = async (batchName) => {
+    if (adminPassword) {
+      const lowercasedUsername = "sa".toLowerCase().toString()
+      const hash = await generateHmacMD5(lowercasedUsername, adminPassword);
+
+      const res = await fetch(`http://${etracsIP}:${etracsPort}/osiris3/json/etracs25/LoginService.login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          env: {
+            CLIENTTYPE: 'mobile',
+          },
+          args: {
+            username: "sa",
+            password: hash,
+          },
+        }),
+        signal: controller.signal,
       });
-      tx.executeSql(`SELECT * FROM sqlite_master WHERE type='table'`, null!,
-        (txObj, resultSet) => {
-          setList(resultSet.rows._array.filter((item) => item.name !== ("android_metadata" && "sqlite_sequence")))
-        }
-      )
-    }, () => console.log("error delete batch"), () => {
-      AsyncStorage.removeItem(`${batchName}Start`);
-      AsyncStorage.removeItem(`${batchName}`);
-    })
-    setOpen(false)
+
+      if (!res.ok) {
+        throw new Error('Network response was not ok');
+      }
+
+      const data = await res.json();
+
+      if (data.status === 'ERROR') {
+        setAdminPassword("")
+        alert("Incorrect Password")
+      } else {
+        db.transaction(tx => {
+          tx.executeSql(`DROP TABLE ${batchName}`, null, (txObj, resultSet) => {
+            console.log(`${batchName} has been deleted`)
+          });
+          tx.executeSql(`SELECT * FROM sqlite_master WHERE type='table'`, null!,
+            (txObj, resultSet) => {
+              setList(resultSet.rows._array.filter((item) => item.name !== ("android_metadata" && "sqlite_sequence")))
+            }
+          )
+        }, () => console.log("error delete batch"), () => {
+          AsyncStorage.removeItem(`${batchName}Start`);
+          AsyncStorage.removeItem(`${batchName}`);
+        })
+        console.log("adminPassword:", adminPassword)
+        setAdminPassword("")
+        setOpen(false)
+      }
+      console.log("adminPass:", adminPassword)
+
+    } else {
+      setAdminPassword("")
+      alert(`Please provide the admin password to remove ${bacthToDelete}.`)
+    }
+
+  }
+
+  function generateHmacMD5(seed: string, v: string) {
+    const hmac = CryptoJS.HmacMD5(v, seed);
+    return hmac.toString();
   }
 
   const confirm = (name) => {
@@ -61,7 +137,7 @@ const ReadAndBill = ({ navigation }) => {
 
   if (loading) {
     return (
-      <View style={{flex: 1, backgroundColor: 'white'}}>
+      <View style={{ flex: 1, backgroundColor: 'white' }}>
         <WaterHeader navigation={navigation} />
         <ActivityIndicator style={{ flex: 1 }} size={50} color="#00669B" />
       </View>
@@ -117,6 +193,9 @@ const ReadAndBill = ({ navigation }) => {
           <View style={styles.modalContainer}>
             <View style={styles.modal}>
               <Text>Are you sure you want to delete batch {bacthToDelete} ?</Text>
+              <View style={{ width: "auto", paddingVertical: 10, borderWidth: 1, borderColor: "gray", justifyContent: 'center', marginVertical: 20 }}>
+                <TextInput placeholder='Admin Password' value={adminPassword} onChangeText={(text) => setAdminPassword(text)} secureTextEntry={true} style={{ marginHorizontal: 5 }} />
+              </View>
               <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center', justifyContent: 'space-around' }}>
                 <TouchableOpacity style={{ ...styles.save, backgroundColor: 'white' }} onPress={() => {
                   setBatchToDelete("")

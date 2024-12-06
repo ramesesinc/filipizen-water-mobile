@@ -69,7 +69,9 @@ const UserInfo = ({ navigation, route }) => {
         receiver: null,
         receiveDate: null,
         noteDate: null,
-        qrcode: null
+        qrcode: null,
+        othercharge: null,
+        disconnectiondate: null
     })
     const [headers, setHeaders] = useState({
         header1: "",
@@ -253,6 +255,7 @@ const UserInfo = ({ navigation, route }) => {
                 printReceipt();
             } else {
                 const orgid = readerObj.env.ORGID
+                console.log("orgid:", orgid, typeof (orgid))
                 const svc = await Service.lookup(`${orgid}:OnlineWaterMobileReadingService`, "water");
 
                 const compute_param = {
@@ -273,12 +276,12 @@ const UserInfo = ({ navigation, route }) => {
                 }
                 console.log("1")
 
-                const data = await invokeWithTimeout(svc.invoke("compute", compute_param), 3000);
+                const data = await invokeWithTimeout(svc.invoke("compute", compute_param), 30000);
 
                 console.log("data", data)
                 if (data) {
                     const computed = await data
-                    computedRef.current = {...computed, qrcode: computed.qrcode.replace(/^qrcode:/, '')}
+                    computedRef.current = { ...computed, qrcode: computed.qrcode.replace(/^qrcode:/, '') }
                     setRateOpenOk(true)
                 }
             }
@@ -478,7 +481,7 @@ const UserInfo = ({ navigation, route }) => {
 
     }
 
-    const handleConfirm = async () => {
+    const handleConfirmWithSig = async () => {
         try {
             if (signatureData !== "" && receiver !== "") {
                 const orgid = readerObj.env.ORGID
@@ -538,11 +541,78 @@ const UserInfo = ({ navigation, route }) => {
             alert(`Error uploading: ${e}`)
         }
     }
+    const handleConfirm = async () => {
+        try {
+            const orgid = readerObj.env.ORGID
+            const svc = await Service.lookup(`${orgid}:OnlineWaterMobileReadingService`, "water");
 
+            const upload_param = {
+                batchid: user.batchid,
+                acctno: user.acctno,
+                prevreading: user.prevreading,
+                reading: user.reading,
+                volume: user.volume,
+                rate: computedRef.current.rate,
+                duedate: computedRef.current.duedate,
+                receivedby: {
+                    name: receiver,
+                    date: user.receiveDate,
+                    signature: signatureData
+                },
+                hold: user.note ? {
+                    message: user.note,
+                    date: user.noteDate
+                } : null
+            }
+            const data = await svc.invoke("uploadReading", upload_param);
+
+            console.log("data in uploadReading", data)
+
+            if (data) {
+                db.transaction(
+                    tx => {
+                        tx.executeSql(
+                            `UPDATE ${batchname} SET uploaded = ?, receiver = ?, rate = ?, duedate = ?, receiveDate = ?, qrcode = ? WHERE acctno = ?`,
+                            [1, receiver, computedRef.current.rate, computedRef.current.duedate, currentDate, computedRef.current.qrcode, user.acctno,],
+                            (txObj, resultSet) => {
+                                console.log('Updated uploaded');
+                                setSigOpen(false)
+                                printReceipt();
+                            },
+                            (txObj, error) => {
+                                console.error('Error updating uploaded:', error);
+                                return false
+                            }
+                        );
+                    }
+                );
+                setRateOpenOk(false)
+            }
+
+        } catch (e) {
+            setRateOpenOk(false)
+            alert(`Error uploading: ${e}`)
+        }
+    }
+
+    const printReceiptWithSig = async () => {
+        try {
+            await ThermalPrinterModule.printBluetooth({
+                payload: printFormat(user, headers, imageUrl, user.sigData ? user.sigData : signatureData, user.receiver ? user.receiver : receiver, user.rate > 0 ? user.rate : computedRef.current.rate, user.qrcode ? user.qrcode : computedRef.current.qrcode),
+                printerWidthMM: 48,
+                printerNbrCharactersPerLine: 32
+            })
+
+        } catch (err) {
+            //error handling
+            alert(err)
+            console.log(err.message);
+        }
+    };
     const printReceipt = async () => {
         try {
             await ThermalPrinterModule.printBluetooth({
-                payload: printFormat(user, headers, imageUrl, user.sigData ? user.sigData : signatureData, user.receiver ? user.receiver : receiver, user.rate ? user.rate : computedRef.current.rate, user.qrcode ? user.qrcode : computedRef.current.qrcode),
+                payload: printFormat(user, headers, imageUrl, "", user.receiver ? user.receiver : receiver, user.rate > 0 ? user.rate : computedRef.current.rate, user.qrcode ? user.qrcode : computedRef.current.qrcode),
                 printerWidthMM: 48,
                 printerNbrCharactersPerLine: 32
             })
@@ -557,7 +627,6 @@ const UserInfo = ({ navigation, route }) => {
     const handleCancel = () => {
         setSigOpen(false)
         setSignatureData("")
-        signatureRef.current.clearSignature();
     }
 
     return (
@@ -779,9 +848,9 @@ const UserInfo = ({ navigation, route }) => {
                         <Modal transparent={true} onRequestClose={() => setSigOpen(false)}>
                             <View style={styles1.modalContainer}>
                                 <View style={styles1.signModal}>
-                                    <Text>Please enter name and sign to confirm reciept.</Text>
+                                    <Text>Please enter name of the receiver.</Text>
                                     <TextInput placeholder='Name of Receiver' value={receiver} onChangeText={(text) => setReceiver(text)} style={{ borderWidth: 1, padding: 5 }} />
-                                    <Signature
+                                    {/* <Signature
                                         ref={signatureRef}
                                         onOK={handleOK}
                                         onEnd={handleEndDrawing}
@@ -790,18 +859,18 @@ const UserInfo = ({ navigation, route }) => {
                                         backgroundColor='#fff'
                                         imageType="image/jpeg"
                                         style={{ borderWidth: 1, height: 20 }}
-                                    />
+                                    /> */}
                                     <View style={{ flexDirection: 'row', gap: 10, justifyContent: 'space-between', alignItems: 'center' }}>
                                         <View style={{ flex: 1, flexDirection: 'row', gap: 15 }}>
                                             <TouchableOpacity style={{ borderWidth: 1, padding: 5, borderRadius: 5, alignItems: 'center' }} onPress={handleCancel}>
                                                 <Text style={{ fontSize: 12, textAlign: 'center' }}>Cancel</Text>
                                             </TouchableOpacity>
-                                            <TouchableOpacity style={{ borderRadius: 5, padding: 5, alignItems: 'center', backgroundColor: 'white' }} onPress={() => {
+                                            {/* <TouchableOpacity style={{ borderRadius: 5, padding: 5, alignItems: 'center', backgroundColor: 'white' }} onPress={() => {
                                                 signatureRef.current.clearSignature()
                                                 setSignatureData("")
                                             }}>
                                                 <FontAwesome name="repeat" size={20} color="black" />
-                                            </TouchableOpacity>
+                                            </TouchableOpacity> */}
                                         </View>
                                         <View style={{ flex: 1 }}>
                                             <TouchableOpacity style={{ alignSelf: 'flex-end', padding: 5, backgroundColor: 'green', borderRadius: 5 }} onPress={handleConfirm}>
@@ -844,7 +913,7 @@ const UserInfo = ({ navigation, route }) => {
                                         <TouchableOpacity onPress={() => setRateOpenOk(false)} style={{ borderWidth: 1, padding: 5, borderRadius: 5 }}>
                                             <Text>Cancel</Text>
                                         </TouchableOpacity>
-                                        <TouchableOpacity onPress={handleContinue} style={{ backgroundColor: 'green', padding: 5, borderRadius: 5 }}>
+                                        <TouchableOpacity onPress={handleConfirm} style={{ backgroundColor: 'green', padding: 5, borderRadius: 5 }}>
                                             <Text style={{ color: 'white' }}>Continue</Text>
                                         </TouchableOpacity>
                                     </View>
@@ -882,7 +951,7 @@ const UserInfo = ({ navigation, route }) => {
                         </Modal>
                     }
                 </View>
-                <View style={{ gap: 10, height: 80, paddingHorizontal: 20}}>
+                <View style={{ gap: 10, height: 80, paddingHorizontal: 20 }}>
                     {user.note &&
                         <View>
                             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, justifyContent: 'center' }}>
@@ -891,7 +960,7 @@ const UserInfo = ({ navigation, route }) => {
                                     <FontAwesome6 name="edit" size={15} color="black" />
                                 </Pressable>
                             </View>
-                            <Text style={{marginTop: 5 }}>{user.note}</Text>
+                            <Text style={{ marginTop: 5 }}>{user.note}</Text>
                         </View>
                     }
                 </View>

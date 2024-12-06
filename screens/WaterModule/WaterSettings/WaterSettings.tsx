@@ -6,16 +6,53 @@ import { styles } from './styles'
 import WaterHeader from '../../../components/Water/WaterHeader';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SQLITE from 'expo-sqlite'
-import { TouchableOpacity } from 'react-native-gesture-handler';
-import { useState } from 'react';
+import { TextInput, TouchableOpacity } from 'react-native-gesture-handler';
+import { useEffect, useState } from 'react';
+import CryptoJS from 'crypto-js';
+import { useIsFocused } from '@react-navigation/native';
 
 const WaterSettings = ({ navigation }) => {
   const db = SQLITE.openDatabase('example.db');
 
   const [open, setOpen] = useState(false)
   const [logoutOpen, setLogoutOpen] = useState(false)
+  const [adminPassword, setAdminPassword] = useState("")
 
-  const handleClearData = async () => {
+  const [etracsIP, setEtracsIP] = useState("")
+  const [etracsPort, setEtracsPort] = useState("")
+
+  const isFocused = useIsFocused()
+  const controller = new AbortController();
+
+  useEffect(() => {
+    const getServerAdd = async () => {
+      try {
+        const serverObjectString = await AsyncStorage.getItem('serverObject');
+        const serverObjectJSON = await JSON.parse(serverObjectString);
+
+        if (serverObjectJSON) {
+          setEtracsIP(serverObjectJSON.etracs.ip)
+          setEtracsPort(serverObjectJSON.etracs.port)
+        } else {
+          setEtracsIP("localhost")
+          setEtracsPort("8070")
+        }
+
+      } catch (e) {
+        alert(e)
+      }
+    }
+    if (isFocused) {
+      getServerAdd();
+    }
+  }, [isFocused])
+
+  function generateHmacMD5(seed: string, v: string) {
+    const hmac = CryptoJS.HmacMD5(v, seed);
+    return hmac.toString();
+  }
+
+  const clearData = async () => {
     db.transaction(tx => {
       tx.executeSql(
         `SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name NOT IN ('android_metadata', 'sqlite_sequence');`,
@@ -41,13 +78,99 @@ const WaterSettings = ({ navigation }) => {
       );
     });
     alert("Data Cleared")
-    setOpen(false)
+  }
+
+  const handleClearData = async () => {
+    try {
+      if (adminPassword) {
+        const lowercasedUsername = "sa".toLowerCase().toString()
+        const hash = await generateHmacMD5(lowercasedUsername, adminPassword);
+
+        const res = await fetch(`http://${etracsIP}:${etracsPort}/osiris3/json/etracs25/LoginService.login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            env: {
+              CLIENTTYPE: 'mobile',
+            },
+            args: {
+              username: "sa",
+              password: hash,
+            },
+          }),
+          signal: controller.signal,
+        });
+
+        if (!res.ok) {
+          throw new Error('Network response was not ok');
+        }
+
+        const data = await res.json();
+
+        if (data.status === 'ERROR') {
+          setAdminPassword("")
+          alert("Incorrect Password")
+        } else {
+          await clearData();
+          console.log("adminPassword:", adminPassword)
+          setAdminPassword("")
+          setOpen(false)
+        }
+      } else {
+        alert("Please provide the admin password clear data.")
+      }
+
+    } catch (e) {
+      alert(e)
+    }
+
   }
 
   const handleLogout = async () => {
-    await handleClearData();
-    await AsyncStorage.removeItem('readerInfo')
-    navigation.navigate("Login")
+    try {
+      if (adminPassword) {
+        const lowercasedUsername = "sa".toLowerCase().toString()
+        const hash = await generateHmacMD5(lowercasedUsername, adminPassword);
+
+        const res = await fetch(`http://${etracsIP}:${etracsPort}/osiris3/json/etracs25/LoginService.login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            env: {
+              CLIENTTYPE: 'mobile',
+            },
+            args: {
+              username: "sa",
+              password: hash,
+            },
+          }),
+          signal: controller.signal,
+        });
+
+        if (!res.ok) {
+          throw new Error('Network response was not ok');
+        }
+
+        const data = await res.json();
+
+        if (data.status === 'ERROR') {
+          setAdminPassword("")
+          alert("Incorrect Password")
+        } else {
+          await clearData();
+          await AsyncStorage.removeItem('readerInfo')
+          navigation.navigate("Login")
+          console.log("adminPassword:", adminPassword)
+          setAdminPassword("")
+          setLogoutOpen(false)
+        }
+      } else {
+        setAdminPassword("")
+        alert("Please provide the admin password to logout.")
+      }
+    } catch (e) {
+      alert(e)
+    }
   }
 
   return (
@@ -57,7 +180,10 @@ const WaterSettings = ({ navigation }) => {
         <Modal transparent={true} onRequestClose={() => setOpen(false)}>
           <View style={styles.modalContainer}>
             <View style={styles.modal}>
-              <Text>Please be advised that all data will be cleared once logged out. Do you want to continue ?</Text>
+              <Text>Please be advised that all data will be cleared once logged out. Do you want to continue?</Text>
+              <View style={{ width: "auto", paddingVertical: 10, borderWidth: 1, borderColor: "gray", justifyContent: 'center', marginVertical: 20 }}>
+                <TextInput placeholder='Admin Password' value={adminPassword} onChangeText={(text) => setAdminPassword(text)} secureTextEntry={true} style={{ marginHorizontal: 5 }} />
+              </View>
               <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center', justifyContent: 'space-around' }}>
                 <Pressable style={{ ...styles.save, backgroundColor: 'white' }} onPress={() => {
                   setLogoutOpen(false)
@@ -76,7 +202,10 @@ const WaterSettings = ({ navigation }) => {
         <Modal transparent={true} onRequestClose={() => setOpen(false)}>
           <View style={styles.modalContainer}>
             <View style={styles.modal}>
-              <Text>Are you sure you want to Clear All Data ?</Text>
+              <Text>Are you sure you want to Clear All Data?</Text>
+              <View style={{ width: "auto", paddingVertical: 10, borderWidth: 1, borderColor: "gray", justifyContent: 'center', marginVertical: 20 }}>
+                <TextInput placeholder='Admin Password' value={adminPassword} onChangeText={(text) => setAdminPassword(text)} secureTextEntry={true} style={{ marginHorizontal: 5 }} />
+              </View>
               <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center', justifyContent: 'space-around' }}>
                 <Pressable style={{ ...styles.save, backgroundColor: 'white' }} onPress={() => {
                   setOpen(false)
@@ -114,3 +243,7 @@ const WaterSettings = ({ navigation }) => {
 }
 
 export default WaterSettings
+
+function generateHmacMD5(lowercasedUsername: string, password: any) {
+  throw new Error('Function not implemented.');
+}

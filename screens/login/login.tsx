@@ -44,7 +44,7 @@ export default function Login({ navigation }) {
                 // navigation.navigate("Water")
                 const parsedReaderInformation = await JSON.parse(readerInformation);
                 setReaderInfo(parsedReaderInformation)
-                console.log("reader")
+                console.log("reader", parsedReaderInformation)
                 setError("Previous user has not logged out properly. Please use Offline Login.")
             }
             setLoading(false)

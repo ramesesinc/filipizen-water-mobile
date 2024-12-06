@@ -27,8 +27,8 @@ export const printFormat = (user: UserType, headers, imageUrl, signatureData, re
 
         // Array of month names
         const monthNames = [
-            "January", "February", "March", "April", "May", "June",
-            "July", "August", "September", "October", "November", "December"
+            "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+            "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
         ];
 
         // Extract components of the date
@@ -37,7 +37,7 @@ export const printFormat = (user: UserType, headers, imageUrl, signatureData, re
         const day = dateObj.getDate();
 
         // Format the date as "MONTH day, year"
-        const formattedDate = monthNames[monthIndex].toUpperCase() + ' ' + day + ', ' + year;
+        const formattedDate = monthNames[monthIndex] + ' ' + day + ', ' + year;
 
         return formattedDate;
     }
@@ -54,9 +54,10 @@ export const printFormat = (user: UserType, headers, imageUrl, signatureData, re
         }).format(num);
     }
 
-    const prevBal = formatVal(user.balance.toFixed(2))
-    const amountDue = formatVal(user.rate ? user.rate.toFixed(2): computedRate.toFixed(2))
-    const totalAmount = formatVal(Number((user.rate + user.balance).toFixed(2)))
+    const prevBal = formatVal(user.balance ? user.balance.toFixed(2): "0.00")
+    const amountDue = formatVal(user.rate > 0 ? user.rate.toFixed(2) : computedRate.toFixed(2))
+    const otherchargeTotal = formatVal(user.othercharge ? user.othercharge.toFixed(2): "0.00")
+    const totalAmount = formatVal(Number((computedRate + user.balance + user.othercharge).toFixed(2)))
 
     return (
         (header1 !== "" ? `[C]<b><font size='normal'>${header1}</b></font>\n` : "") +
@@ -78,7 +79,7 @@ export const printFormat = (user: UserType, headers, imageUrl, signatureData, re
         `[L]<font size='normal'>Address:</font>\n` +
         `[L]<font size='normal'>${newLoc}</font>\n` +
         `[L]\n` +
-        `[L]<font size='normal'>Account Grooup:</font>\n` +
+        `[L]<font size='normal'>Account Group:</font>\n` +
         `[L]<font size='normal'>${user.acctgroup}</font>\n` +
         `[L]<font size='normal'>Classification: ${user.classification}</font>\n` +
         `[L]<font size='normal'>Meter No: ${user.brand} / ${user.meterno}</font>\n` +
@@ -103,14 +104,14 @@ export const printFormat = (user: UserType, headers, imageUrl, signatureData, re
         `[C]<b><font size='normal'>Billing</font></b>\n` +
         `[L]\n` +
         `[L]<font size='normal'>Amount Due</font>[R]<font size='normal'>${amountDue ? amountDue : 0}</font>\n` +
-        `[L]<font size='normal'>Prev Balance</font>[R]<font size='normal'>${user.balance ? prevBal : 0}</font>\n` +
-        `[L]<font size='normal'>Other Charges</font>[R]<font size='normal'>${0}</font>\n` +
+        `[L]<font size='normal'>Prev Balance</font>[R]<font size='normal'>${prevBal}</font>\n` +
+        `[L]<font size='normal'>Other Charges</font>[R]<font size='normal'>${otherchargeTotal}</font>\n` +
         `[L]\n` +
         `[L]<font size='normal'>Total Amount Due</font>[R]<font size='normal'>PHP ${totalAmount}</font>\n` +
         `[C]<b>================================</b>\n` +
         `[L]\n` +
         `[L]<font size='normal'>Due Date</font>[R]<font size='normal'>:${user.duedate}</font>\n` +
-        `[L]<font size='normal'>Disconnection Date</font>[R]<font size='normal'>${user.discdate ? (":" + user.discdate) : ""}</font>\n` +
+        `[L]<font size='normal'>Disconnection Date</font>[R]<font size='normal'>${user.disconnectiondate ? (":" + user.disconnectiondate) : ""}</font>\n` +
         `[L]\n` +
         `[C]<b>================================</b>\n` +
         `[L]\n` +
@@ -121,12 +122,14 @@ export const printFormat = (user: UserType, headers, imageUrl, signatureData, re
         `[C]<font size='normal'>service</font>\n` +
         `[L]\n` +
         `[L]\n` +
-        `[C]<img>${signatureData}</img>\n` +
-        `[L]\n` +
         (
-            receiver.length > 15 ?
-                `[L]<font size='normal'>Recevied by:</font>\n[L]<font size='normal'>${receiver}</font>\n` :
-                `[L]<font size='normal'>Recevied by: ${receiver}</font>\n`
-        ) 
+            signatureData && `[C]<img>${signatureData}</img>\n`
+        ) +
+        `[L]\n` 
+        // (
+        //     receiver.length > 15 ?
+        //         `[L]<font size='normal'>Recevied by:</font>\n[L]<font size='normal'>${receiver}</font>\n` :
+        //         `[L]<font size='normal'>Recevied by: ${receiver}</font>\n`
+        // )
     )
 }
