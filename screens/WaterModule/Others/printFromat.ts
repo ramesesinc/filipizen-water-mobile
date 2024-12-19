@@ -2,17 +2,23 @@ import { UserType } from '../../WaterModule/Others/types'
 import ensureFourDecimalPlaces from './ensureFourDecimalPlaces';
 
 const replaceñ = (name) => {
-    return name.replace(/ñ/gi, (match) => {
-        return match === 'ñ' ? 'n' : 'N';
-    });
+    if (name !== null && typeof name === 'string') {
+        console.log("replaced", name)
+        return name.replace(/ñ/gi, (match) => {
+            return match === 'ñ' ? 'n' : 'N';
+        });
+    } else {
+        console.log("Not replaced", name)
+        return ""
+    }
 }
 
-export const printFormat = (user: UserType, headers, imageUrl, signatureData, receiver, computedRate, qrcode) => {
+export const printFormat = (user: UserType, headers, imageUrl, signatureData, receiver, computedRate, qrcode, discdate) => {
     const newMeterNo = user.meterno ? user.meterno.substring(0, user.meterno.indexOf(':')) : null;
     const { header1, header2, header3 } = headers;
     const newName = replaceñ(user.acctname)
     const newReader = replaceñ(user.reader)
-    const newLoc = replaceñ(user.location.replace(/\n/g, '').replace(/  +/g, ' '));
+    const newLoc = replaceñ(user.location?.replace(/\n/g, '').replace(/  +/g, ' '));
 
     let extraName = "";
 
@@ -54,10 +60,15 @@ export const printFormat = (user: UserType, headers, imageUrl, signatureData, re
         }).format(num);
     }
 
-    const prevBal = formatVal(user.balance ? user.balance.toFixed(2): "0.00")
+    const prevBal = formatVal(user.balance ? user.balance.toFixed(2) : "0.00")
     const amountDue = formatVal(user.rate > 0 ? user.rate.toFixed(2) : computedRate.toFixed(2))
-    const otherchargeTotal = formatVal(user.othercharge ? user.othercharge.toFixed(2): "0.00")
-    const totalAmount = formatVal(Number((computedRate + user.balance + user.othercharge).toFixed(2)))
+    const otherchargeTotal = formatVal(user.othercharge ? user.othercharge.toFixed(2) : "0.00")
+
+    const toAddRate = Number(computedRate);
+    const toAddBalance = Number(user.balance);
+    const toAddOtherCharge = Number(user.othercharge);
+
+    const totalAmount = formatVal(Number((toAddRate + toAddBalance + toAddOtherCharge).toFixed(2)))
 
     return (
         (header1 !== "" ? `[C]<b><font size='normal'>${header1}</b></font>\n` : "") +
@@ -111,11 +122,11 @@ export const printFormat = (user: UserType, headers, imageUrl, signatureData, re
         `[C]<b>================================</b>\n` +
         `[L]\n` +
         `[L]<font size='normal'>Due Date</font>[R]<font size='normal'>:${user.duedate}</font>\n` +
-        `[L]<font size='normal'>Disconnection Date</font>[R]<font size='normal'>${user.disconnectiondate ? (":" + user.disconnectiondate) : ""}</font>\n` +
+        `[L]<font size='normal'>Disconnection Date</font>[R]<font size='normal'>${discdate ? `:${discdate}` : ""}</font>\n` +
         `[L]\n` +
         `[C]<b>================================</b>\n` +
         `[L]\n` +
-        `[C]<qrcode size='32'>${qrcode}</qrcode>\n` +
+        `[C]<qrcode size='40'>${qrcode}</qrcode>\n` +
         `[L]\n` +
         `[C]<font size='normal'>Pay your bills on time to avoid</font>\n` +
         `[C]<font size='normal'>disconnection of your water</font>\n` +
@@ -125,7 +136,7 @@ export const printFormat = (user: UserType, headers, imageUrl, signatureData, re
         (
             signatureData && `[C]<img>${signatureData}</img>\n`
         ) +
-        `[L]\n` 
+        `[L]\n`
         // (
         //     receiver.length > 15 ?
         //         `[L]<font size='normal'>Recevied by:</font>\n[L]<font size='normal'>${receiver}</font>\n` :

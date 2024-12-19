@@ -240,14 +240,14 @@ const UserInfo = ({ navigation, route }) => {
               body,html {
               width: ${300}px; height: ${200}px;}`;;
 
-    const handleEndDrawing = () => {
-        signatureRef.current?.readSignature();
-    };
-    const handleOK = (signature: any) => {
-        // const base64code = signature.replace('data:image/png;base64,', 'data:image/png;base64,');
-        setSignatureData(signature)
-        console.log(typeof (signature))
-    };
+    // const handleEndDrawing = () => {
+    //     signatureRef.current?.readSignature();
+    // };
+    // const handleOK = (signature: any) => {
+    //     // const base64code = signature.replace('data:image/png;base64,', 'data:image/png;base64,');
+    //     setSignatureData(signature)
+    //     console.log(typeof (signature))
+    // };
 
     const getRate = async () => {
         try {
@@ -281,6 +281,7 @@ const UserInfo = ({ navigation, route }) => {
                 console.log("data", data)
                 if (data) {
                     const computed = await data
+                    console.log("computed",computed)
                     computedRef.current = { ...computed, qrcode: computed.qrcode.replace(/^qrcode:/, '') }
                     setRateOpenOk(true)
                 }
@@ -453,94 +454,73 @@ const UserInfo = ({ navigation, route }) => {
         setNoteOpen(true)
     }
 
-    const handleContinue = () => {
-        setRateOpenOk(false)
-        setSigOpen(true)
-    }
+    // const handleContinue = () => {
+    //     setRateOpenOk(false)
+    //     setSigOpen(true)
+    // }
 
-    const sampleFunc = async () => {
-        try {
-            console.log("cloud server ip:", process.env.cloud_server_ip)
-            const orgid = readerObj.env.ORGID
-            const svc = await Service.lookup(`${orgid}:OnlineWaterMobileReadingService`, "water");
 
-            const compute_param = {
-                batchid: user.batchid,
-                acctno: user.acctno,
-                prevreading: user.prevreading,
-                reading: 1521,
-                volume: 10
-            }
+    // const handleConfirmWithSig = async () => {
+    //     try {
+    //         if (signatureData !== "" && receiver !== "") {
+    //             const orgid = readerObj.env.ORGID
+    //             const svc = await Service.lookup(`${orgid}:OnlineWaterMobileReadingService`, "water");
 
-            const data = await svc.invoke("compute", compute_param);
+    //             const upload_param = {
+    //                 batchid: user.batchid,
+    //                 acctno: user.acctno,
+    //                 prevreading: user.prevreading,
+    //                 reading: user.reading,
+    //                 volume: user.volume,
+    //                 rate: computedRef.current.rate,
+    //                 duedate: computedRef.current.duedate,
+    //                 receivedby: {
+    //                     name: receiver,
+    //                     date: user.receiveDate,
+    //                     signature: signatureData
+    //                 },
+    //                 hold: user.note ? {
+    //                     message: user.note,
+    //                     date: user.noteDate
+    //                 } : null
+    //             }
+    //             const data = await svc.invoke("uploadReading", upload_param);
 
-            console.log("data", data)
-        } catch (e) {
-            console.log("error", e)
-        }
+    //             console.log("data in uploadReading", data)
 
-    }
+    //             if (data) {
+    //                 db.transaction(
+    //                     tx => {
+    //                         tx.executeSql(
+    //                             `UPDATE ${batchname} SET uploaded = ?, sigData = ?, receiver = ?, rate = ?, duedate = ?, receiveDate = ?, qrcode = ? WHERE acctno = ?`,
+    //                             [1, signatureData, receiver, computedRef.current.rate, computedRef.current.duedate, currentDate, computedRef.current.qrcode, user.acctno,],
+    //                             (txObj, resultSet) => {
+    //                                 console.log('Updated uploaded');
+    //                                 setSigOpen(false)
+    //                                 signatureRef.current && signatureRef.current.clearSignature();
+    //                                 setSignatureData("")
+    //                                 printReceipt();
+    //                             },
+    //                             (txObj, error) => {
+    //                                 console.error('Error updating uploaded:', error);
+    //                                 return false
+    //                             }
+    //                         );
+    //                     }
+    //                 );
+    //             }
+    //         } else {
+    //             alert("Cant confirm without a receiver's name and sign")
+    //         }
 
-    const handleConfirmWithSig = async () => {
-        try {
-            if (signatureData !== "" && receiver !== "") {
-                const orgid = readerObj.env.ORGID
-                const svc = await Service.lookup(`${orgid}:OnlineWaterMobileReadingService`, "water");
+    //     } catch (e) {
+    //         setSigOpen(false)
+    //         signatureRef.current && signatureRef.current.clearSignature();
+    //         setSignatureData("")
+    //         alert(`Error uploading: ${e}`)
+    //     }
+    // }
 
-                const upload_param = {
-                    batchid: user.batchid,
-                    acctno: user.acctno,
-                    prevreading: user.prevreading,
-                    reading: user.reading,
-                    volume: user.volume,
-                    rate: computedRef.current.rate,
-                    duedate: computedRef.current.duedate,
-                    receivedby: {
-                        name: receiver,
-                        date: user.receiveDate,
-                        signature: signatureData
-                    },
-                    hold: user.note ? {
-                        message: user.note,
-                        date: user.noteDate
-                    } : null
-                }
-                const data = await svc.invoke("uploadReading", upload_param);
-
-                console.log("data in uploadReading", data)
-
-                if (data) {
-                    db.transaction(
-                        tx => {
-                            tx.executeSql(
-                                `UPDATE ${batchname} SET uploaded = ?, sigData = ?, receiver = ?, rate = ?, duedate = ?, receiveDate = ?, qrcode = ? WHERE acctno = ?`,
-                                [1, signatureData, receiver, computedRef.current.rate, computedRef.current.duedate, currentDate, computedRef.current.qrcode, user.acctno,],
-                                (txObj, resultSet) => {
-                                    console.log('Updated uploaded');
-                                    setSigOpen(false)
-                                    signatureRef.current && signatureRef.current.clearSignature();
-                                    setSignatureData("")
-                                    printReceipt();
-                                },
-                                (txObj, error) => {
-                                    console.error('Error updating uploaded:', error);
-                                    return false
-                                }
-                            );
-                        }
-                    );
-                }
-            } else {
-                alert("Cant confirm without a receiver's name and sign")
-            }
-
-        } catch (e) {
-            setSigOpen(false)
-            signatureRef.current && signatureRef.current.clearSignature();
-            setSignatureData("")
-            alert(`Error uploading: ${e}`)
-        }
-    }
     const handleConfirm = async () => {
         try {
             const orgid = readerObj.env.ORGID
@@ -572,8 +552,8 @@ const UserInfo = ({ navigation, route }) => {
                 db.transaction(
                     tx => {
                         tx.executeSql(
-                            `UPDATE ${batchname} SET uploaded = ?, receiver = ?, rate = ?, duedate = ?, receiveDate = ?, qrcode = ? WHERE acctno = ?`,
-                            [1, receiver, computedRef.current.rate, computedRef.current.duedate, currentDate, computedRef.current.qrcode, user.acctno,],
+                            `UPDATE ${batchname} SET uploaded = ?, receiver = ?, rate = ?, duedate = ?, receiveDate = ?, qrcode = ?, disconnectiondate = ? WHERE acctno = ?`,
+                            [1, receiver, computedRef.current.rate, computedRef.current.duedate, currentDate, computedRef.current.qrcode, computedRef.current.disconnectiondate ? computedRef.current.disconnectiondate : '', user.acctno,],
                             (txObj, resultSet) => {
                                 console.log('Updated uploaded');
                                 setSigOpen(false)
@@ -595,31 +575,31 @@ const UserInfo = ({ navigation, route }) => {
         }
     }
 
-    const printReceiptWithSig = async () => {
-        try {
-            await ThermalPrinterModule.printBluetooth({
-                payload: printFormat(user, headers, imageUrl, user.sigData ? user.sigData : signatureData, user.receiver ? user.receiver : receiver, user.rate > 0 ? user.rate : computedRef.current.rate, user.qrcode ? user.qrcode : computedRef.current.qrcode),
-                printerWidthMM: 48,
-                printerNbrCharactersPerLine: 32
-            })
+    // const printReceiptWithSig = async () => {
+    //     try {
+    //         await ThermalPrinterModule.printBluetooth({
+    //             payload: printFormat(user, headers, imageUrl, user.sigData ? user.sigData : signatureData, user.receiver ? user.receiver : receiver, user.rate > 0 ? user.rate : computedRef.current.rate, user.qrcode ? user.qrcode : computedRef.current.qrcode, user.disconnectiondate ? user.disconnectiondate : computedRef.current.disconnectiondate),
+    //             printerWidthMM: 48,
+    //             printerNbrCharactersPerLine: 32
+    //         })
 
-        } catch (err) {
-            //error handling
-            alert(err)
-            console.log(err.message);
-        }
-    };
+    //     } catch (err) {
+    //         //error handling
+    //         alert(err)
+    //         console.log(err.message);
+    //     }
+    // };
     const printReceipt = async () => {
         try {
             await ThermalPrinterModule.printBluetooth({
-                payload: printFormat(user, headers, imageUrl, "", user.receiver ? user.receiver : receiver, user.rate > 0 ? user.rate : computedRef.current.rate, user.qrcode ? user.qrcode : computedRef.current.qrcode),
+                payload: printFormat(user, headers, imageUrl, "", user.receiver ? user.receiver : receiver, user.rate > 0 ? user.rate : computedRef.current.rate, user.qrcode ? user.qrcode : computedRef.current.qrcode, user.disconnectiondate || ''),
                 printerWidthMM: 48,
                 printerNbrCharactersPerLine: 32
             })
 
         } catch (err) {
             //error handling
-            alert(err)
+            alert(`Print error: ${err}`)
             console.log(err.message);
         }
     };
@@ -739,7 +719,7 @@ const UserInfo = ({ navigation, route }) => {
                                 <View style={styles1.infoGap}>
                                     <View style={styles1.info}>
                                         <Text style={styles1.infoName}>Previous Reading:</Text>
-                                        <Text style={styles1.infoValue}>{user.prevreading && ensureFourDecimalPlaces(user.prevreading)}</Text>
+                                        <Text style={styles1.infoValue}>{user.prevreading !== null && ensureFourDecimalPlaces(user.prevreading)}</Text>
                                     </View>
                                     <View style={styles1.info}>
                                         <Text style={styles1.infoName}>Current Reading:</Text>
