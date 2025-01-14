@@ -88,7 +88,15 @@ const UserInfo = ({ navigation, route }) => {
     const [formula, setFormula] = useState(null)
 
     const [otp, setOtp] = React.useState('');
-    const computedRef = useRef(null)
+    const computedRef = useRef({
+        balance: 0,
+        total: null,
+        rate: null,
+        duedate: null,
+        disconnectiondate: null,
+        qrcode: null
+    })
+    const printRef = useRef(null)
 
     // const hdb = SQLITE.openDatabase('headers.db');
 
@@ -125,6 +133,7 @@ const UserInfo = ({ navigation, route }) => {
             const imageAsset = Asset.fromModule(require('../../../../assets/printerLogoExample2.jpg'));
 
             if (!imageAsset.localUri) {
+                console.log("downloadAsyn Run")
                 await imageAsset.downloadAsync();
             }
             // const exampleImageUri = Image.resolveAssetSource(imageAsset).uri
@@ -135,6 +144,7 @@ const UserInfo = ({ navigation, route }) => {
             const fileInfo = await FileSystem.getInfoAsync(localUri);
             console.log(`file Exist? ${fileInfo.exists}`)
             if (!fileInfo.exists) {
+                console.log("copyAsyn Run")
                 await FileSystem.copyAsync({
                     from: imageAsset.localUri || imageAsset.uri,
                     to: localUri,
@@ -251,7 +261,7 @@ const UserInfo = ({ navigation, route }) => {
 
     const getRate = async () => {
         try {
-            if (user.uploaded) {
+            if (user.rate) {
                 printReceipt();
             } else {
                 const orgid = readerObj.env.ORGID
@@ -281,8 +291,13 @@ const UserInfo = ({ navigation, route }) => {
                 console.log("data", data)
                 if (data) {
                     const computed = await data
-                    console.log("computed",computed)
+                    console.log("computed", computed)
                     computedRef.current = { ...computed, qrcode: computed.qrcode.replace(/^qrcode:/, '') }
+                    if (!computedRef.current.balance) {
+                        computedRef.current.balance = 0
+                    }
+                    computedRef.current.total = computedRef.current.rate + computedRef.current.balance
+                    console.log(computedRef)
                     setRateOpenOk(true)
                 }
             }
@@ -547,13 +562,14 @@ const UserInfo = ({ navigation, route }) => {
             const data = await svc.invoke("uploadReading", upload_param);
 
             console.log("data in uploadReading", data)
+            console.log("ComputedRef:", computedRef.current)
 
             if (data) {
                 db.transaction(
                     tx => {
                         tx.executeSql(
-                            `UPDATE ${batchname} SET uploaded = ?, receiver = ?, rate = ?, duedate = ?, receiveDate = ?, qrcode = ?, disconnectiondate = ? WHERE acctno = ?`,
-                            [1, receiver, computedRef.current.rate, computedRef.current.duedate, currentDate, computedRef.current.qrcode, computedRef.current.disconnectiondate ? computedRef.current.disconnectiondate : '', user.acctno,],
+                            `UPDATE ${batchname} SET uploaded = ?, receiver = ?, rate = ?, duedate = ?, receiveDate = ?, qrcode = ?, disconnectiondate = ?, balance = ? WHERE acctno = ?`,
+                            [1, receiver, computedRef.current.rate, computedRef.current.duedate, currentDate, computedRef.current.qrcode, computedRef.current.disconnectiondate ? computedRef.current.disconnectiondate : '', computedRef.current.balance ?  computedRef.current.balance : 0, user.acctno,],
                             (txObj, resultSet) => {
                                 console.log('Updated uploaded');
                                 setSigOpen(false)
@@ -589,10 +605,14 @@ const UserInfo = ({ navigation, route }) => {
     //         console.log(err.message);
     //     }
     // };
+    
     const printReceipt = async () => {
+        // console.log(`userBal: ${user.balance}`)
         try {
+
+            // console.log(`userBal: ${user.balance}, compBal: ${computedRef.current.balance}`)
             await ThermalPrinterModule.printBluetooth({
-                payload: printFormat(user, headers, imageUrl, "", user.receiver ? user.receiver : receiver, user.rate > 0 ? user.rate : computedRef.current.rate, user.qrcode ? user.qrcode : computedRef.current.qrcode, user.disconnectiondate || ''),
+                payload: printFormat(user, headers, imageUrl, "", user.receiver ? user.receiver : receiver, user.rate > 0 ? user.rate : computedRef.current.rate, user.qrcode ? user.qrcode : computedRef.current.qrcode, user.disconnectiondate || '', user.balance !== null &&  user.balance !== 0 ?  user.balance : computedRef.current.balance),
                 printerWidthMM: 48,
                 printerNbrCharactersPerLine: 32
             })
@@ -649,7 +669,7 @@ const UserInfo = ({ navigation, route }) => {
                                         :
                                         <View>
                                             {
-                                                !user.uploaded ?
+                                                !user.rate ?
                                                     <View style={{ justifyContent: 'flex-end' }}>
                                                         {!user.note ? <View style={{ justifyContent: 'space-between', gap: 10 }}>
                                                             <TouchableOpacity onPress={() => setNoteOpen(true)} style={styles1.hold}>
@@ -735,7 +755,7 @@ const UserInfo = ({ navigation, route }) => {
                                     }
                                     {user.rate !== null &&
                                         <View style={styles1.info}>
-                                            <Text style={styles1.infoName}>Bill Amount:</Text>
+                                            <Text style={styles1.infoName}>Rate:</Text>
                                             <Text style={styles1.infoValue}>{user.rate ? currencyFormat({ val: user.rate, decimal: 2 }) : ""}</Text>
                                         </View>
                                     }
@@ -868,6 +888,11 @@ const UserInfo = ({ navigation, route }) => {
                                 <View style={styles1.rateModal}>
                                     <View style={{ flex: 1 }}>
                                         <View style={{ justifyContent: 'space-between', flexDirection: 'row' }}>
+                                            <Text>Due Date</Text>
+                                            <Text>{computedRef.current.duedate}</Text>
+                                        </View>
+                                        <View style={{ flex: 1 }}></View>
+                                        <View style={{ justifyContent: 'space-between', flexDirection: 'row' }}>
                                             <Text>Current Reading</Text>
                                             <Text>{user.volume && ensureFourDecimalPlaces(user.reading)}</Text>
                                         </View>
@@ -879,14 +904,19 @@ const UserInfo = ({ navigation, route }) => {
                                             <Text>Volume</Text>
                                             <Text>{user.volume && ensureFourDecimalPlaces(user.volume)}</Text>
                                         </View>
+                                        <View style={{ flex: 1 }}></View>
                                         <View style={{ justifyContent: 'space-between', flexDirection: 'row' }}>
-                                            <Text>Due Date</Text>
-                                            <Text>{computedRef.current.duedate}</Text>
+                                            <Text>Rate</Text>
+                                            <Text>{computedRef.current.rate ? currencyFormat({ val: computedRef.current.rate, decimal: 2 }) : ""}</Text>
+                                        </View>
+                                        <View style={{ justifyContent: 'space-between', flexDirection: 'row' }}>
+                                            <Text>Previous Balance</Text>
+                                            <Text>{computedRef.current.balance ? currencyFormat({ val: computedRef.current.balance, decimal: 2 }) : ""}</Text>
                                         </View>
                                         <View style={{ flex: 1 }}></View>
                                         <View style={{ justifyContent: 'space-between', flexDirection: 'row' }}>
-                                            <Text>Bill Amount</Text>
-                                            <Text>{computedRef.current.rate}</Text>
+                                            <Text style={{fontWeight: 'bold'}}>Total</Text>
+                                            <Text style={{fontWeight: 'bold'}}>{computedRef.current.total ? currencyFormat({ val: computedRef.current.total, decimal: 2 }) : ""}</Text>
                                         </View>
                                     </View>
                                     <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginTop: 10 }}>

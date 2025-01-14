@@ -3,7 +3,7 @@ import ensureFourDecimalPlaces from './ensureFourDecimalPlaces';
 
 const replaceñ = (name) => {
     if (name !== null && typeof name === 'string') {
-        console.log("replaced", name)
+        // console.log("replaced", name)
         return name.replace(/ñ/gi, (match) => {
             return match === 'ñ' ? 'n' : 'N';
         });
@@ -13,7 +13,7 @@ const replaceñ = (name) => {
     }
 }
 
-export const printFormat = (user: UserType, headers, imageUrl, signatureData, receiver, computedRate, qrcode, discdate) => {
+export const printFormat = (user: UserType, headers, imageUrl, signatureData, receiver, computedRate, qrcode, discdate, printBalance) => {
     const newMeterNo = user.meterno ? user.meterno.substring(0, user.meterno.indexOf(':')) : null;
     const { header1, header2, header3 } = headers;
     const newName = replaceñ(user.acctname)
@@ -59,13 +59,14 @@ export const printFormat = (user: UserType, headers, imageUrl, signatureData, re
             maximumFractionDigits: 2
         }).format(num);
     }
+    // console.log("Type",typeof printBalance, printBalance)
 
-    const prevBal = formatVal(user.balance ? user.balance.toFixed(2) : "0.00")
+    const prevBal = formatVal(printBalance !== null  ? printBalance.toFixed(2) : "0.00")
     const amountDue = formatVal(user.rate > 0 ? user.rate.toFixed(2) : computedRate.toFixed(2))
     const otherchargeTotal = formatVal(user.othercharge ? user.othercharge.toFixed(2) : "0.00")
 
     const toAddRate = Number(computedRate);
-    const toAddBalance = Number(user.balance);
+    const toAddBalance = Number(printBalance);
     const toAddOtherCharge = Number(user.othercharge);
 
     const totalAmount = formatVal(Number((toAddRate + toAddBalance + toAddOtherCharge).toFixed(2)))
